@@ -1,0 +1,30 @@
+{
+    "providers": {
+        "gemini": {
+            "model": "gemini-2.0-flash",
+            "max_tokens_per_day": 1000000,
+            "cost_per_1k_tokens": 0.0,
+            "rate_limit_rpm": 15,
+            "rate_limit_tpm": 1000000,
+            "description": "Google Gemini 2.0 Flash - 1M tokens/day free"
+        },
+        "openrouter": {
+            "model": "meta-llama/llama-3.1-8b-instruct:free",
+            "max_tokens_per_day": null,
+            "cost_per_1k_tokens": 0.0,
+            "rate_limit_rpm": 20,
+            "rate_limit_tpm": 200,
+            "description": "OpenRouter Free Models - Llama 3.1 8B"
+        }
+    },
+    "fallback_order": ["gemini", "openrouter"],
+    "voice": {
+        "stt_model": "base",
+        "tts_engine": "kokoro"
+    },
+    "memory": {
+        "vector_db": "chromadb",
+        "embedding_model": "BAAI/bge-m3",
+        "max_memories": 10000
+    }
+}
