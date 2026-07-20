@@ -6,7 +6,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-env_path = Path(__file__).parent.parent / ".env"
+env_path = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(env_path)
 
 
@@ -37,7 +37,7 @@ class Config:
     @classmethod
     def get_model_config(cls) -> dict:
         """Load model configurations from config/models.json."""
-        config_path = Path(__file__).parent.parent / "config" / "models.json"
+        config_path = Path(__file__).parent.parent.parent / "config" / "models.json"
         if config_path.exists():
             with open(config_path) as f:
                 return json.load(f)

@@ -91,7 +91,7 @@ class Prometheus:
         self.scheduler = TaskScheduler()
 
         # System ready
-        logger.info("[bold green]✓ Project Prometheus initialized![/bold green]")
+        logger.info("[bold green]Project Prometheus initialized![/bold green]")
         logger.info(f"[green]Available LLM providers: {self.router.list_available_providers()}[/green]")
 
     def greet(self):

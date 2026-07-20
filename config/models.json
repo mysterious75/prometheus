@@ -2,29 +2,59 @@
     "providers": {
         "gemini": {
             "model": "gemini-2.0-flash",
+            "role": "senses",
             "max_tokens_per_day": 1000000,
             "cost_per_1k_tokens": 0.0,
             "rate_limit_rpm": 15,
             "rate_limit_tpm": 1000000,
-            "description": "Google Gemini 2.0 Flash - 1M tokens/day free"
+            "description": "Google Gemini 2.0 Flash - The Conscious Actor & Senses (vision, 1M tokens/day free)"
+        },
+        "deepseek": {
+            "model": "deepseek/deepseek-chat:free",
+            "role": "logic",
+            "max_tokens_per_day": null,
+            "cost_per_1k_tokens": 0.0,
+            "description": "DeepSeek V4 Flash - The Subconscious & Logic Engine (via OpenRouter free)"
+        },
+        "mistral": {
+            "model": "mistralai/mistral-7b-instruct:free",
+            "role": "reasoning",
+            "max_tokens_per_day": null,
+            "cost_per_1k_tokens": 0.0,
+            "description": "Mistral 7B - Reasoning & Analysis (via OpenRouter free)"
         },
         "openrouter": {
             "model": "meta-llama/llama-3.1-8b-instruct:free",
+            "role": "guardrail",
             "max_tokens_per_day": null,
             "cost_per_1k_tokens": 0.0,
             "rate_limit_rpm": 20,
             "rate_limit_tpm": 200,
-            "description": "OpenRouter Free Models - Llama 3.1 8B"
+            "description": "OpenRouter Free Models - Llama 3.1 8B (Guardrail/Backup)"
         }
     },
-    "fallback_order": ["gemini", "openrouter"],
+    "consensus": {
+        "enabled": true,
+        "min_providers_for_debate": 2,
+        "critic_role": "guardrail",
+        "debate_rounds": 1
+    },
+    "fallback_order": ["gemini", "deepseek", "mistral", "openrouter"],
     "voice": {
         "stt_model": "base",
         "tts_engine": "kokoro"
     },
+    "vision": {
+        "webcam_index": 0,
+        "capture_interval": 2.0,
+        "emotion_detection": true
+    },
     "memory": {
         "vector_db": "chromadb",
         "embedding_model": "BAAI/bge-m3",
-        "max_memories": 10000
+        "max_memories": 10000,
+        "consolidation_threshold": 0.8,
+        "high_importance": 0.7,
+        "low_importance": 0.3
     }
 }

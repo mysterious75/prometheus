@@ -13,6 +13,9 @@ requests>=2.31.0
 chromadb>=0.5.0
 sentence-transformers>=3.0.0
 
+# === VISION (Webcam + Image Processing) ===
+opencv-python>=4.9.0
+
 # === VOICE (Optional - uncomment when needed) ===
 # openai-whisper>=20231117
 # kokoro>=0.1.0

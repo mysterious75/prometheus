@@ -7,7 +7,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.logging import RichHandler
 
-console = Console()
+console = Console(force_terminal=True)
 
 
 def setup_logger(name: str = "prometheus", level: str = "INFO") -> logging.Logger:
@@ -31,7 +31,7 @@ def setup_logger(name: str = "prometheus", level: str = "INFO") -> logging.Logge
         log_dir.mkdir(exist_ok=True)
         log_file = log_dir / f"prometheus_{datetime.now().strftime('%Y%m%d')}.log"
 
-        file_handler = logging.FileHandler(log_file)
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         file_handler.setFormatter(formatter)

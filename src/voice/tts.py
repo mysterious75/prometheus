@@ -28,7 +28,7 @@ class TextToSpeech:
             try:
                 logger.info("Loading Kokoro TTS pipeline")
                 self.pipeline = KPipeline(lang_code='a')
-                logger.info("[green]✓ Kokoro TTS loaded[/green]")
+                logger.info("[green]Kokoro TTS loaded[/green]")
             except Exception as e:
                 logger.warning(f"[yellow]⚠ Could not load Kokoro: {e}[/yellow]")
         else:
@@ -67,7 +67,7 @@ class TextToSpeech:
                     wf.setframerate(24000)
                     wf.writeframes(audio_int16.tobytes())
 
-            logger.info(f"[green]✓ Audio saved to {output_path}[/green]")
+            logger.info(f"[green]Audio saved to {output_path}[/green]")
             return output_path
         except Exception as e:
             logger.error(f"[red]TTS Error: {e}[/red]")

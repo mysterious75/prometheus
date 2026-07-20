@@ -90,7 +90,7 @@ class ReconPipeline:
     def http_probe(self) -> str:
         """Phase 3: HTTP probing."""
         logger.info(f"[*] Probing HTTP services on {self.target}")
-        output_file = self.output_dir / "http_services.txt"]
+        output_file = self.output_dir / "http_services.txt"
 
         try:
             import requests

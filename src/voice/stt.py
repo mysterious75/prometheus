@@ -24,7 +24,7 @@ class SpeechToText:
             try:
                 logger.info(f"Loading Whisper model: {model_size}")
                 self.model = whisper.load_model(model_size)
-                logger.info(f"[green]✓ Whisper {model_size} loaded[/green]")
+                logger.info(f"[green]Whisper {model_size} loaded[/green]")
             except Exception as e:
                 logger.warning(f"[yellow]⚠ Could not load Whisper: {e}[/yellow]")
         else:
