@@ -351,9 +351,21 @@ def main():
             if not user_input:
                 continue
 
-            if user_input.lower() == "commands":
-                console.print(prometheus.intent_parser.get_available_commands())
-                continue
+        # Intent patterns
+        if user_input.lower() == "commands":
+            console.print(prometheus.intent_parser.get_available_commands())
+            continue
+
+        if user_input.lower() == "tools":
+            from src.bugbounty.recon import ReconPipeline
+            r = ReconPipeline("check")
+            status = []
+            for tool, available in r.tools.items():
+                status.append(f"  {'[OK]' if available else '[MISSING]'} {tool}")
+            console.print("[bold]Bug Bounty Tools Status:[/bold]")
+            console.print("\n".join(status))
+            console.print("\nKali Linux mein install karo: ./install.sh")
+            continue
 
             response = prometheus.process(user_input)
 
