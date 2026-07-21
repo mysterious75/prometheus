@@ -1,0 +1,23 @@
+{
+  "conversations": [
+    {
+      "user": "hello",
+      "ai": "hi there",
+      "emotion": "neutral",
+      "timestamp": "2026-07-21T22:59:39.501530"
+    },
+    {
+      "user": "hello",
+      "ai": "hi there",
+      "emotion": "neutral",
+      "timestamp": "2026-07-21T22:59:55.750650"
+    }
+  ],
+  "user_profiles": {
+    "topics": {
+      "hello": 2
+    },
+    "total_interactions": 2,
+    "last_interaction": "2026-07-21T22:59:55.750659"
+  }
+}

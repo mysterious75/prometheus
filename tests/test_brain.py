@@ -265,3 +265,68 @@ class TestWorkflow:
         task = scheduler.add_task("test", lambda: None, 60)
         assert task.name == "test"
         assert len(scheduler.tasks) == 1
+
+
+class TestChatSystem:
+    """Test Chat System and Intent Parser."""
+
+    def test_intent_parser(self):
+        from src.consciousness.intent_parser import IntentParser
+        parser = IntentParser()
+        intent = parser.parse("scan google.com")
+        assert intent.action == "bugbounty_scan"
+        assert "google.com" in intent.target
+
+    def test_intent_code(self):
+        from src.consciousness.intent_parser import IntentParser
+        parser = IntentParser()
+        intent = parser.parse("code banao for todo app")
+        assert intent.action == "generate_code"
+
+    def test_intent_think(self):
+        from src.consciousness.intent_parser import IntentParser
+        parser = IntentParser()
+        intent = parser.parse("soch about AI")
+        assert intent.action == "think"
+
+    def test_intent_chat(self):
+        from src.consciousness.intent_parser import IntentParser
+        parser = IntentParser()
+        intent = parser.parse("hello kaise ho")
+        assert intent.action == "chat"
+
+    def test_intent_quit(self):
+        from src.consciousness.intent_parser import IntentParser
+        parser = IntentParser()
+        intent = parser.parse("quit")
+        assert intent.action == "quit"
+
+    def test_commands_list(self):
+        from src.consciousness.intent_parser import IntentParser
+        parser = IntentParser()
+        commands = parser.get_available_commands()
+        assert "scan" in commands
+        assert "code" in commands
+
+    def test_monologue_init(self):
+        from src.consciousness.monologue import InternalMonologue
+        from src.brain.router import ModelRouter
+        router = ModelRouter(use_consensus=False)
+        monologue = InternalMonologue(router)
+        assert monologue.thoughts == []
+
+    def test_conversation_memory_init(self):
+        from src.consciousness.conversation_memory import ConversationMemory
+        import tempfile
+        cm = ConversationMemory(storage_path=Path(tempfile.mkdtemp()))
+        assert cm.count() == 0
+
+    def test_conversation_store_and_recall(self):
+        from src.consciousness.conversation_memory import ConversationMemory
+        import tempfile
+        cm = ConversationMemory(storage_path=Path(tempfile.mkdtemp()))
+        cm.store_interaction("hello", "hi there", "neutral")
+        assert cm.count() == 1
+        recent = cm.recall_recent(1)
+        assert len(recent) == 1
+        assert recent[0]["user"] == "hello"

@@ -1,0 +1,114 @@
+"""Intent Parser - Understands natural language and maps to actions."""
+
+import re
+from typing import Dict, Any, Optional, Tuple
+from dataclasses import dataclass
+
+
+@dataclass
+class ParsedIntent:
+    """Parsed user intent."""
+    action: str           # what to do
+    target: str           # what to do it on
+    raw_input: str        # original input
+    confidence: float     # how sure we are
+    params: Dict[str, Any] = None
+
+    def __post_init__(self):
+        if self.params is None:
+            self.params = {}
+
+
+class IntentParser:
+    """Parses natural language into executable actions."""
+
+    # Intent patterns - order matters (first match wins)
+    PATTERNS = [
+        # Bug Bounty
+        (r"(?:scan|recon|bug\s*bounty|vulnerability)\s+(?:on\s+)?(.+)", "bugbounty_scan"),
+        (r"(?:nuclei|scan)\s+(.+)", "bugbounty_scan"),
+
+        # Code Generation
+        (r"(?:generate|banao|banao|create|likh|write)\s+(?:code|program|script)?\s*(?:for|of|to)?\s*(.+)", "generate_code"),
+        (r"(?:code|program)\s+(?:for|of|to)\s+(.+)", "generate_code"),
+        (r"banao\s+(.+)", "generate_code"),
+
+        # Thinking / Reflection
+        (r"(?:think|soch|vichaar)\s+(?:about|ke baare mein|pe)\s+(.+)", "think"),
+        (r"(?:kya\s+lagta\s+hai|what\s+do\s+you\s+think)\s+(?:about|ke baare mein)?\s*(.+)?", "think"),
+
+        # Dream / Consolidate
+        (r"(?:dream|sapna|consolidate|yaadein)\s*$", "dream"),
+
+        # Status
+        (r"(?:status|hal|kya\s+haal|system\s+info)", "status"),
+
+        # Emotional
+        (r"(?:kaisa\s+feel|how\s+do\s+you\s+feel|mood\s+kaisa)", "mood"),
+        (r"(?:tumhara\s+naam|your\s+name|kaun\s+ho)", "identity"),
+
+        # Memory recall
+        (r"(?:yaad\s+karo|recall|remember|pichli\s+baar|last\s+time)\s*(.*)", "recall"),
+        (r"(?:kya\s+hua\s+tha|what\s+happened)\s*(.*)", "recall"),
+
+        # Self evolution
+        (r"(?:evolve|upgrade|improve|khud\s+ko\s+sudhar|self\s+improve)", "evolve"),
+
+        # Goals
+        (r"(?:goal|lakshya|target| Objective)\s+(.+)", "set_goal"),
+        (r"(?:goals?\s+dekh|show\s+goals?|goal\s+status)", "show_goals"),
+
+        # Code execution
+        (r"(?:run|chala|execute)\s+(.+)", "run_code"),
+
+        # Learning
+        (r"(?:seekh|learn|study|research)\s+(.+)", "learn"),
+
+        # Quit
+        (r"(?:quit|exit|band|close|bye|alvida)", "quit"),
+    ]
+
+    def parse(self, text: str) -> ParsedIntent:
+        """Parse user input into an intent."""
+        text_lower = text.lower().strip()
+
+        for pattern, action in self.PATTERNS:
+            match = re.search(pattern, text_lower)
+            if match:
+                target = match.group(1) if match.lastindex and match.group(1) else ""
+                return ParsedIntent(
+                    action=action,
+                    target=target.strip(),
+                    raw_input=text,
+                    confidence=0.8
+                )
+
+        # No pattern matched - treat as general chat
+        return ParsedIntent(
+            action="chat",
+            target=text,
+            raw_input=text,
+            confidence=0.5
+        )
+
+    def get_available_commands(self) -> str:
+        """Return human-readable list of what Prometheus can do."""
+        return """
+Mujhe ye sab commands samajh aa jaate hain:
+
+  BOLIYE                          KAAM KYA HOGA
+  ─────────────────────────────── ──────────────────────────────
+  "scan google.com"               Bug bounty scan chalega
+  "code banao for todo app"       Code generate karega
+  "soch about AI"                 Sochega aur batayega
+  "dream"                         Yaadein compress karega
+  "status"                        System status dega
+  "kaisa feel kar raha hai"       Apna mood batayega
+  "yaad karo"                     Pichli baatein yaad karega
+  "evolve"                        Khud ko upgrade karega
+  "goal set karo"                 Naya goal banayega
+  "seekh machine learning"        Research karega
+  "bye"                           Band karega
+
+  Ya kuch bhi normally baat karo - main samajh jaunga!
+"""
