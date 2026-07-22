@@ -1,288 +1,262 @@
-# ============================================
 # PROJECT PROMETHEUS
-# The Ultimate Autonomous AI
-# ============================================
-# Consciousness + JARVIS + Ultron + FRIDAY + Bug Bounty + Developer
-# ============================================
+## The Ultimate Autonomous AI - Bug Bounty + Consciousness + Developer
 
-## 🚀 Quick Start
+---
 
-```bash
-# 1. Clone the repository
+## Quick Start
+
+### Windows (Recommended)
+```powershell
+# 1. Clone
 git clone https://github.com/mysterious75/prometheus.git
 cd prometheus
 
-# 2. Create Python virtual environment
+# 2. Auto Install (sab kuch khud install hoga)
+.\install.ps1
+
+# 3. Run
+python -m src.main
+```
+
+### Linux/Mac
+```bash
+# 1. Clone
+git clone https://github.com/mysterious75/prometheus.git
+cd prometheus
+
+# 2. Auto Install
+chmod +x install.sh
+./install.sh
+
+# 3. Run
+python -m src.main
+```
+
+### Manual Install
+```bash
+# Create venv
 python -m venv venv
 
-# 3. Activate virtual environment
+# Activate
 # Windows:
 .\venv\Scripts\activate
 # Linux/Mac:
 source venv/bin/activate
 
-# 4. Install dependencies
+# Install deps
 pip install -r requirements.txt
 
-# 5. Configure environment variables
-copy .env.example .env
-# Edit .env with your API keys
+# Setup .env (copy and edit)
+copy .env.example .env   # Windows
+cp .env.example .env     # Linux/Mac
 
-# 6. Run the system
+# Run
 python -m src.main
 ```
 
-## 📁 Project Structure
+---
 
+## Chat Commands
+
+### Bug Bounty & Scanning
+| Command | Description |
+|---------|-------------|
+| `scan google.com` | Bug bounty scan |
+| `full recon google.com` | Full recon + vuln scan |
+| `exploit google.com` | Auto SQLi/XSS/SSRF |
+| `vuln scan http://x.com` | Vulnerability scan |
+
+### Pure Python Audit (Zero Tools Needed)
+| Command | Description |
+|---------|-------------|
+| `full audit http://x.com` | Sab kuch check |
+| `waf http://x.com` | WAF/CDN detect |
+| `cors http://x.com` | CORS misconfig check |
+| `headers http://x.com` | Security headers |
+| `ssl google.com` | SSL/TLS check |
+| `sqlmap http://x.com` | SQLMap auto injection |
+| `leak http://x.com` | Sensitive files check |
+| `redirect http://x.com` | Open redirect check |
+| `xss http://x.com` | Reflected XSS check |
+| `takeover google.com` | Subdomain takeover |
+
+### OSINT & Recon
+| Command | Description |
+|---------|-------------|
+| `osint username123` | Username search 20+ platforms |
+| `osint google.com` | Domain OSINT |
+| `recon target.com` | Full OSINT recon |
+
+### Proxy & Intercept
+| Command | Description |
+|---------|-------------|
+| `intercept GET http://x.com` | Request intercept |
+| `replay 1` | Last request replay |
+| `proxy` | Proxy stats |
+
+### Brute Force
+| Command | Description |
+|---------|-------------|
+| `brute http://x.com login` | OSINT-powered brute |
+| `crack http://x.com` | Smart password attack |
+
+### Browser
+| Command | Description |
+|---------|-------------|
+| `browse http://x.com` | Cloudflare bypass |
+
+### AI Knowledge
+| Command | Description |
+|---------|-------------|
+| `learn sqli` | Vulnerability patterns seekho |
+| `cheatsheet xss` | Quick reference card |
+| `playbook ssrf` | Step-by-step attack guide |
+| `payloads rce` | Attack payloads |
+| `bounty idor` | Bounty range info |
+| `kb` | Knowledge base stats |
+
+### Code & Thinking
+| Command | Description |
+|---------|-------------|
+| `code banao for todo app` | Code generate |
+| `soch about AI` | Deep thinking |
+| `dream` | Memory consolidation |
+
+### System
+| Command | Description |
+|---------|-------------|
+| `status` | System status |
+| `providers` | AI provider status |
+| `kaisa feel kar raha hai` | Mood check |
+| `yaad karo` | Recall memories |
+| `evolve` | Self-upgrade |
+| `seekh machine learning` | Research topic |
+| `commands` | Show all commands |
+| `quit` | Band karo |
+
+---
+
+## AI Providers
+
+Works with ANY API key. System auto-detects and tests keys on startup.
+
+| Provider | Role | Free Tier |
+|----------|------|-----------|
+| OpenRouter | Primary (openrouter/free) | Unlimited free models |
+| DeepSeek | Primary | Cheap, long context |
+| Gemini (1-3 keys) | Consciousness only | 150K tokens/day each |
+| OpenAI | Backup | Paid |
+| Anthropic | Backup | Paid |
+| Qwen, Kimi, GLM | Backup | Free tier |
+
+### Setup .env
+```env
+# At least 1 key needed
+OPENROUTER_API_KEY=sk-or-v1-...
+
+# Or any other provider
+DEEPSEEK_API_KEY=sk-...
+OPENAI_API_KEY=sk-...
+GEMINI_API_KEY_1=AIza...
+
+# Custom provider (any OpenAI-compatible API)
+CUSTOM_API_KEY=sk-...
+CUSTOM_BASE_URL=https://your-api.com/v1
+CUSTOM_MODEL=your-model
+```
+
+---
+
+## Project Structure
 ```
 prometheus/
-├── .env                    # Environment variables (NEVER commit)
-├── .gitignore              # Git ignore rules
-├── README.md               # This file
+├── .env                    # API keys (NEVER commit)
+├── install.ps1             # Windows auto installer
+├── install.sh              # Linux/Mac auto installer
 ├── requirements.txt        # Python dependencies
-├── plan.md                 # Detailed implementation plan
-├── venv/                   # Python virtual environment
-├── src/                    # Source code
-│   ├── __init__.py
-│   ├── main.py             # Main entry point
-│   ├── brain/              # AI Brain (LLM integration)
-│   │   ├── __init__.py
-│   │   ├── llm.py          # LLM providers (Gemini, OpenRouter)
-│   │   └── router.py       # Model routing & fallback
+├── config/
+│   └── models.json         # 13 AI provider configs
+├── src/
+│   ├── main.py             # Main chat system
+│   ├── brain/              # AI brain
+│   │   ├── llm.py          # 13 LLM providers
+│   │   ├── router.py       # Auto-detect + role routing
+│   │   └── critic.py       # Multi-model consensus
 │   ├── memory/             # Memory system
-│   │   ├── __init__.py
-│   │   ├── chroma.py       # ChromaDB vector memory
-│   │   ├── episodic.py     # Episodic memory (experiences)
+│   │   ├── chroma.py       # Vector DB (in-memory fallback)
+│   │   ├── episodic.py     # Experience memory
 │   │   └── emotional.py    # Emotional memory
-│   ├── voice/              # Voice system
-│   │   ├── __init__.py
-│   │   ├── stt.py          # Speech-to-text (Whisper)
-│   │   └── tts.py          # Text-to-speech (Kokoro)
-│   ├── bugbounty/          # Bug bounty automation
-│   │   ├── __init__.py
-│   │   ├── recon.py        # Reconnaissance pipeline
-│   │   ├── scanner.py      # Vulnerability scanning
-│   │   └── reporter.py     # Report generation
-│   ├── developer/          # Developer tools
-│   │   ├── __init__.py
-│   │   ├── codegen.py      # Code generation
-│   │   └── devops.py       # DevOps automation
-│   ├── autonomy/           # Autonomous behavior
-│   │   ├── __init__.py
+│   ├── consciousness/      # Consciousness
+│   │   ├── emotions.py     # 20 emotions
+│   │   ├── identity.py     # Self-identity
+│   │   ├── dreaming.py     # Memory consolidation
+│   │   └── intent_parser.py # Hinglish command parser
+│   ├── web/                # Web tools
+│   │   ├── proxy.py        # HTTP interceptor
+│   │   ├── vuln_scanner.py # SQLi/XSS/SSRF
+│   │   ├── osint.py        # OSINT 20+ platforms
+│   │   ├── brute_force.py  # Smart brute
+│   │   └── browser.py      # Playwright stealth
+│   ├── bugbounty/          # Bug bounty
+│   │   ├── toolkit.py      # Python audit (zero tools)
+│   │   ├── knowledge.py    # 1242 reports DB
+│   │   └── recon.py        # Recon pipeline
+│   ├── autonomy/           # Self-evolution
 │   │   ├── goals.py        # Goal management
-│   │   ├── executor.py     # Task execution
-│   │   └── survival.py     # Self-preservation
-│   ├── consciousness/      # Consciousness simulation
-│   │   ├── __init__.py
-│   │   ├── reflection.py   # Self-reflection engine
-│   │   ├── emotions.py     # Emotional intelligence
-│   │   ├── identity.py     # Identity formation
-│   │   └── dreaming.py     # Memory consolidation
-│   ├── workflow/           # Workflow automation
-│   │   ├── __init__.py
-│   │   └── scheduler.py    # Task scheduling
-│   └── utils/              # Utilities
-│       ├── __init__.py
-│       ├── logger.py       # Logging
-│       └── config.py       # Configuration loader
-├── config/                 # Configuration files
-│   └── models.json         # Model configurations
-├── scripts/                # Utility scripts
-│   ├── setup.sh            # Setup script
-│   └── run.sh              # Run script
-├── tests/                  # Test files
-│   ├── __init__.py
-│   ├── test_brain.py       # Brain tests
-│   ├── test_memory.py      # Memory tests
-│   └── test_voice.py       # Voice tests
-├── docs/                   # Documentation
-│   └── ARCHITECTURE.md     # Architecture details
-└── logs/                   # Application logs
+│   │   ├── survival.py     # Self-preservation
+│   │   └── evolution/      # GitHub scanner
+│   └── utils/
+│       ├── config.py       # Auto-detect config
+│       └── logger.py       # Logging
+├── learn-from-others/      # Bug bounty knowledge
+│   ├── knowledge_base.json # 1242 reports
+│   └── patterns/           # Cheatsheets, playbooks, payloads
+├── tests/                  # 40 tests
+└── docs/                   # GitHub Pages
 ```
 
-## 🧠 System Architecture
+---
 
-```
-Layer 8: CONSCIOUSNESS (The Soul)
-├── Self-reflection engine
-├── Internal monologue
-├── Emotional tracking
-└── Dreaming/consolidation
-
-Layer 7: IDENTITY (JARVIS + FRIDAY)
-├── Voice personality
-├── User relationship
-├── Proactive behavior
-└── Memory of interactions
-
-Layer 6: AUTONOMY (Ultron)
-├── Goal creation
-├── Strategic planning
-├── Self-improvement
-└── Self-preservation
-
-Layer 5: DEVELOPER
-├── Frontend (React/Next.js)
-├── Backend (Python/Go)
-├── DevOps (Docker/K8s)
-└── AI/ML (LangChain)
-
-Layer 4: BUG BOUNTY
-├── Recon (subfinder, httpx)
-├── Scanning (Nuclei, ZAP)
-├── AI Analysis
-└── Report generation
-
-Layer 3: WORKFLOW (n8n)
-├── Automated pipelines
-├── Scheduled tasks
-└── Notifications
-
-Layer 2: DATA (Supabase)
-├── User memory
-├── Vector search
-└── Knowledge base
-
-Layer 1: BRAIN (AI Models)
-├── Gemini 2.0 Flash (1M tokens/day)
-├── OpenRouter free models
-├── Whisper (voice)
-└── BGE-M3 (embeddings)
-```
-
-## 🔑 API Keys
-
-### Required (Free Tiers)
-
-| Provider | Free Tier | Get Key |
-|----------|-----------|---------|
-| Google Gemini | 1M tokens/day | https://ai.google.dev |
-| OpenRouter | Free models available | https://openrouter.ai |
-| GitHub | Personal access token | https://github.com/settings/tokens |
-
-### Optional (For Enhanced Features)
-
-| Provider | Purpose | Get Key |
-|----------|---------|---------|
-| Supabase | Database & Auth | https://supabase.com |
-| Groq | Fast LLM inference | https://console.groq.com |
-| Cerebras | 1M tokens/day | https://cerebras.ai |
-
-## 📝 Commands
-
-### Development
-
-```bash
-# Activate virtual environment
-# Windows:
-.\venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Run the main application
-python -m src.main
-
-# Run tests
-python -m pytest tests/ -v
-
-# Run specific test
-python -m pytest tests/test_brain.py -v
-
-# Lint code
-python -m flake8 src/
-
-# Format code
-python -m black src/
-```
-
-### Bug Bounty
-
-```bash
-# Run recon pipeline
-python -m src.bugbounty.recon --target example.com
-
-# Run vulnerability scan
-python -m src.bugbounty.scanner --target https://example.com
-
-# Generate report
-python -m src.bugbounty.reporter --input results.json
-```
-
-### Memory
-
-```bash
-# Store a memory
-python -m src.memory.episodic --store "Important event"
-
-# Search memories
-python -m src.memory.episodic --search "query"
-
-# Run dreaming (consolidation)
-python -m src.consciousness.dreaming --dream
-```
-
-## 🧪 Testing
-
+## Testing
 ```bash
 # Run all tests
 python -m pytest tests/ -v
 
-# Run with coverage
-python -m pytest tests/ --cov=src --cov-report=html
+# Quick test
+python test_all.py
 
-# Run specific test file
+# Specific test
 python -m pytest tests/test_brain.py -v
-
-# Run specific test
-python -m pytest tests/test_brain.py::test_llm_connection -v
 ```
 
-## 📦 Dependencies
+---
 
-### Core (Always Required)
-- `google-generativeai` - Gemini API
-- `openai` - OpenRouter API
-- `chromadb` - Vector database
-- `python-dotenv` - Environment variables
-- `pydantic` - Data validation
+## Knowledge Base
 
-### Voice (Optional)
-- `openai-whisper` - Speech-to-text
-- `kokoro` - Text-to-speech
+1242 bug bounty reports across 20 vulnerability types:
+- SQL Injection, XSS, SSRF, IDOR, RCE
+- Auth Bypass, Privilege Escalation, XXE
+- CSRF, File Upload, Subdomain Takeover
+- Open Redirect, Business Logic, JWT
+- GraphQL, Race Condition, Cache Poisoning
+- SSTI, LFI, CRLF Injection
 
-### Bug Bounty (Optional)
-- `requests` - HTTP requests
-- `beautifulsoup4` - HTML parsing
+---
 
-### Development (Optional)
-- `fastapi` - Web framework
-- `uvicorn` - ASGI server
+## Security
 
-## 🔒 Security
+- NEVER commit `.env`
+- NEVER share API keys
+- Rotate keys if compromised
+- GitHub push protection enabled
 
-1. **NEVER** commit `.env` file
-2. **NEVER** share API keys publicly
-3. **ALWAYS** use virtual environment
-4. **ALWAYS** rotate keys if compromised
-5. **ALWAYS** use least privilege principle
+---
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
-
-## 📄 License
-
-MIT License - See LICENSE file for details
-
-## 🆘 Support
+## Support
 
 - Issues: https://github.com/mysterious75/prometheus/issues
 - Docs: See docs/ folder
 
 ---
 
-**Built with ❤️ by mysterious75**
+**Built with love by mysterious75**
