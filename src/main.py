@@ -380,6 +380,7 @@ def main():
     console.print("[green]Kuch bhi boliye - main samajh jaunga![/green]")
     console.print("[green]'commands' - saari cheezein kaise bolni hain[/green]")
     console.print("[green]'tools' - bug bounty tools ka status[/green]")
+    console.print("[green]'hacker' - all hacker tools database[/green]")
     console.print("[green]'platform' - system info[/green]")
     console.print("[green]'quit' - band karo[/green]\n")
 
@@ -395,22 +396,28 @@ def main():
                 console.print(prometheus.intent_parser.get_available_commands())
                 continue
 
-            if user_input.lower() == "tools":
-                from src.bugbounty.cross_platform_checker import CrossPlatformToolChecker
-                checker = CrossPlatformToolChecker()
-                checker.print_status()
-                missing = checker.get_missing()
-                outdated = checker.get_outdated()
-                if missing or outdated:
-                    console.print(f"\n[yellow]Install commands:[/yellow]")
-                    console.print(checker.get_all_install_commands())
-                else:
-                    console.print(f"\n[green]Sab tools latest hain![/green]")
-                continue
+        if user_input.lower() == "tools":
+            from src.bugbounty.cross_platform_checker import CrossPlatformToolChecker
+            checker = CrossPlatformToolChecker()
+            checker.print_status()
+            missing = checker.get_missing()
+            outdated = checker.get_outdated()
+            if missing or outdated:
+                console.print(f"\n[yellow]Install commands:[/yellow]")
+                console.print(checker.get_all_install_commands())
+            else:
+                console.print(f"\n[green]Sab tools latest hain![/green]")
+            continue
 
-            if user_input.lower() == "platform":
-                detector.print_info()
-                continue
+        if user_input.lower() == "hacker":
+            from src.bugbounty.hacker_tools import HackerTools
+            ht = HackerTools()
+            ht.print_status()
+            continue
+
+        if user_input.lower() == "platform":
+            detector.print_info()
+            continue
 
             response = prometheus.process(user_input)
 

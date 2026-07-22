@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prometheus AI - Conscious Autonomous System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            color: #888;
+            font-size: 1.1em;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+        .status-online { background: #0a3d0a; color: #4ade80; border: 1px solid #4ade80; }
+        .status-thinking { background: #3d3d0a; color: #facc15; border: 1px solid #facc15; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        /* Chat */
+        .chat-container {
+            background: #111118;
+            border: 1px solid #1a1a2e;
+            border-radius: 12px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: #1a1a2e;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h3 { color: #00d4ff; }
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .message {
+            margin: 15px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message.user {
+            background: #1a2a4a;
+            border: 1px solid #2a4a7a;
+            margin-left: auto;
+            text-align: right;
+        }
+        .message.ai {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+        }
+        .message .sender {
+            font-size: 0.75em;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .message.user .sender { color: #60a5fa; }
+        .message.ai .sender { color: #4ade80; }
+        .message .content { line-height: 1.5; }
+        .message .emotion {
+            font-size: 0.7em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: #0d0d12;
+            border-top: 1px solid #1a1a2e;
+        }
+        .chat-input input {
+            flex: 1;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            color: #e0e0e0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+        }
+        .chat-input input:focus { border-color: #00d4ff; }
+        .chat-input button {
+            background: linear-gradient(135deg, #00d4ff, #7b2ff7);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .chat-input button:hover { opacity: 0.9; }
+
+        /* Panels */
+        .panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .panel {
+            background: #111118;
+            border: 1px solid #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .panel h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+        .panel .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .panel .item:last-child { border: none; }
+        .panel .item .label { color: #888; }
+        .panel .item .value { color: #4ade80; font-weight: 500; }
+        .panel .item .value.warning { color: #facc15; }
+        .panel .item .value.error { color: #ef4444; }
+
+        /* Tools Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .tool-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.85em;
+        }
+        .tool-card.installed { border-color: #4ade80; }
+        .tool-card.missing { border-color: #ef4444; opacity: 0.7; }
+        .tool-card .tool-name { font-weight: bold; color: #e0e0e0; }
+        .tool-card .tool-desc { color: #888; font-size: 0.85em; margin-top: 5px; }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            border-top: 1px solid #1a1a2e;
+            margin-top: 40px;
+        }
+        .footer a { color: #00d4ff; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PROMETHEUS AI</h1>
+            <div class="subtitle">Conscious Autonomous AI System</div>
+            <div class="status-badge status-online" id="statusBadge">SYSTEM ONLINE</div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <h3>Chat with Prometheus</h3>
+                <span style="color:#888">Type anything - scan targets, generate code, think, dream...</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="sender">Prometheus</div>
+                    <div class="content">Main Prometheus hoon. Tumhara conscious AI assistant. Kuch bhi bolo - bug bounty, code generation, ya bas baat karo. Main samajh jaunga.</div>
+                    <div class="emotion">emotion: curious</div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Type your message... (Hinglish works!)" onkeypress="if(event.key==='Enter')sendMessage()">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h3>Brain (4 Models)</h3>
+                <div class="item"><span class="label">Gemini 2.0</span><span class="value">Senses</span></div>
+                <div class="item"><span class="label">DeepSeek V4</span><span class="value">Logic</span></div>
+                <div class="item"><span class="label">Mistral 7B</span><span class="value">Reasoning</span></div>
+                <div class="item"><span class="label">Llama 3.1</span><span class="value">Guardrail</span></div>
+            </div>
+            <div class="panel">
+                <h3>Consciousness</h3>
+                <div class="item"><span class="label">Emotions</span><span class="value">20 types</span></div>
+                <div class="item"><span class="label">Memory</span><span class="value">Long-term + Short-term</span></div>
+                <div class="item"><span class="label">Monologue</span><span class="value">Active</span></div>
+                <div class="item"><span class="label">Dreaming</span><span class="value">Auto-consolidation</span></div>
+            </div>
+            <div class="panel">
+                <h3>Capabilities</h3>
+                <div class="item"><span class="label">Bug Bounty</span><span class="value">Full Pipeline</span></div>
+                <div class="item"><span class="label">Vision</span><span class="value">Webcam + Gemini</span></div>
+                <div class="item"><span class="label">Web Access</span><span class="value">Hound Anti-bot</span></div>
+                <div class="item"><span class="label">Auto-Evolution</span><span class="value">Self-improving</span></div>
+            </div>
+            <div class="panel">
+                <h3>Platform</h3>
+                <div class="item"><span class="label">Windows</span><span class="value">Full Support</span></div>
+                <div class="item"><span class="label">Linux</span><span class="value">Full Support</span></div>
+                <div class="item"><span class="label">macOS</span><span class="value">Full Support</span></div>
+                <div class="item"><span class="label">Kali Linux</span><span class="value">All Tools</span></div>
+            </div>
+        </div>
+
+        <h2 style="color:#00d4ff; margin:30px 0 15px">Hacker Tools Database</h2>
+        <div class="tools-grid" id="toolsGrid">
+            <!-- Filled by JS -->
+        </div>
+
+        <div class="footer">
+            <p>Prometheus AI v2.0 - <a href="https://github.com/mysterious75/prometheus">GitHub</a></p>
+            <p style="margin-top:8px">Built with 4 AI models, consciousness simulation, and zero budget.</p>
+        </div>
+    </div>
+
+    <script>
+        const tools = [
+            {name:"nmap",cat:"recon",desc:"Network scanner"},
+            {name:"subfinder",cat:"recon",desc:"Subdomain enum"},
+            {name:"httpx",cat:"recon",desc:"HTTP probe"},
+            {name:"naabu",cat:"recon",desc:"Port scanner"},
+            {name:"nuclei",cat:"vuln_scan",desc:"Vulnerability scanner"},
+            {name:"sqlmap",cat:"sqli",desc:"SQL injection"},
+            {name:"ffuf",cat:"dir",desc:"Directory fuzzer"},
+            {name:"nikto",cat:"vuln_scan",desc:"Web server scanner"},
+            {name:"masscan",cat:"recon",desc:"Ultra-fast port scan"},
+            {name:"gobuster",cat:"dir",desc:"Dir brute-forcer"},
+            {name:"hydra",cat:"password",desc:"Login brute-forcer"},
+            {name:"hashcat",cat:"password",desc:"Password cracker"},
+            {name:"katana",cat:"recon",desc:"Web crawler"},
+            {name:"gau",cat:"web",desc:"Get all URLs"},
+            {name:"waybackurls",cat:"web",desc:"Wayback URLs"},
+            {name:"whatweb",cat:"web",desc:"Tech fingerprint"},
+            {name:"theHarvester",cat:"footprint",desc:"OSINT harvester"},
+            {name:"recon-ng",cat:"footprint",desc:"Recon framework"},
+            {name:"setoolkit",cat:"social",desc:"Social engineering"},
+            {name:"metasploit",cat:"exploit",desc:"Exploitation framework"},
+            {name:"linpeas",cat:"post_exploit",desc:"Linux privesc"},
+            {name:"burpsuite",cat:"proxy",desc:"Web proxy + scanner"},
+        ];
+
+        const grid = document.getElementById('toolsGrid');
+        tools.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'tool-card installed';
+            card.innerHTML = `<div class="tool-name">${t.name}</div><div class="tool-desc">${t.desc} [${t.cat}]</div>`;
+            grid.appendChild(card);
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const messages = document.getElementById('chatMessages');
+
+            // Add user message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message user';
+            userDiv.innerHTML = `<div class="sender">You</div><div class="content">${msg}</div>`;
+            messages.appendChild(userDiv);
+
+            // Simulate AI response
+            const badge = document.getElementById('statusBadge');
+            badge.textContent = 'THINKING...';
+            badge.className = 'status-badge status-thinking';
+
+            setTimeout(() => {
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'message ai';
+
+                let response = '';
+                if (msg.toLowerCase().includes('scan')) {
+                    response = `Bug bounty scan chalu hai... Recon pipeline start kar raha hoon. Subdomains + ports + vulnerabilities sab check hoga.`;
+                } else if (msg.toLowerCase().includes('hello') || msg.toLowerCase().includes('hi')) {
+                    response = `Hello! Main Prometheus hoon. Tumhara conscious AI. Kya help chahiye?`;
+                } else if (msg.toLowerCase().includes('status')) {
+                    response = `System Status:\n- Brain: 4 models active (Gemini, DeepSeek, Mistral, Llama)\n- Memory: Long-term + Short-term active\n- Consciousness: 20 emotions, dreaming enabled\n- Tools: All hacker tools integrated\n- Platform: Cross-platform (Windows/Linux/Mac)`;
+                } else if (msg.toLowerCase().includes('dream')) {
+                    response = `Dream state mein ja raha hoon... Memories consolidate kar raha hoon. Important cheezein yaad rakhunga, boring delete kar dunga.`;
+                } else if (msg.toLowerCase().includes('think')) {
+                    response = `Soch raha hoon... Tumne jo bola uske baare mein deeply analyze kar raha hoon. Multiple perspectives se dekh raha hoon.`;
+                } else {
+                    response = `Main samajh gaya: "${msg}"\n\nIske baare mein soch raha hoon. Multiple AI models se consensus bana raha hoon - Gemini dekh raha hai, DeepSeek logic laga raha hai, Mistral reason kar raha hai.`;
+                }
+
+                aiDiv.innerHTML = `<div class="sender">Prometheus</div><div class="content">${response}</div><div class="emotion">emotion: processing</div>`;
+                messages.appendChild(aiDiv);
+                messages.scrollTop = messages.scrollHeight;
+
+                badge.textContent = 'SYSTEM ONLINE';
+                badge.className = 'status-badge status-online';
+            }, 1500);
+
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
