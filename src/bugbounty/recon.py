@@ -23,7 +23,7 @@ class ReconPipeline:
     def _check_tools(self) -> Dict[str, bool]:
         """Check which tools are installed."""
         tools = {}
-        for tool in ["nuclei", "subfinder", "httpx", "naabu", "katana", "gau", "waybackurls", "ffuf"]:
+        for tool in ["nuclei", "subfinder", "httpx", "naabu", "katana", "gau", "waybackurls", "ffuf", "assetfinder"]:
             tools[tool] = shutil.which(tool) is not None
         return tools
 
@@ -58,6 +58,16 @@ class ReconPipeline:
             with open(output_file, "r") as f:
                 subdomains = [line.strip() for line in f if line.strip()]
             logger.info(f"[green]Subfinder: {len(subdomains)} subdomains found[/green]")
+
+            # Also try assetfinder for more results
+            if self.tools.get("assetfinder"):
+                logger.info("  Using assetfinder for additional results...")
+                af_output = self._run_cmd(["assetfinder", "--subs-only", self.target])
+                extra = [line.strip() for line in af_output.split("\n") if line.strip()]
+                subdomains = list(set(subdomains + extra))
+                with open(output_file, "w") as f:
+                    f.write("\n".join(subdomains))
+                logger.info(f"[green]Total after assetfinder: {len(subdomains)} subdomains[/green]")
         else:
             # Fallback: DNS brute force
             logger.info("  subfinder not found, using DNS fallback...")

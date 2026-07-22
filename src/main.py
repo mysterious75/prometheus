@@ -357,14 +357,17 @@ def main():
             continue
 
         if user_input.lower() == "tools":
-            from src.bugbounty.recon import ReconPipeline
-            r = ReconPipeline("check")
-            status = []
-            for tool, available in r.tools.items():
-                status.append(f"  {'[OK]' if available else '[MISSING]'} {tool}")
-            console.print("[bold]Bug Bounty Tools Status:[/bold]")
-            console.print("\n".join(status))
-            console.print("\nKali Linux mein install karo: ./install.sh")
+            from src.bugbounty.tool_checker import ToolChecker
+            checker = ToolChecker()
+            checker.print_status()
+            if checker.get_missing():
+                console.print(f"\n[yellow]Missing tools install karo:[/yellow]")
+                console.print(checker.get_install_commands())
+            elif checker.get_outdated():
+                console.print(f"\n[yellow]Outdated tools update karo:[/yellow]")
+                console.print(checker.get_install_commands())
+            else:
+                console.print(f"\n[green]Sab tools latest hain![/green]")
             continue
 
             response = prometheus.process(user_input)
