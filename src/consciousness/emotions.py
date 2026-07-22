@@ -53,7 +53,7 @@ class EmotionalIntelligence:
         Return only the emotion name (one word, lowercase).
         """
 
-        response = self.router.generate(prompt).strip().lower()
+        response = self.router.generate(prompt, role="consciousness").strip().lower()
 
         try:
             emotion = Emotion(response)

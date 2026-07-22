@@ -259,6 +259,9 @@ class Prometheus:
         elif intent.action == "status":
             return self._get_status()
 
+        elif intent.action == "providers":
+            return self.router.get_status()
+
         elif intent.action == "mood":
             return self._get_mood()
 
@@ -347,7 +350,7 @@ class Prometheus:
         Respond naturally, like a friend who is also an AI. Keep it concise (2-4 lines).
         """
 
-        return self.router.generate(prompt)
+        return self.router.generate(prompt, role="primary")
 
     def _run_scan(self, target: str) -> str:
         """Run bug bounty scan."""
@@ -770,7 +773,7 @@ Koi specific vulnerability dekhni hai?"""
     def _learn_from_kb(self, topic: str) -> str:
         """Learn from bug bounty knowledge base."""
         prompt = knowledge.get_learning_prompt(topic, count=3)
-        return self.router.generate(prompt)
+        return self.router.generate(prompt, role="primary")
 
     def _cheatsheet(self, vuln_type: str) -> str:
         """Get cheatsheet for a vulnerability type."""
@@ -896,9 +899,14 @@ Insights: {result.get('insights', 'None')[:200]}..."""
         conv_count = self.conversation_memory.count()
         platform = detector.info.os.value.upper()
 
+        # Get primary provider info
+        primary = self.router.get_provider("primary")
+        primary_name = primary.name if primary else "none"
+
         return f"""System Status:
   Platform: {platform}
-  Brain: {len(providers)} providers ({', '.join(providers)})
+  Primary AI: {primary_name}
+  Providers: {len(providers)} active ({', '.join(providers[:5])})
   Emotion: {emotional['current_emotion']} (dominant: {emotional['dominant_recent']})
   Conversations: {conv_count}
   Goals: {goals['total']} total, {goals['completed']} completed
@@ -960,7 +968,7 @@ Total emotional history: {state['history_length']} entries"""
 
         Be concise but informative.
         """
-        return self.router.generate(prompt)
+        return self.router.generate(prompt, role="primary")
 
     def _self_reflect(self, user_input: str, response: str) -> str:
         return self.router.self_reflect(response, user_input)

@@ -107,6 +107,7 @@ class IntentParser:
 
         # Status
         (r"(?:status|hal|kya\s+haal|system\s+info)", "status"),
+        (r"(?:providers?|ai\s*status|models?|keys?)", "providers"),
 
         # Emotional
         (r"(?:kaisa\s+feel|how\s+do\s+you\s+feel|mood\s+kaisa)", "mood"),
