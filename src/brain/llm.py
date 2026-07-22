@@ -112,26 +112,40 @@ class OpenAICompatibleProvider(LLMProvider):
     def generate(self, prompt: str, **kwargs) -> str:
         try:
             client = self._get_client()
+            # Free models have very limited tokens - use lower max_tokens
+            is_free = ":free" in (self.model or "") or "free" in (self.model or "").lower()
+            default_tokens = 200 if is_free else 1024
             response = client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=kwargs.get("max_tokens", 1024),
+                max_tokens=kwargs.get("max_tokens", default_tokens),
                 temperature=kwargs.get("temperature", 0.7)
             )
             tokens = response.usage.total_tokens if response.usage else 0
             self.total_tokens_used += tokens
             self.daily_tokens_used += tokens
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            # Some models return reasoning instead of content - extract actual content
+            if content is None or (isinstance(content, str) and len(content.strip()) == 0):
+                # Try to get from reasoning or other fields
+                msg = response.choices[0].message
+                if hasattr(msg, 'reasoning') and msg.reasoning:
+                    # Return last line of reasoning as it often contains the answer
+                    lines = msg.reasoning.strip().split('\n')
+                    content = lines[-1] if lines else msg.reasoning
+            return content or ""
         except Exception as e:
             return f"[{self.name} Error] {str(e)}"
 
     def generate_stream(self, prompt: str, **kwargs):
         try:
             client = self._get_client()
+            is_free = ":free" in (self.model or "")
+            default_tokens = 100 if is_free else 1024
             response = client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=kwargs.get("max_tokens", 1024),
+                max_tokens=kwargs.get("max_tokens", default_tokens),
                 temperature=kwargs.get("temperature", 0.7),
                 stream=True
             )

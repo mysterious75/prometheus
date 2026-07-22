@@ -40,7 +40,7 @@ class BugBountyKnowledge:
             # Main knowledge base
             kb_file = self.BASE_DIR / "knowledge_base.json"
             if kb_file.exists():
-                data = json.loads(kb_file.read_text(encoding="utf-8"))
+                data = json.loads(kb_file.read_text(encoding="utf-8"), strict=False)
                 if isinstance(data, dict):
                     self.knowledge_base = data.get("entries", data.get("data", []))
                 elif isinstance(data, list):
@@ -52,14 +52,21 @@ class BugBountyKnowledge:
             # Index
             index_file = self.BASE_DIR / "knowledge_index.json"
             if index_file.exists():
-                self.index = json.loads(index_file.read_text(encoding="utf-8"))
+                try:
+                    self.index = json.loads(index_file.read_text(encoding="utf-8"), strict=False)
+                except Exception:
+                    pass
 
             # Patterns
             for name in ["vuln_cheatsheet", "attack_playbooks", "payload_database",
                          "bounty_ranges", "tech_stack_patterns"]:
                 p_file = self.BASE_DIR / "patterns" / f"{name}.json"
                 if p_file.exists():
-                    setattr(self, name.replace("-", "_"), json.loads(p_file.read_text(encoding="utf-8")))
+                    try:
+                        data = json.loads(p_file.read_text(encoding="utf-8"), strict=False)
+                        setattr(self, name.replace("-", "_"), data)
+                    except Exception:
+                        pass
 
             self._loaded = True
         except Exception as e:
