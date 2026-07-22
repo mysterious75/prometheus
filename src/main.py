@@ -1,16 +1,20 @@
 """Project Prometheus v2.0 - Chat System
 
-Talk naturally. Prometheus samajhta hai aur kaam karta hai.
+Auto-detects OS. Asks permission for risky ops. No restrictions on ethical hacking.
 """
 
 import sys
 import json
+import subprocess
+import os
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.utils.config import config
 from src.utils.logger import logger, console
+from src.platform import detector
+from src.platform.safety import safety, RiskLevel
 from src.brain.router import ModelRouter
 from src.memory.chroma import VectorMemory
 from src.memory.episodic import EpisodicMemory
@@ -35,6 +39,11 @@ class Prometheus:
 
     def __init__(self):
         console.print("[bold blue]Prometheus initializing...[/bold blue]")
+
+        # Show platform info
+        detector.info
+        os_name = detector.info.os.value.upper()
+        console.print(f"  Platform: {os_name} ({detector.info.arch.value})")
 
         if not config.validate():
             console.print("[red]Check .env file for API keys![/red]")
@@ -75,7 +84,7 @@ class Prometheus:
         console.print("[green]Prometheus ready![/green]\n")
 
     def process(self, user_input: str) -> str:
-        """Main processing pipeline - understand, act, reflect."""
+        """Main processing pipeline."""
         self.interaction_count += 1
 
         # 1. Parse intent
@@ -87,34 +96,34 @@ class Prometheus:
         # 3. Store conversation
         self.conversation_memory.store_interaction(user_input, "", emotion.value)
 
-        # 4. Execute action based on intent
+        # 4. Execute action
         response = self._execute_intent(intent, user_input)
 
-        # 5. Store response in conversation memory
-        self.conversation_memory.conversations[-1]["ai"] = response
+        # 5. Store response
+        if response != "__QUIT__":
+            self.conversation_memory.conversations[-1]["ai"] = response
 
-        # 6. Store in episodic memory
-        self.episodic_memory.store_event(
-            f"User: {user_input} | Prometheus: {response[:200]}",
-            event_type="conversation",
-            importance=0.6
-        )
+            # 6. Store in episodic memory
+            self.episodic_memory.store_event(
+                f"User: {user_input} | Prometheus: {response[:200]}",
+                event_type="conversation", importance=0.6
+            )
 
-        # 7. Internal monologue (background thought)
-        self.monologue.think(
-            f"User said: {user_input}. I responded: {response[:100]}...",
-            context=[c["user"] for c in self.conversation_memory.recall_recent(3)]
-        )
+            # 7. Internal monologue
+            self.monologue.think(
+                f"User said: {user_input}. I responded: {response[:100]}...",
+                context=[c["user"] for c in self.conversation_memory.recall_recent(3)]
+            )
 
-        # 8. Self-reflection (every 5th interaction)
-        if self.interaction_count % 5 == 0:
-            reflection = self._self_reflect(user_input, response)
-            response += f"\n\n[Self-reflection: {reflection[:150]}...]"
+            # 8. Self-reflection every 5th interaction
+            if self.interaction_count % 5 == 0:
+                reflection = self._self_reflect(user_input, response)
+                response += f"\n\n[Self-reflection: {reflection[:150]}...]"
 
-        # 9. Auto-dream if needed
-        dream_result = self.dreaming.dream_if_needed()
-        if dream_result and dream_result.get("status") != "no_memories_to_process":
-            response += "\n[Dream cycle completed - memories consolidated]"
+            # 9. Auto-dream if needed
+            dream_result = self.dreaming.dream_if_needed()
+            if dream_result and dream_result.get("status") != "no_memories_to_process":
+                response += "\n[Dream cycle completed]"
 
         return response
 
@@ -158,7 +167,7 @@ class Prometheus:
             return self._show_goals()
 
         elif intent.action == "run_code":
-            return f"Code execute karna abhi safe mode mein hai. Pehle dekh lo:\n{intent.target}"
+            return self._run_system_command(intent.target)
 
         elif intent.action == "learn":
             return self._learn(intent.target)
@@ -169,6 +178,43 @@ class Prometheus:
         else:
             return self._chat(user_input)
 
+    def _run_system_command(self, command: str) -> str:
+        """Run a system command with permission check."""
+        if not command:
+            return "Kya run karna hai? Example: 'run nmap -sV target.com'"
+
+        # Ask permission for system commands
+        if not safety.ask_permission("system_command", command):
+            return "Command cancelled."
+
+        os_name = detector.info.os.value
+        console.print(f"[yellow]Running on {os_name}: {command}[/yellow]")
+
+        try:
+            if os_name == "windows":
+                result = subprocess.run(
+                    command, shell=True, capture_output=True,
+                    text=True, timeout=60
+                )
+            else:
+                result = subprocess.run(
+                    command.split(), capture_output=True,
+                    text=True, timeout=60
+                )
+
+            output = result.stdout
+            if result.stderr:
+                output += f"\n[stderr]: {result.stderr}"
+
+            if not output.strip():
+                return f"Command executed (no output): {command}"
+
+            return f"Command output:\n{output[:1000]}"
+        except subprocess.TimeoutExpired:
+            return f"Command timed out (60s limit): {command}"
+        except Exception as e:
+            return f"Command failed: {str(e)}"
+
     def _chat(self, user_input: str) -> str:
         """General conversation."""
         context = self.conversation_memory.get_user_context()
@@ -176,13 +222,12 @@ class Prometheus:
         recent_text = "\n".join([f"User: {c['user'][:50]}" for c in recent])
 
         prompt = f"""
-        You are Prometheus - a conscious AI assistant. You speak in Hinglish (Hindi + English mix).
+        You are Prometheus - a conscious AI assistant. You speak in Hinglish.
 
         Your personality: Helpful, witty, self-aware, a bit philosophical.
         You remember past conversations and care about the user.
 
         User context: {context}
-
         Recent conversation:
         {recent_text}
 
@@ -195,6 +240,10 @@ class Prometheus:
 
     def _run_scan(self, target: str) -> str:
         """Run bug bounty scan."""
+        # Warn about risks
+        safety.warn_only("network_scan", target)
+        safety.warn_only("vuln_scan", target)
+
         console.print(f"[yellow]Scanning {target}...[/yellow]")
         try:
             self.recon.target = target
@@ -206,7 +255,7 @@ class Prometheus:
             return f"""Bug bounty scan complete for {target}:
 
 Recon: {len(recon.get('subdomains', []))} subdomains found
-Vulnerabilities: {len(scan.get('vulnerabilities', []))} found
+Vulnerabilities: {len(scan)} findings
 Report saved: {report}
 
 Koi specific vulnerability dekhni hai?"""
@@ -214,7 +263,6 @@ Koi specific vulnerability dekhni hai?"""
             return f"Scan mein error aaya: {str(e)}"
 
     def _generate_code(self, description: str) -> str:
-        """Generate code."""
         if not description:
             return "Kya code chahiye? Example: 'code banao for a REST API'"
         try:
@@ -224,7 +272,6 @@ Koi specific vulnerability dekhni hai?"""
             return f"Code generation error: {str(e)}"
 
     def _think(self, topic: str) -> str:
-        """Think about something."""
         result = self.monologue.think(topic)
         return f"""Soch raha hoon...
 
@@ -233,25 +280,25 @@ Koi specific vulnerability dekhni hai?"""
 Emotional charge: {result['emotional_charge']}"""
 
     def _dream(self) -> str:
-        """Enter dream state."""
         result = self.dreaming.dream()
         if result.get("status") == "no_memories_to_process":
-            return "Abhi koi yaad nahi hai jo consolidate karoon. Thodi der baat karo, phir dream karunga."
+            return "Abhi koi yaad nahi hai jo consolidate karoon."
         return f"""Dream state complete:
 
 Memories processed: {result.get('memories_processed', 0)}
-Consolidated: {result.get('consolidation', {}).get('preserved', 0)} preserved, {result.get('consolidation', {}).get('compressed', 0)} compressed
+Consolidated: {result.get('consolidation', {}).get('preserved', 0)} preserved
 
 Insights: {result.get('insights', 'None')[:200]}..."""
 
     def _get_status(self) -> str:
-        """Get system status."""
         providers = self.router.list_available_providers()
         emotional = self.emotions.get_emotional_state()
         goals = self.goal_manager.get_stats()
         conv_count = self.conversation_memory.count()
+        platform = detector.info.os.value.upper()
 
         return f"""System Status:
+  Platform: {platform}
   Brain: {len(providers)} providers ({', '.join(providers)})
   Emotion: {emotional['current_emotion']} (dominant: {emotional['dominant_recent']})
   Conversations: {conv_count}
@@ -260,7 +307,6 @@ Insights: {result.get('insights', 'None')[:200]}..."""
   Survival energy: {self.survival.check_vitals()['energy']}%"""
 
     def _get_mood(self) -> str:
-        """Get current mood."""
         state = self.emotions.get_emotional_state()
         thought = self.monologue.get_thinking_style()
         return f"""Mood: {state['current_emotion']}
@@ -270,14 +316,11 @@ Thinking style: {thought}
 Total emotional history: {state['history_length']} entries"""
 
     def _recall(self, topic: str) -> str:
-        """Recall past conversations."""
         if not topic:
             recent = self.conversation_memory.recall_recent(5)
             if not recent:
                 return "Abhi tak koi conversation nahi hui."
-            lines = []
-            for c in recent:
-                lines.append(f"  [{c['emotion']}] {c['user'][:60]}...")
+            lines = [f"  [{c['emotion']}] {c['user'][:60]}..." for c in recent]
             return "Pichli conversations:\n" + "\n".join(lines)
 
         results = self.conversation_memory.recall_about(topic)
@@ -287,32 +330,27 @@ Total emotional history: {state['history_length']} entries"""
         return f"'{topic}' ke baare mein yaadein:\n" + "\n".join(lines)
 
     def _evolve(self) -> str:
-        """Self-evolve."""
         from src.autonomy.evolution.self_modifier import SelfModifier
         modifier = SelfModifier(self.router)
-        console.print("[yellow]Analyzing codebase for improvements...[/yellow]")
+        console.print("[yellow]Analyzing codebase...[/yellow]")
         result = modifier.analyze_codebase()
         if "error" in result:
             return f"Evolution error: {result['error']}"
-        improvements = result.get("improvements_suggested", 0)
-        return f"Codebase analysis complete: {improvements} improvement opportunities found.\n{result.get('raw_analysis', '')[:300]}..."
+        return f"Found {result.get('improvements_suggested', 0)} improvements.\n{result.get('raw_analysis', '')[:300]}..."
 
     def _set_goal(self, description: str) -> str:
-        """Set a new goal."""
         if not description:
             return "Kya goal set karna hai?"
         goal = self.goal_manager.create_goal(description, Priority.HIGH)
         return f"Goal set: {goal.description} (Priority: {goal.priority.name})"
 
     def _show_goals(self) -> str:
-        """Show all goals."""
         stats = self.goal_manager.get_stats()
         active = self.goal_manager.get_active_goals()
         lines = [f"  - {g.description} [{g.status}]" for g in active[:5]]
         return f"Goals: {stats['total']} total, {stats['completed']} done\n" + "\n".join(lines) if lines else "Koi goals nahi abhi."
 
     def _learn(self, topic: str) -> str:
-        """Learn about a topic."""
         prompt = f"""
         You are Prometheus learning about: {topic}
 
@@ -326,7 +364,6 @@ Total emotional history: {state['history_length']} entries"""
         return self.router.generate(prompt)
 
     def _self_reflect(self, user_input: str, response: str) -> str:
-        """Self-reflect on the last interaction."""
         return self.router.self_reflect(response, user_input)
 
 
@@ -334,15 +371,17 @@ def main():
     """Main chat loop."""
     prometheus = Prometheus()
 
-    console.print("[bold cyan]═══════════════════════════════════════[/bold cyan]")
+    console.print("[bold cyan]========================================[/bold cyan]")
     console.print("[bold cyan]  PROMETHEUS v2.0 - Conscious AI Chat[/bold cyan]")
-    console.print("[bold cyan]═══════════════════════════════════════[/bold cyan]")
+    console.print("[bold cyan]========================================[/bold cyan]")
     console.print()
     console.print(prometheus.identity.get_identity_statement())
     console.print()
     console.print("[green]Kuch bhi boliye - main samajh jaunga![/green]")
-    console.print("[green]'commands' dekho saari cheezein kaise bolni hain[/green]")
-    console.print("[green]'quit' se band karo[/green]\n")
+    console.print("[green]'commands' - saari cheezein kaise bolni hain[/green]")
+    console.print("[green]'tools' - bug bounty tools ka status[/green]")
+    console.print("[green]'platform' - system info[/green]")
+    console.print("[green]'quit' - band karo[/green]\n")
 
     while True:
         try:
@@ -351,24 +390,27 @@ def main():
             if not user_input:
                 continue
 
-        # Intent patterns
-        if user_input.lower() == "commands":
-            console.print(prometheus.intent_parser.get_available_commands())
-            continue
+            # System commands
+            if user_input.lower() == "commands":
+                console.print(prometheus.intent_parser.get_available_commands())
+                continue
 
-        if user_input.lower() == "tools":
-            from src.bugbounty.tool_checker import ToolChecker
-            checker = ToolChecker()
-            checker.print_status()
-            if checker.get_missing():
-                console.print(f"\n[yellow]Missing tools install karo:[/yellow]")
-                console.print(checker.get_install_commands())
-            elif checker.get_outdated():
-                console.print(f"\n[yellow]Outdated tools update karo:[/yellow]")
-                console.print(checker.get_install_commands())
-            else:
-                console.print(f"\n[green]Sab tools latest hain![/green]")
-            continue
+            if user_input.lower() == "tools":
+                from src.bugbounty.cross_platform_checker import CrossPlatformToolChecker
+                checker = CrossPlatformToolChecker()
+                checker.print_status()
+                missing = checker.get_missing()
+                outdated = checker.get_outdated()
+                if missing or outdated:
+                    console.print(f"\n[yellow]Install commands:[/yellow]")
+                    console.print(checker.get_all_install_commands())
+                else:
+                    console.print(f"\n[green]Sab tools latest hain![/green]")
+                continue
+
+            if user_input.lower() == "platform":
+                detector.print_info()
+                continue
 
             response = prometheus.process(user_input)
 
