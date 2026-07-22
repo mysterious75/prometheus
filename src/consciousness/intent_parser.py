@@ -24,9 +24,35 @@ class IntentParser:
 
     # Intent patterns - order matters (first match wins)
     PATTERNS = [
-        # Bug Bounty
+        # Bug Bounty - Full recon
+        (r"(?:full\s+recon|recon\s+full|complete\s+recon)\s+(.+)", "full_recon"),
+        (r"(?:full\s+recon|recon\s+full|complete\s+recon)", "full_recon"),
+
+        # Bug Bounty - Scan
         (r"(?:scan|recon|bug\s*bounty|vulnerability)\s+(?:on\s+)?(.+)", "bugbounty_scan"),
         (r"(?:nuclei|scan)\s+(.+)", "bugbounty_scan"),
+
+        # Vulnerability Scanner (automated SQLi/XSS/SSRF)
+        (r"(?:exploit|vuln\s*scan|auto\s*scan)\s+(.+)", "vuln_scan"),
+        (r"(?:exploit|vuln\s*scan|auto\s*scan)", "vuln_scan"),
+
+        # Proxy Intercept
+        (r"(?:intercept|proxy)\s+(.+)", "proxy_intercept"),
+        (r"(?:intercept|proxy)", "proxy_stats"),
+
+        # Replay
+        (r"(?:replay)\s+(\d+)", "proxy_replay"),
+
+        # OSINT
+        (r"(?:osint|recon|intel|info)\s+(.+)", "osint"),
+        (r"(?:osint|recon|intel|info)", "osint_help"),
+
+        # Brute Force
+        (r"(?:brute|brute\s*force|crack)\s+(.+)", "brute_force"),
+        (r"(?:brute|brute\s*force|crack)", "brute_help"),
+
+        # Browser
+        (r"(?:browse|open|visit|khol)\s+(.+)", "browse"),
 
         # Code Generation
         (r"(?:generate|banao|banao|create|likh|write)\s+(?:code|program|script)?\s*(?:for|of|to)?\s*(.+)", "generate_code"),
@@ -96,17 +122,40 @@ class IntentParser:
         return """
 Mujhe ye sab commands samajh aa jaate hain:
 
-  BOLIYE                          KAAM KYA HOGA
+  BUG BOUNTY & SCANNING
   ─────────────────────────────── ──────────────────────────────
   "scan google.com"               Bug bounty scan chalega
-  "code banao for todo app"       Code generate karega
+  "full recon google.com"         Full recon + vuln scan
+  "exploit google.com"            Auto SQLi/XSS/SSRF scan
+  "vuln scan http://x.com"       Vulnerability scan
+
+  OSINT & RECON
+  "osint username123"             Username 20+ platforms pe dhundhega
+  "osint google.com"              Domain OSINT - subdomains, emails
+  "recon target.com"              Full OSINT recon
+
+  PROXY & INTERCEPT
+  "intercept GET http://x.com"   Request intercept karega
+  "replay 1"                      Last request replay
+  "proxy"                         Proxy stats
+
+  BRUTE FORCE
+  "brute http://x.com login"     OSINT-powered brute force
+  "crack http://x.com"           Smart password attack
+
+  BROWSER
+  "browse http://x.com"          Cloudflare bypass ke saath khol
+
+  CODE & THINKING
+  "code banao for todo app"      Code generate karega
   "soch about AI"                 Sochega aur batayega
   "dream"                         Yaadein compress karega
+
+  SYSTEM
   "status"                        System status dega
   "kaisa feel kar raha hai"       Apna mood batayega
   "yaad karo"                     Pichli baatein yaad karega
   "evolve"                        Khud ko upgrade karega
-  "goal set karo"                 Naya goal banayega
   "seekh machine learning"        Research karega
   "bye"                           Band karega
 

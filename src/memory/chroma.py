@@ -10,8 +10,52 @@ try:
     CHROMA_AVAILABLE = True
 except ImportError:
     CHROMA_AVAILABLE = False
+    chromadb = None
 
 from ..utils.logger import logger
+
+
+class _InMemoryCollection:
+    """Minimal in-memory collection fallback when chromadb is not installed."""
+
+    def __init__(self, name: str):
+        self.name = name
+        self._ids = []
+        self._docs = []
+        self._metas = []
+
+    def add(self, documents=None, metadatas=None, ids=None):
+        for i, doc in enumerate(documents or []):
+            self._ids.append(ids[i] if ids else f"mem_{len(self._ids)+1}")
+            self._docs.append(doc)
+            self._metas.append((metadatas or [{}])[i] if metadatas else {})
+
+    def get(self, ids=None):
+        return {"ids": list(self._ids), "documents": list(self._docs), "metadatas": list(self._metas)}
+
+    def query(self, query_texts=None, n_results=5):
+        n = min(n_results, len(self._ids))
+        return {
+            "ids": [self._ids[:n]],
+            "documents": [self._docs[:n]],
+            "metadatas": [self._metas[:n]],
+            "distances": [[0.0] * n],
+        }
+
+    def delete(self, ids=None):
+        for fid in (ids or []):
+            if fid in self._ids:
+                idx = self._ids.index(fid)
+                self._ids.pop(idx)
+                self._docs.pop(idx)
+                self._metas.pop(idx)
+
+
+class _InMemoryClient:
+    """Minimal in-memory client fallback."""
+
+    def get_or_create_collection(self, name, metadata=None):
+        return _InMemoryCollection(name)
 
 
 class VectorMemory:
@@ -20,7 +64,7 @@ class VectorMemory:
     def __init__(self, host: str = "localhost", port: int = 8000):
         if not CHROMA_AVAILABLE:
             logger.warning("[yellow]ChromaDB not installed. Using in-memory fallback.[/yellow]")
-            self.client = chromadb.Client()
+            self.client = _InMemoryClient()
         else:
             try:
                 self.client = chromadb.HttpClient(host=host, port=port)

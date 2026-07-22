@@ -32,6 +32,11 @@ from src.consciousness.dreaming import DreamingSystem
 from src.consciousness.monologue import InternalMonologue
 from src.consciousness.conversation_memory import ConversationMemory
 from src.consciousness.intent_parser import IntentParser
+from src.web.proxy import ProxyInterceptor
+from src.web.vuln_scanner import VulnScanner as WebVulnScanner
+from src.web.osint import OSINTFinder
+from src.web.brute_force import SmartBruteForce
+from src.web.browser import BrowserAutomation
 
 
 class Prometheus:
@@ -62,6 +67,13 @@ class Prometheus:
         self.recon = ReconPipeline(target="localhost")
         self.scanner = VulnerabilityScanner(target="localhost")
         self.reporter = BugBountyReporter()
+
+        # Web tools
+        self.proxy = ProxyInterceptor()
+        self.web_scanner = WebVulnScanner()
+        self.osint = OSINTFinder()
+        self.brute = SmartBruteForce()
+        self.browser = BrowserAutomation()
 
         # Developer
         self.codegen = CodeGenerator(self.router)
@@ -135,6 +147,48 @@ class Prometheus:
             if not target:
                 return "Kaunsa target scan karna hai? Example: 'scan google.com'"
             return self._run_scan(target)
+
+        elif intent.action == "full_recon":
+            target = intent.target.strip()
+            if not target:
+                return "Full recon ke liye target do: 'full recon google.com'"
+            return self._full_recon(target)
+
+        elif intent.action == "vuln_scan":
+            target = intent.target.strip()
+            if not target:
+                return "Vuln scan ke liye target do: 'exploit http://target.com'"
+            return self._vuln_scan(target)
+
+        elif intent.action == "proxy_intercept":
+            return self._proxy_intercept(intent.target)
+
+        elif intent.action == "proxy_replay":
+            return self._proxy_replay(intent.target)
+
+        elif intent.action == "proxy_stats":
+            return self._proxy_stats()
+
+        elif intent.action == "osint":
+            target = intent.target.strip()
+            if not target:
+                return "OSINT ke liye target do: 'osint username123' ya 'osint google.com'"
+            return self._run_osint(target)
+
+        elif intent.action == "osint_help":
+            return "OSINT usage: 'osint username123' (username search) ya 'osint google.com' (domain recon)"
+
+        elif intent.action == "brute_force":
+            target = intent.target.strip()
+            if not target:
+                return "Brute force ke liye target do: 'brute http://target.com login'"
+            return self._run_brute(target)
+
+        elif intent.action == "brute_help":
+            return "Brute force usage: 'brute http://target.com login' (URL + optional username)"
+
+        elif intent.action == "browse":
+            return self._browse(intent.target)
 
         elif intent.action == "generate_code":
             return self._generate_code(intent.target)
@@ -261,6 +315,228 @@ Report saved: {report}
 Koi specific vulnerability dekhni hai?"""
         except Exception as e:
             return f"Scan mein error aaya: {str(e)}"
+
+    def _full_recon(self, target: str) -> str:
+        """Full recon: OSINT + vuln scan + report."""
+        safety.warn_only("network_scan", target)
+        safety.warn_only("vuln_scan", target)
+
+        console.print(f"[yellow]Full recon on {target}...[/yellow]")
+        try:
+            # OSINT
+            info = self.osint.gather_target_info(target)
+
+            # Vuln scan
+            url = f"https://{target}"
+            findings = self.web_scanner.scan_full(url)
+
+            report = {
+                "target": target,
+                "osint": {
+                    "subdomains": info.get("subdomains", []),
+                    "emails": info.get("emails", []),
+                    "tech_stack": info.get("tech_stack", []),
+                },
+                "vulns": {
+                    "total": len(findings),
+                    "critical": len([f for f in findings if f.severity == "CRITICAL"]),
+                    "high": len([f for f in findings if f.severity == "HIGH"]),
+                }
+            }
+
+            lines = [f"Full Recon Report: {target}", ""]
+            lines.append(f"Subdomains: {len(info.get('subdomains', []))}")
+            lines.append(f"Emails: {len(info.get('emails', []))}")
+            lines.append(f"Tech: {', '.join(info.get('tech_stack', [])[:3])}")
+            lines.append(f"Vulns: {report['vulns']['total']} ({report['vulns']['critical']} critical, {report['vulns']['high']} high)")
+
+            if findings:
+                lines.append("")
+                lines.append("Top findings:")
+                for f in findings[:5]:
+                    lines.append(f"  [{f.severity}] {f.vuln_type}: {f.url}")
+
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Full recon error: {str(e)}"
+
+    def _vuln_scan(self, target: str) -> str:
+        """Automated SQLi/XSS/SSRF scan."""
+        safety.warn_only("vuln_scan", target)
+
+        if not target.startswith("http"):
+            target = f"https://{target}"
+
+        console.print(f"[yellow]Vuln scan on {target}...[/yellow]")
+        try:
+            findings = self.web_scanner.scan_full(target)
+
+            if not findings:
+                return f"No vulnerabilities found on {target}. Clean hai!"
+
+            lines = [f"Vuln Scan Results: {target}", ""]
+            for f in findings:
+                lines.append(f"[{f.severity}] {f.vuln_type}")
+                lines.append(f"  URL: {f.url}")
+                lines.append(f"  Payload: {f.payload[:80]}")
+                lines.append(f"  Fix: {f.remediation}")
+                lines.append("")
+
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Vuln scan error: {str(e)}"
+
+    def _proxy_intercept(self, target: str) -> str:
+        """Intercept an HTTP request."""
+        parts = target.split(maxsplit=1)
+        if len(parts) < 2:
+            return "Usage: 'intercept GET http://target.com' ya 'intercept POST http://target.com'"
+
+        method = parts[0].upper()
+        url = parts[1]
+
+        console.print(f"[yellow]Intercepting {method} {url}...[/yellow]")
+        try:
+            req = self.proxy.intercept(method, url, notes=f"Manual intercept")
+            sent = self.proxy.send(req.id)
+
+            lines = [
+                f"Request #{req.id}: {method} {url}",
+                f"Status: {sent.response_status}",
+                f"Time: {sent.response_time_ms:.0f}ms",
+                f"Response size: {len(sent.response_body)} bytes",
+                "",
+                "Response preview:",
+                sent.response_body[:500],
+            ]
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Proxy error: {str(e)}"
+
+    def _proxy_replay(self, request_id_str: str) -> str:
+        """Replay a request."""
+        try:
+            request_id = int(request_id_str)
+        except ValueError:
+            return "Usage: 'replay 1' (request ID number)"
+
+        console.print(f"[yellow]Replaying request #{request_id}...[/yellow]")
+        try:
+            result = self.proxy.replay(request_id)
+            return f"Replay #{request_id}: Status {result.response_status}, Time: {result.response_time_ms:.0f}ms\n{result.response_body[:500]}"
+        except ValueError:
+            return f"Request #{request_id} nahi mila."
+        except Exception as e:
+            return f"Replay error: {str(e)}"
+
+    def _proxy_stats(self) -> str:
+        """Show proxy stats."""
+        stats = self.proxy.get_stats()
+        return f"""Proxy Stats:
+  Intercepted: {stats['total_intercepted']}
+  Modified: {stats['modified']}
+  Rules: {stats['rules']}
+  Avg response: {stats['avg_response_ms']:.0f}ms"""
+
+    def _run_osint(self, target: str) -> str:
+        """Run OSINT on target."""
+        console.print(f"[yellow]OSINT on {target}...[/yellow]")
+        try:
+            # Check if it looks like a domain
+            if "." in target and " " not in target:
+                info = self.osint.gather_target_info(target)
+                lines = [f"OSINT Report: {target}", ""]
+                lines.append(f"Subdomains ({len(info.get('subdomains', []))}):")
+                for sub in info.get("subdomains", [])[:10]:
+                    lines.append(f"  - {sub}")
+                lines.append(f"\nEmails ({len(info.get('emails', []))}):")
+                for email in info.get("emails", [])[:10]:
+                    lines.append(f"  - {email}")
+                if info.get("tech_stack"):
+                    lines.append(f"\nTech: {', '.join(info['tech_stack'])}")
+                return "\n".join(lines)
+            else:
+                # Username search
+                profiles = self.osint.find_username(target)
+                found = [p for p in profiles if p.exists]
+                lines = [f"Username OSINT: {target}", f"Found on {len(found)}/{len(profiles)} platforms:", ""]
+                for p in found:
+                    lines.append(f"  [+] {p.platform}: {p.url}")
+                not_found = [p for p in profiles if not p.exists]
+                if not_found:
+                    lines.append(f"\nNot found on: {', '.join(p.platform for p in not_found[:5])}")
+                return "\n".join(lines)
+        except Exception as e:
+            return f"OSINT error: {str(e)}"
+
+    def _run_brute(self, target: str) -> str:
+        """Run OSINT-powered brute force."""
+        parts = target.split()
+        url = parts[0] if parts else ""
+        username = parts[1] if len(parts) > 1 else "admin"
+
+        if not url:
+            return "Usage: 'brute http://target.com login'"
+
+        if not url.startswith("http"):
+            url = f"http://{url}"
+
+        safety.warn_only("brute_force", url)
+
+        console.print(f"[yellow]Smart brute force on {url} (user: {username})...[/yellow]")
+        try:
+            # First do OSINT
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            domain = parsed.hostname or url
+            info = self.osint.gather_target_info(domain)
+
+            # Generate smart passwords
+            passwords = self.brute.generate_passwords(info)
+            console.print(f"Generated {len(passwords)} passwords from OSINT")
+
+            # Try login
+            results = self.brute.smart_brute(url, [username], info, max_attempts=50)
+
+            if results:
+                lines = ["CRACKED!", ""]
+                for r in results:
+                    lines.append(f"  Username: {r.username}")
+                    lines.append(f"  Password: {r.password}")
+                    lines.append(f"  Status: {r.status_code}")
+                return "\n".join(lines)
+            else:
+                return f"Brute force complete. {self.brute.get_stats()['total_attempts']} attempts, no credentials found."
+        except Exception as e:
+            return f"Brute force error: {str(e)}"
+
+    def _browse(self, url: str) -> str:
+        """Browse a URL with Cloudflare bypass."""
+        if not url.startswith("http"):
+            url = f"https://{url}"
+
+        console.print(f"[yellow]Browsing {url} (Cloudflare bypass)...[/yellow]")
+        try:
+            import asyncio
+            result = asyncio.run(self._async_browse(url))
+            return result
+        except Exception as e:
+            return f"Browser error: {str(e)}"
+
+    async def _async_browse(self, url: str) -> str:
+        """Async browser navigation."""
+        started = await self.browser.start(headless=True)
+        if not started:
+            return "Playwright install nahi hai. 'pip install playwright && playwright install' chalao."
+
+        try:
+            result = await self.browser.navigate(url)
+            if result.get("status") == "ok":
+                return f"Page: {result.get('title', 'N/A')}\nURL: {result.get('url', url)}\n\nContent preview:\n{result.get('content', '')[:1000]}"
+            else:
+                return f"Browser failed: {result.get('error', 'unknown')}"
+        finally:
+            await self.browser.close()
 
     def _generate_code(self, description: str) -> str:
         if not description:
@@ -396,28 +672,28 @@ def main():
                 console.print(prometheus.intent_parser.get_available_commands())
                 continue
 
-        if user_input.lower() == "tools":
-            from src.bugbounty.cross_platform_checker import CrossPlatformToolChecker
-            checker = CrossPlatformToolChecker()
-            checker.print_status()
-            missing = checker.get_missing()
-            outdated = checker.get_outdated()
-            if missing or outdated:
-                console.print(f"\n[yellow]Install commands:[/yellow]")
-                console.print(checker.get_all_install_commands())
-            else:
-                console.print(f"\n[green]Sab tools latest hain![/green]")
-            continue
+            if user_input.lower() == "tools":
+                from src.bugbounty.cross_platform_checker import CrossPlatformToolChecker
+                checker = CrossPlatformToolChecker()
+                checker.print_status()
+                missing = checker.get_missing()
+                outdated = checker.get_outdated()
+                if missing or outdated:
+                    console.print(f"\n[yellow]Install commands:[/yellow]")
+                    console.print(checker.get_all_install_commands())
+                else:
+                    console.print(f"\n[green]Sab tools latest hain![/green]")
+                continue
 
-        if user_input.lower() == "hacker":
-            from src.bugbounty.hacker_tools import HackerTools
-            ht = HackerTools()
-            ht.print_status()
-            continue
+            if user_input.lower() == "hacker":
+                from src.bugbounty.hacker_tools import HackerTools
+                ht = HackerTools()
+                ht.print_status()
+                continue
 
-        if user_input.lower() == "platform":
-            detector.print_info()
-            continue
+            if user_input.lower() == "platform":
+                detector.print_info()
+                continue
 
             response = prometheus.process(user_input)
 
