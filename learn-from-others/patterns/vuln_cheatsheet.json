@@ -1,0 +1,198 @@
+{
+  "vulnerability_types": {
+    "SQL Injection": {
+      "description": "Injection of SQL queries through user input, allowing unauthorized data access or manipulation",
+      "severity_range": ["Critical", "High", "Medium"],
+      "bounty_range_usd": [500, 25000],
+      "key_indicators": ["Database error messages", "Unusual response times", "Boolean differences in responses"],
+      "testing_approach": "Inject payloads into input fields, URL parameters, headers, and cookies; observe response differences",
+      "common_locations": ["Login forms", "Search functionality", "API endpoints", "URL parameters", "Cookie values"],
+      "encoding_bypasses": ["URL encoding", "Double encoding", "Unicode", "Hex encoding", "Case variation"]
+    },
+    "Cross-Site Scripting (XSS)": {
+      "description": "Injection of malicious scripts into web pages viewed by other users",
+      "severity_range": ["High", "Medium", "Low"],
+      "bounty_range_usd": [100, 10000],
+      "key_indicators": ["Reflected input in page source", "No Content-Security-Policy headers", "Event handler injection possible"],
+      "testing_approach": "Test input reflection, bypass filters using various encoding and obfuscation techniques",
+      "common_locations": ["Search fields", "Comment sections", "User profiles", "Error messages", "URL fragments"],
+      "encoding_bypasses": ["HTML entities", "JavaScript escape sequences", "Base64", "CSS expressions", "SVG injection"]
+    },
+    "Server-Side Request Forgery (SSRF)": {
+      "description": "Making the server perform unintended requests to internal or external resources",
+      "severity_range": ["Critical", "High", "Medium"],
+      "bounty_range_usd": [1000, 25000],
+      "key_indicators": ["URL parameters that fetch resources", "Webhook functionality", "File import via URL"],
+      "testing_approach": "Test URL parameters with internal IPs, cloud metadata endpoints, and protocol handlers",
+      "common_locations": ["URL import features", "Webhook configurations", "PDF generators", "Thumbnail generators", "API integrations"],
+      "encoding_bypasses": ["IP representation (decimal, octal, hex)", "DNS rebinding", "Redirect bypass", "IPv6 notation"]
+    },
+    "Insecure Direct Object Reference (IDOR)": {
+      "description": "Accessing resources by manipulating identifiers without proper authorization checks",
+      "severity_range": ["High", "Medium", "Low"],
+      "bounty_range_usd": [200, 10000],
+      "key_indicators": ["Sequential IDs in URLs/API", "Predictable resource paths", "No ownership verification"],
+      "testing_approach": "Enumerate object references, test access with different user sessions, check for authorization bypass",
+      "common_locations": ["User profiles", "Document access", "API endpoints", "Download links", "Account settings"],
+      "encoding_bypasses": ["UUID prediction", "Base64 encoded IDs", "Sequential number enumeration", "Hash manipulation"]
+    },
+    "Remote Code Execution (RCE)": {
+      "description": "Executing arbitrary code on the target server through vulnerabilities",
+      "severity_range": ["Critical"],
+      "bounty_range_usd": [5000, 50000],
+      "key_indicators": ["Command injection points", "Deserialization vulnerabilities", "Template injection leading to code exec"],
+      "testing_approach": "Test for command injection, unsafe deserialization, template injection, file upload with code execution",
+      "common_locations": ["Admin panels", "File processors", "Import/export features", "API endpoints", "Backup utilities"],
+      "encoding_bypasses": ["Shell metacharacters", "Backtick execution", "Variable substitution", "Newline injection"]
+    },
+    "Authentication Bypass": {
+      "description": "Circumventing authentication mechanisms to access protected resources",
+      "severity_range": ["Critical", "High"],
+      "bounty_range_usd": [2000, 30000],
+      "key_indicators": ["Multiple authentication endpoints", "Session management flaws", "Logic vulnerabilities in auth flow"],
+      "testing_approach": "Map authentication flow, test for bypass in alternative endpoints, manipulate session tokens",
+      "common_locations": ["Login pages", "API authentication", "Password reset flows", "SSO implementations", "Admin panels"],
+      "encoding_bypasses": ["Case variation in endpoints", "Parameter pollution", "HTTP method manipulation"]
+    },
+    "Privilege Escalation": {
+      "description": "Elevating access from lower to higher privilege levels",
+      "severity_range": ["Critical", "High"],
+      "bounty_range_usd": [1500, 25000],
+      "key_indicators": ["Role-based access controls", "Parameter manipulation", "Function-level access control missing"],
+      "testing_approach": "Enumerate user roles, test parameter manipulation, check function-level authorization",
+      "common_locations": ["User management", "Admin functions", "API endpoints", "Configuration panels", "Role assignments"],
+      "encoding_bypasses": ["Role parameter injection", "Header manipulation", "Cookie modification"]
+    },
+    "XML External Entity (XXE)": {
+      "description": "Exploiting XML parsers to access internal files or perform SSRF",
+      "severity_range": ["Critical", "High", "Medium"],
+      "bounty_range_usd": [500, 15000],
+      "key_indicators": ["XML processing endpoints", "File upload accepting XML", "SOAP API endpoints"],
+      "testing_approach": "Inject XML entities, test for file read and SSRF capabilities, check parser configurations",
+      "common_locations": ["File upload", "SOAP APIs", "RSS feeds", "Document processors", "SVG handling"],
+      "encoding_bypasses": ["UTF-8 BOM", "Parameter entities", "External DTD references", "XXE via SVG"]
+    },
+    "Cross-Site Request Forgery (CSRF)": {
+      "description": "Tricking authenticated users into performing unintended actions",
+      "severity_range": ["High", "Medium"],
+      "bounty_range_usd": [200, 5000],
+      "key_indicators": ["State-changing operations without CSRF tokens", "SameSite cookies not set", "Origin validation missing"],
+      "testing_approach": "Identify state-changing operations, test for anti-CSRF protections, craft PoC pages",
+      "common_locations": ["Account settings", "Email changes", "Password modifications", "Admin actions", "Data deletion"],
+      "encoding_bypasses": ["Origin header bypass", "Referer header bypass", "Content-Type manipulation"]
+    },
+    "File Upload": {
+      "description": "Uploading malicious files that can lead to code execution or other attacks",
+      "severity_range": ["Critical", "High", "Medium"],
+      "bounty_range_usd": [500, 20000],
+      "key_indicators": ["File upload functionality", "Insufficient validation", "Web-accessible upload directories"],
+      "testing_approach": "Test file type validation, extension bypass, content-type checks, double extensions",
+      "common_locations": ["Profile pictures", "Document uploads", "Import features", "Media galleries", "Backup systems"],
+      "encoding_bypasses": ["Double extensions", "Null bytes", "Content-Type bypass", "Case variation", "Magic bytes"]
+    },
+    "Subdomain Takeover": {
+      "description": "Taking control of subdomains pointing to unclaimed third-party services",
+      "severity_range": ["High", "Medium"],
+      "bounty_range_usd": [500, 10000],
+      "key_indicators": ["Dangling CNAME records", "Unclaimed services (GitHub Pages, Heroku, S3)"],
+      "testing_approach": "Enumerate subdomains, check DNS records, verify service claim status",
+      "common_locations": ["Cloud-hosted subdomains", "Third-party service integrations", "Legacy services"],
+      "encoding_bypasses": ["N/A - primarily enumeration based"]
+    },
+    "Open Redirect": {
+      "description": "Redirecting users to arbitrary external sites through vulnerable parameters",
+      "severity_range": ["Medium", "Low"],
+      "bounty_range_usd": [100, 2000],
+      "key_indicators": ["URL parameters used in redirects", "No allowlist validation", "Parameter manipulation affects redirect"],
+      "testing_approach": "Test redirect parameters with various payloads, check for filter bypasses",
+      "common_locations": ["Login/logout redirects", "OAuth callbacks", "Error pages", "Next parameter in URLs"],
+      "encoding_bypasses": ["URL encoding", "Double slashes", "Backslash", "Null bytes", "Protocol-relative URLs"]
+    },
+    "Business Logic": {
+      "description": "Exploiting flaws in application logic to manipulate intended behavior",
+      "severity_range": ["Critical", "High", "Medium", "Low"],
+      "bounty_range_usd": [200, 25000],
+      "key_indicators": ["Price manipulation", "Race conditions", "State machine flaws", "Coupon/discount abuse"],
+      "testing_approach": "Map business processes, test step ordering, manipulate values, check state transitions",
+      "common_locations": ["E-commerce checkout", "Coupon systems", "Loyalty programs", "Workflow applications", "Booking systems"],
+      "encoding_bypasses": ["Parameter manipulation", "Request replay", "State modification"]
+    },
+    "JWT Vulnerabilities": {
+      "description": "Flaws in JSON Web Token implementation allowing token manipulation",
+      "severity_range": ["Critical", "High"],
+      "bounty_range_usd": [1000, 20000],
+      "key_indicators": ["None algorithm acceptance", "Weak signing keys", "Insecure token storage"],
+      "testing_approach": "Decode tokens, test algorithm confusion, brute-force weak keys, test token manipulation",
+      "common_locations": ["API authentication", "Session management", "SSO implementations", "Mobile app auth"],
+      "encoding_bypasses": ["Algorithm switching", "Key confusion attacks", "Token forgery"]
+    },
+    "GraphQL": {
+      "description": "Vulnerabilities specific to GraphQL API implementations",
+      "severity_range": ["High", "Medium", "Low"],
+      "bounty_range_usd": [200, 10000],
+      "key_indicators": ["Introspection enabled", "Missing rate limiting", "Excessive data exposure", "Batch query abuse"],
+      "testing_approach": "Enable introspection, map schema, test for injection, check authorization, test batching",
+      "common_locations": ["API endpoints", "Admin interfaces", "Mobile app backends", "Microservices"],
+      "encoding_bypasses": ["Alias abuse", "Batch queries", "Nested queries", "GraphQL injection"]
+    },
+    "Race Condition": {
+      "description": "Exploiting timing issues in concurrent operations to manipulate application state",
+      "severity_range": ["High", "Medium"],
+      "bounty_range_usd": [500, 10000],
+      "key_indicators": ["Balance transfers", "Redemption codes", "Resource allocation", "Concurrent modifications"],
+      "testing_approach": "Identify atomic operations, send concurrent requests, analyze state changes",
+      "common_locations": ["Payment processing", "Coupon redemption", "Account creation", "Voting systems", "Inventory management"],
+      "encoding_bypasses": ["N/A - timing based"]
+    },
+    "Cache Poisoning": {
+      "description": "Manipulating cache to serve poisoned content to other users",
+      "severity_range": ["High", "Medium"],
+      "bounty_range_usd": [500, 10000],
+      "key_indicators": ["Unkeyed headers", "Cache behavior inconsistencies", "Parameter reflection in cached responses"],
+      "testing_approach": "Identify cache behavior, test unkeyed inputs, poison cache with malicious content",
+      "common_locations": ["CDN configurations", "Reverse proxies", "Application caches", "API response caching"],
+      "encoding_bypasses": ["Header manipulation", "Parameter pollution", "Case variation"]
+    },
+    "Server-Side Template Injection (SSTI)": {
+      "description": "Injecting template expressions that execute on the server",
+      "severity_range": ["Critical", "High"],
+      "bounty_range_usd": [2000, 25000],
+      "key_indicators": ["Template syntax in responses", "User input in template context", "Error messages revealing template engine"],
+      "testing_approach": "Identify template engine, test injection syntax, escalate to RCE if possible",
+      "common_locations": ["Email templates", "Report generators", "Custom HTML editors", "CMS platforms"],
+      "encoding_bypasses": ["Template syntax variation", "String concatenation", "Variable manipulation"]
+    },
+    "Local File Inclusion (LFI)": {
+      "description": "Including and reading local files through path manipulation",
+      "severity_range": ["High", "Medium"],
+      "bounty_range_usd": [500, 10000],
+      "key_indicators": ["File path parameters", "Include/require statements", "Directory traversal possible"],
+      "testing_approach": "Test path traversal sequences, use null bytes if applicable, test for log poisoning to RCE",
+      "common_locations": ["File include parameters", "Template includes", "Language selection", "Content viewers"],
+      "encoding_bypasses": ["Null byte injection", "Double encoding", "UTF-8 overflow", "Path truncation"]
+    },
+    "CRLF Injection": {
+      "description": "Injecting carriage return and line feed characters to manipulate HTTP responses",
+      "severity_range": ["Medium", "Low"],
+      "bounty_range_usd": [100, 3000],
+      "key_indicators": ["User input in headers", "Log injection possible", "Response splitting vulnerable"],
+      "testing_approach": "Inject CRLF sequences, test for response splitting, header injection",
+      "common_locations": ["URL parameters", "Cookie values", "User-agent headers", "Log entries", "Redirect parameters"],
+      "encoding_bypasses": ["%0d%0a encoding", "Unicode line breaks", "Null bytes"]
+    }
+  },
+  "testing_methodologies": {
+    "reconnaissance": {
+      "passive": ["OSINT gathering", "DNS enumeration", "Certificate transparency", "Wayback machine", "Google dorking"],
+      "active": ["Port scanning", "Service enumeration", "Directory bruteforce", "Technology fingerprinting"]
+    },
+    "vulnerability_analysis": {
+      "automated": ["Scanner configurations", "Fuzzing techniques", "Parameter discovery"],
+      "manual": ["Code review", "Business logic testing", "Authentication bypass attempts"]
+    },
+    "exploitation": {
+      "techniques": ["Payload crafting", "Filter bypass", "Encoding evasion", "Chaining vulnerabilities"],
+      "documentation": ["Proof of concept", "Impact demonstration", "Remediation steps"]
+    }
+  }
+}

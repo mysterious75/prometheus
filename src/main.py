@@ -38,6 +38,7 @@ from src.web.osint import OSINTFinder
 from src.web.brute_force import SmartBruteForce
 from src.web.browser import BrowserAutomation
 from src.bugbounty.toolkit import PythonToolkit
+from src.bugbounty.knowledge import knowledge
 
 
 class Prometheus:
@@ -227,6 +228,24 @@ class Prometheus:
 
         elif intent.action == "subdomain_takeover":
             return self._subdomain_takeover(intent.target)
+
+        elif intent.action == "learn_from_kb":
+            return self._learn_from_kb(intent.target)
+
+        elif intent.action == "cheatsheet":
+            return self._cheatsheet(intent.target)
+
+        elif intent.action == "playbook":
+            return self._playbook(intent.target)
+
+        elif intent.action == "get_payloads":
+            return self._get_payloads(intent.target)
+
+        elif intent.action == "bounty_info":
+            return self._bounty_info(intent.target)
+
+        elif intent.action == "kb_stats":
+            return knowledge.format_stats()
 
         elif intent.action == "generate_code":
             return self._generate_code(intent.target)
@@ -747,6 +766,100 @@ Koi specific vulnerability dekhni hai?"""
             return "No subdomain takeover vulnerabilities."
         except Exception as e:
             return f"Takeover check error: {str(e)}"
+
+    def _learn_from_kb(self, topic: str) -> str:
+        """Learn from bug bounty knowledge base."""
+        prompt = knowledge.get_learning_prompt(topic, count=3)
+        return self.router.generate(prompt)
+
+    def _cheatsheet(self, vuln_type: str) -> str:
+        """Get cheatsheet for a vulnerability type."""
+        sheet = knowledge.get_cheatsheet(vuln_type)
+        if not sheet:
+            # Try fuzzy match
+            for key in knowledge.vuln_cheatsheet:
+                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
+                    sheet = knowledge.vuln_cheatsheet[key]
+                    break
+        if not sheet:
+            return f"Cheatsheet not found for '{vuln_type}'. Available: {', '.join(knowledge.vuln_cheatsheet.keys())}"
+
+        lines = [f"Cheatsheet: {vuln_type}", ""]
+        for key, val in sheet.items():
+            if isinstance(val, list):
+                lines.append(f"{key}:")
+                for item in val[:5]:
+                    lines.append(f"  - {item}")
+            else:
+                lines.append(f"{key}: {val}")
+        return "\n".join(lines)
+
+    def _playbook(self, vuln_type: str) -> str:
+        """Get attack playbook."""
+        playbook = knowledge.get_playbook(vuln_type)
+        if not playbook:
+            for key in knowledge.playbooks:
+                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
+                    playbook = knowledge.playbooks[key]
+                    break
+        if not playbook:
+            return f"Playbook not found for '{vuln_type}'"
+
+        lines = [f"Attack Playbook: {vuln_type}", ""]
+        steps = playbook.get("steps", playbook.get("methodology", []))
+        if isinstance(steps, list):
+            for i, step in enumerate(steps, 1):
+                lines.append(f"Step {i}: {step}")
+        elif isinstance(steps, dict):
+            for k, v in steps.items():
+                lines.append(f"{k}: {v}")
+        else:
+            lines.append(str(steps)[:1000])
+
+        if playbook.get("tools"):
+            lines.append(f"\nTools: {', '.join(playbook['tools'])}")
+        if playbook.get("tips"):
+            lines.append(f"\nTips: {playbook['tips']}")
+        return "\n".join(lines)
+
+    def _get_payloads(self, vuln_type: str) -> str:
+        """Get payloads for a vulnerability type."""
+        payloads = knowledge.get_payloads(vuln_type)
+        if not payloads:
+            for key in knowledge.payloads:
+                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
+                    payloads = knowledge.payloads[key]
+                    break
+        if not payloads:
+            return f"Payloads not found for '{vuln_type}'"
+
+        lines = [f"Payloads for {vuln_type} ({len(payloads)} total):", ""]
+        for p in payloads[:20]:
+            lines.append(f"  {p}")
+        if len(payloads) > 20:
+            lines.append(f"  ... and {len(payloads) - 20} more")
+        return "\n".join(lines)
+
+    def _bounty_info(self, vuln_type: str) -> str:
+        """Get bounty info for a vulnerability type."""
+        info = knowledge.get_bounty_info(vuln_type)
+        if not info:
+            for key in knowledge.bounty_ranges:
+                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
+                    info = knowledge.bounty_ranges[key]
+                    break
+        if not info:
+            return f"Bounty info not found for '{vuln_type}'"
+
+        lines = [f"Bounty Ranges: {vuln_type}", ""]
+        for key, val in info.items():
+            if isinstance(val, dict):
+                lines.append(f"{key}:")
+                for k, v in val.items():
+                    lines.append(f"  {k}: {v}")
+            else:
+                lines.append(f"{key}: {val}")
+        return "\n".join(lines)
 
     def _generate_code(self, description: str) -> str:
         if not description:

@@ -85,6 +85,14 @@ class IntentParser:
         # Toolkit - Subdomain Takeover
         (r"(?:takeover|subdomain\s*takeover)\s+(.+)", "subdomain_takeover"),
 
+        # Knowledge Base - Learn from others
+        (r"(?:seekh|learn|study)\s+(.+)", "learn_from_kb"),
+        (r"(?:cheatsheet|cheat\s*sheet)\s+(.+)", "cheatsheet"),
+        (r"(?:playbook|attack)\s+(.+)", "playbook"),
+        (r"(?:payloads?|payload)\s+(.+)", "get_payloads"),
+        (r"(?:bounty|payout)\s+(.+)", "bounty_info"),
+        (r"(?:kb\s*stats|knowledge)", "kb_stats"),
+
         # Code Generation
         (r"(?:generate|banao|banao|create|likh|write)\s+(?:code|program|script)?\s*(?:for|of|to)?\s*(.+)", "generate_code"),
         (r"(?:code|program)\s+(?:for|of|to)\s+(.+)", "generate_code"),

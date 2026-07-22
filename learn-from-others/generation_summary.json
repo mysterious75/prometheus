@@ -1,0 +1,73 @@
+{
+  "total_entries": 1242,
+  "total_bounty_simulated_usd": 5811069,
+  "average_bounty_usd": 4678,
+  "vulnerability_type_distribution": {
+    "SQL Injection": 67,
+    "Cross-Site Scripting (XSS)": 51,
+    "Server-Side Request Forgery (SSRF)": 66,
+    "Insecure Direct Object Reference (IDOR)": 55,
+    "Remote Code Execution (RCE)": 67,
+    "Authentication Bypass": 50,
+    "Privilege Escalation": 73,
+    "XML External Entity (XXE)": 54,
+    "Cross-Site Request Forgery (CSRF)": 64,
+    "File Upload": 75,
+    "Subdomain Takeover": 74,
+    "Open Redirect": 55,
+    "Business Logic": 75,
+    "JWT Vulnerabilities": 69,
+    "GraphQL": 69,
+    "Race Condition": 58,
+    "Cache Poisoning": 53,
+    "Server-Side Template Injection (SSTI)": 56,
+    "Local File Inclusion (LFI)": 54,
+    "CRLF Injection": 57
+  },
+  "severity_distribution": {
+    "Medium": 369,
+    "High": 423,
+    "Critical": 300,
+    "Low": 150
+  },
+  "technology_distribution": {
+    "Java": 202,
+    "Ruby": 141,
+    ".NET": 155,
+    "Node.js": 163,
+    "Python": 225,
+    "PHP": 189,
+    "Go": 40,
+    "Cloud": 30,
+    "Various": 39,
+    "DNS": 18,
+    "CDN": 21,
+    "Reverse Proxy": 19
+  },
+  "difficulty_distribution": {
+    "Intermediate": 420,
+    "Beginner": 425,
+    "Advanced": 397
+  },
+  "discovery_technique_distribution": {
+    "Automated": 403,
+    "Combination": 408,
+    "Manual": 431
+  },
+  "unique_programs": 92,
+  "unique_technologies": [
+    "Java",
+    "Ruby",
+    ".NET",
+    "Node.js",
+    "Python",
+    "PHP",
+    "Go",
+    "Cloud",
+    "Various",
+    "DNS",
+    "CDN",
+    "Reverse Proxy"
+  ],
+  "generation_timestamp": "2026-07-22T08:28:14.060916"
+}
