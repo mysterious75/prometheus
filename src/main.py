@@ -37,6 +37,7 @@ from src.web.vuln_scanner import VulnScanner as WebVulnScanner
 from src.web.osint import OSINTFinder
 from src.web.brute_force import SmartBruteForce
 from src.web.browser import BrowserAutomation
+from src.bugbounty.toolkit import PythonToolkit
 
 
 class Prometheus:
@@ -74,6 +75,7 @@ class Prometheus:
         self.osint = OSINTFinder()
         self.brute = SmartBruteForce()
         self.browser = BrowserAutomation()
+        self.toolkit = PythonToolkit()
 
         # Developer
         self.codegen = CodeGenerator(self.router)
@@ -189,6 +191,42 @@ class Prometheus:
 
         elif intent.action == "browse":
             return self._browse(intent.target)
+
+        elif intent.action == "full_audit":
+            target = intent.target.strip()
+            if not target:
+                return "Full audit ke liye target do: 'full audit http://target.com'"
+            return self._full_audit(target)
+
+        elif intent.action == "full_audit_help":
+            return "Full audit usage: 'full audit http://target.com' (sab kuch check karega - no tools needed!)"
+
+        elif intent.action == "waf_detect":
+            return self._waf_detect(intent.target)
+
+        elif intent.action == "cors_check":
+            return self._cors_check(intent.target)
+
+        elif intent.action == "header_check":
+            return self._header_check(intent.target)
+
+        elif intent.action == "ssl_check":
+            return self._ssl_check(intent.target)
+
+        elif intent.action == "sqlmap":
+            return self._sqlmap(intent.target)
+
+        elif intent.action == "info_disclosure":
+            return self._info_disclosure(intent.target)
+
+        elif intent.action == "open_redirect":
+            return self._open_redirect(intent.target)
+
+        elif intent.action == "xss_check":
+            return self._xss_check(intent.target)
+
+        elif intent.action == "subdomain_takeover":
+            return self._subdomain_takeover(intent.target)
 
         elif intent.action == "generate_code":
             return self._generate_code(intent.target)
@@ -537,6 +575,178 @@ Koi specific vulnerability dekhni hai?"""
                 return f"Browser failed: {result.get('error', 'unknown')}"
         finally:
             await self.browser.close()
+
+    def _full_audit(self, target: str) -> str:
+        """Full pure-Python audit - no tools needed."""
+        if not target.startswith("http"):
+            target = f"https://{target}"
+
+        console.print(f"[yellow]Full audit on {target} (pure Python, no tools needed)...[/yellow]")
+        try:
+            report = self.toolkit.full_audit(target)
+
+            lines = [
+                f"Full Audit Report: {target}",
+                f"Total: {report['total_findings']} findings",
+                f"  CRITICAL: {report['critical']}",
+                f"  HIGH: {report['high']}",
+                f"  MEDIUM: {report['medium']}",
+                f"  LOW: {report['low']}",
+                "",
+            ]
+
+            for f in report["findings"][:15]:
+                lines.append(f"[{f.get('severity', 'INFO')}] {f.get('type', 'Unknown')}")
+                if f.get("evidence"):
+                    lines.append(f"  {f['evidence'][:100]}")
+
+            if report["total_findings"] > 15:
+                lines.append(f"\n... and {report['total_findings'] - 15} more")
+
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Full audit error: {str(e)}"
+
+    def _waf_detect(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        console.print(f"[yellow]WAF detection: {target}...[/yellow]")
+        try:
+            result = self.toolkit.detect_waf(target)
+            if result.findings:
+                wafs = [f.get("waf", "Unknown") for f in result.findings]
+                return f"WAFs detected: {', '.join(wafs)}"
+            return "No WAF detected."
+        except Exception as e:
+            return f"WAF detect error: {str(e)}"
+
+    def _cors_check(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        console.print(f"[yellow]CORS check: {target}...[/yellow]")
+        try:
+            result = self.toolkit.cors_check(target)
+            if result.findings:
+                lines = [f"CORS issues found: {len(result.findings)}", ""]
+                for f in result.findings:
+                    lines.append(f"  [{f['severity']}] {f['evidence'][:100]}")
+                return "\n".join(lines)
+            return "CORS looks safe."
+        except Exception as e:
+            return f"CORS check error: {str(e)}"
+
+    def _header_check(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        console.print(f"[yellow]Security headers: {target}...[/yellow]")
+        try:
+            result = self.toolkit.header_check(target)
+            if result.findings:
+                lines = [f"Header issues: {len(result.findings)}", ""]
+                for f in result.findings:
+                    lines.append(f"  [{f['severity']}] {f['type']}")
+                    if f.get("evidence"):
+                        lines.append(f"    {f['evidence'][:80]}")
+                return "\n".join(lines)
+            return "All security headers present."
+        except Exception as e:
+            return f"Header check error: {str(e)}"
+
+    def _ssl_check(self, target: str) -> str:
+        from urllib.parse import urlparse
+        parsed = urlparse(target if target.startswith("http") else f"https://{target}")
+        hostname = parsed.hostname or target
+        console.print(f"[yellow]SSL check: {hostname}...[/yellow]")
+        try:
+            result = self.toolkit.ssl_check(hostname)
+            if result.findings:
+                lines = [f"SSL issues: {len(result.findings)}", ""]
+                for f in result.findings:
+                    lines.append(f"  [{f['severity']}] {f['type']}")
+                    lines.append(f"    {f['evidence'][:100]}")
+                return "\n".join(lines)
+            return "SSL looks good."
+        except Exception as e:
+            return f"SSL check error: {str(e)}"
+
+    def _sqlmap(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        safety.warn_only("sql_injection", target)
+        console.print(f"[yellow]SQLMap: {target}...[/yellow]")
+        try:
+            result = self.toolkit.sqlmap(target)
+            if result.findings:
+                lines = [f"SQL Injection found!", ""]
+                for f in result.findings:
+                    lines.append(f"  [{f['severity']}] {f['type']}")
+                    lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
+                return "\n".join(lines)
+            return f"SQLMap complete. No injection found.\n\nOutput preview:\n{result.raw_output[:500]}"
+        except Exception as e:
+            return f"SQLMap error: {str(e)}"
+
+    def _info_disclosure(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        console.print(f"[yellow]Info disclosure: {target}...[/yellow]")
+        try:
+            result = self.toolkit.info_disclosure_check(target)
+            if result.findings:
+                lines = [f"Exposed files: {len(result.findings)}", ""]
+                for f in result.findings:
+                    lines.append(f"  [{f['severity']}] {f.get('url', 'N/A')} - {f['type']}")
+                return "\n".join(lines)
+            return "No sensitive files exposed."
+        except Exception as e:
+            return f"Info disclosure error: {str(e)}"
+
+    def _open_redirect(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        console.print(f"[yellow]Open redirect: {target}...[/yellow]")
+        try:
+            result = self.toolkit.open_redirect_check(target)
+            if result.findings:
+                lines = [f"Open redirects found: {len(result.findings)}", ""]
+                for f in result.findings:
+                    lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
+                    lines.append(f"  Redirects to: {f.get('evidence', '')[:80]}")
+                return "\n".join(lines)
+            return "No open redirects found."
+        except Exception as e:
+            return f"Redirect check error: {str(e)}"
+
+    def _xss_check(self, target: str) -> str:
+        if not target.startswith("http"):
+            target = f"https://{target}"
+        console.print(f"[yellow]XSS check: {target}...[/yellow]")
+        try:
+            result = self.toolkit.xss_reflected_check(target)
+            if result.findings:
+                lines = [f"XSS vulnerabilities found!", ""]
+                for f in result.findings:
+                    lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
+                    lines.append(f"  Payload: {f.get('payload', 'N/A')[:60]}")
+                return "\n".join(lines)
+            return "No reflected XSS found."
+        except Exception as e:
+            return f"XSS check error: {str(e)}"
+
+    def _subdomain_takeover(self, target: str) -> str:
+        from urllib.parse import urlparse
+        domain = urlparse(target if target.startswith("http") else f"https://{target}").hostname or target
+        console.print(f"[yellow]Subdomain takeover: {domain}...[/yellow]")
+        try:
+            result = self.toolkit.subdomain_takeover_check(domain)
+            if result.findings:
+                lines = [f"TAKEOVER VULNERABILITIES FOUND!", ""]
+                for f in result.findings:
+                    lines.append(f"  [{f['severity']}] {f['evidence'][:100]}")
+                return "\n".join(lines)
+            return "No subdomain takeover vulnerabilities."
+        except Exception as e:
+            return f"Takeover check error: {str(e)}"
 
     def _generate_code(self, description: str) -> str:
         if not description:

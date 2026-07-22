@@ -54,6 +54,37 @@ class IntentParser:
         # Browser
         (r"(?:browse|open|visit|khol)\s+(.+)", "browse"),
 
+        # Toolkit - Full Audit (pure Python, no tools needed)
+        (r"(?:full\s*audit|audit\s*full|complete\s*audit)\s+(.+)", "full_audit"),
+        (r"(?:full\s*audit|audit\s*full|complete\s*audit)", "full_audit_help"),
+
+        # Toolkit - WAF Detection
+        (r"(?:waf|waf\s*detect)\s+(.+)", "waf_detect"),
+
+        # Toolkit - CORS Check
+        (r"(?:cors|cors\s*check)\s+(.+)", "cors_check"),
+
+        # Toolkit - Header Check
+        (r"(?:headers?|security\s*headers?)\s+(.+)", "header_check"),
+
+        # Toolkit - SSL Check
+        (r"(?:ssl|tls|certificate)\s+(.+)", "ssl_check"),
+
+        # Toolkit - SQLMap
+        (r"(?:sqlmap|sql\s*inject)\s+(.+)", "sqlmap"),
+
+        # Toolkit - Info Disclosure
+        (r"(?:leak|disclosure|exposed|sensitive)\s+(.+)", "info_disclosure"),
+
+        # Toolkit - Open Redirect
+        (r"(?:redirect|open\s*redirect)\s+(.+)", "open_redirect"),
+
+        # Toolkit - XSS
+        (r"(?:xss|xss\s*check)\s+(.+)", "xss_check"),
+
+        # Toolkit - Subdomain Takeover
+        (r"(?:takeover|subdomain\s*takeover)\s+(.+)", "subdomain_takeover"),
+
         # Code Generation
         (r"(?:generate|banao|banao|create|likh|write)\s+(?:code|program|script)?\s*(?:for|of|to)?\s*(.+)", "generate_code"),
         (r"(?:code|program)\s+(?:for|of|to)\s+(.+)", "generate_code"),
@@ -128,6 +159,18 @@ Mujhe ye sab commands samajh aa jaate hain:
   "full recon google.com"         Full recon + vuln scan
   "exploit google.com"            Auto SQLi/XSS/SSRF scan
   "vuln scan http://x.com"       Vulnerability scan
+
+  PURE PYTHON AUDIT (koi tool install nahi chahiye!)
+  "full audit http://x.com"       Sab kuch check karega
+  "waf http://x.com"              WAF/CDN detect karega
+  "cors http://x.com"             CORS misconfig check
+  "headers http://x.com"          Security headers check
+  "ssl google.com"                SSL/TLS check
+  "sqlmap http://x.com"           SQLMap auto injection
+  "leak http://x.com"             Sensitive files check
+  "redirect http://x.com"         Open redirect check
+  "xss http://x.com"              Reflected XSS check
+  "takeover google.com"           Subdomain takeover check
 
   OSINT & RECON
   "osint username123"             Username 20+ platforms pe dhundhega
