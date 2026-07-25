@@ -1,1070 +1,201 @@
-"""Project Prometheus v2.0 - Security Research Assistant
+"""Prometheus Orchestrator — the main assessment engine.
 
-Authorized security testing tool with LLM-powered analysis.
-Requires explicit target authorization before any scanning.
+Coordinates the agent brain, tools, knowledge base, and reporting
+to conduct autonomous security assessments.
 """
 
-import sys
-import json
-import subprocess
-import os
-import shlex
-from pathlib import Path
+from typing import Dict, Any, Optional
+from datetime import datetime
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from src.utils.config import config
-from src.utils.logger import logger, console
-from src.platform import detector
-from src.platform.safety import safety, RiskLevel
-from src.brain.router import ModelRouter
-from src.memory.chroma import VectorMemory
-from src.memory.episodic import EpisodicMemory
-from src.memory.emotional import EmotionalMemory
-from src.bugbounty.recon import ReconPipeline
-from src.bugbounty.scanner import VulnerabilityScanner
-from src.bugbounty.reporter import BugBountyReporter
-from src.developer.codegen import CodeGenerator
-from src.autonomy.goals import GoalManager, Priority
-from src.autonomy.executor import ExecutionEngine
-from src.consciousness.emotions import EmotionalIntelligence
-from src.consciousness.identity import Identity
-from src.consciousness.dreaming import DreamingSystem
-from src.consciousness.monologue import InternalMonologue
-from src.consciousness.conversation_memory import ConversationMemory
-from src.consciousness.intent_parser import IntentParser
-from src.web.proxy import ProxyInterceptor
-from src.web.vuln_scanner import VulnScanner as WebVulnScanner
-from src.web.osint import OSINTFinder
-from src.web.browser import BrowserAutomation
-from src.bugbounty.toolkit import PythonToolkit
-from src.bugbounty.knowledge import knowledge
-
-
-# Authorized targets file - only scan domains listed here
-AUTHORIZED_TARGETS_FILE = Path(__file__).parent.parent / "config" / "authorized_targets.json"
-
-
-class TargetAuthorization:
-    """Manages authorized targets for security scanning."""
-
-    def __init__(self):
-        self.authorized: set = set()
-        self._load()
-
-    def _load(self):
-        """Load authorized targets from config file."""
-        if AUTHORIZED_TARGETS_FILE.exists():
-            try:
-                data = json.loads(AUTHORIZED_TARGETS_FILE.read_text())
-                self.authorized = set(data.get("targets", []))
-            except (json.JSONDecodeError, KeyError):
-                self.authorized = set()
-
-    def _save(self):
-        """Save authorized targets to config file."""
-        AUTHORIZED_TARGETS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        AUTHORIZED_TARGETS_FILE.write_text(json.dumps(
-            {"targets": sorted(self.authorized)}, indent=2
-        ))
-
-    def is_authorized(self, target: str) -> bool:
-        """Check if a target is authorized for scanning."""
-        # Normalize: extract hostname
-        from urllib.parse import urlparse
-        if not target.startswith(("http://", "https://")):
-            target = f"https://{target}"
-        hostname = urlparse(target).hostname or target
-        return hostname in self.authorized or target in self.authorized
-
-    def authorize(self, target: str) -> str:
-        """Add a target to authorized list."""
-        from urllib.parse import urlparse
-        if not target.startswith(("http://", "https://")):
-            target = f"https://{target}"
-        hostname = urlparse(target).hostname or target
-        self.authorized.add(hostname)
-        self._save()
-        return f"Target '{hostname}' authorized for scanning."
-
-    def list_targets(self) -> list:
-        return sorted(self.authorized)
+from .agent.planner import AttackPlanner, AttackStep
+from .agent.executor import ToolExecutor
+from .agent.memory import WorkingMemory
+from .agent.chain import ChainBuilder
+from .brain.router import ModelRouter
+from .core.config import config
+from .core.auth import auth
+from .core.logger import logger, console
+from .knowledge.index import knowledge
 
 
 class Prometheus:
-    """Security research assistant with LLM-powered analysis."""
-
-    def __init__(self):
-        console.print("[bold blue]Prometheus initializing...[/bold blue]")
-
-        # Show platform info
-        detector.info
-        os_name = detector.info.os.value.upper()
-        console.print(f"  Platform: {os_name} ({detector.info.arch.value})")
-
-        if not config.validate():
-            console.print("[red]Check .env file for API keys![/red]")
-            return
-
-        # Authorization
-        self.auth = TargetAuthorization()
-
-        # Brain
-        self.router = ModelRouter()
-
-        # Memory
-        self.vector_memory = VectorMemory()
-        self.episodic_memory = EpisodicMemory(self.vector_memory)
-        self.emotional_memory = EmotionalMemory(self.vector_memory)
-        self.conversation_memory = ConversationMemory()
-
-        # Bug Bounty (requires authorization)
-        self.recon = ReconPipeline(target="localhost")
-        self.scanner = VulnerabilityScanner(target="localhost")
-        self.reporter = BugBountyReporter()
-
-        # Web tools
-        self.proxy = ProxyInterceptor()
-        self.web_scanner = WebVulnScanner()
-        self.osint = OSINTFinder()
-        self.browser = BrowserAutomation()
-        self.toolkit = PythonToolkit()
-
-        # Developer
-        self.codegen = CodeGenerator(self.router)
-
-        # Autonomy
-        self.goal_manager = GoalManager()
-        self.executor = ExecutionEngine(self.router, self.goal_manager)
-
-        # Consciousness
-        self.emotions = EmotionalIntelligence(self.router)
-        self.identity = Identity(self.router)
-        self.dreaming = DreamingSystem(self.router, self.episodic_memory)
-        self.monologue = InternalMonologue(self.router)
-        self.intent_parser = IntentParser()
-
-        # Stats
-        self.interaction_count = 0
-
-        console.print("[green]Prometheus ready![/green]\n")
-
-    def _check_auth(self, target: str) -> tuple:
-        """Check if target is authorized. Returns (is_authed, message)."""
-        if self.auth.is_authorized(target):
-            return True, ""
-        return False, (
-            f"Target '{target}' is not authorized.\n"
-            f"Run 'authorize {target}' first, or check 'targets' for authorized list.\n"
-            f"Only scan domains you own or have written permission to test."
-        )
-
-    def process(self, user_input: str) -> str:
-        """Main processing pipeline."""
-        self.interaction_count += 1
-
-        # 1. Parse intent
-        intent = self.intent_parser.parse(user_input)
-
-        # 2. Detect emotion (lightweight - uses local classifier)
-        emotion = self.emotions.detect_emotion(user_input)
-
-        # 3. Store conversation
-        self.conversation_memory.store_interaction(user_input, "", emotion.value)
-
-        # 4. Execute action
-        response = self._execute_intent(intent, user_input)
-
-        # 5. Store response
-        if response != "__QUIT__":
-            self.conversation_memory.conversations[-1]["ai"] = response
-
-            # 6. Store in episodic memory
-            self.episodic_memory.store_event(
-                f"User: {user_input} | Prometheus: {response[:200]}",
-                event_type="conversation", importance=0.6
-            )
-
-            # 7. Internal monologue
-            self.monologue.think(
-                f"User said: {user_input}. I responded: {response[:100]}...",
-                context=[c["user"] for c in self.conversation_memory.recall_recent(3)]
-            )
-
-            # 8. Self-reflection every 5th interaction
-            if self.interaction_count % 5 == 0:
-                reflection = self._self_reflect(user_input, response)
-                response += f"\n\n[Self-reflection: {reflection[:150]}...]"
-
-            # 9. Auto-dream if needed
-            dream_result = self.dreaming.dream_if_needed()
-            if dream_result and dream_result.get("status") != "no_memories_to_process":
-                response += "\n[Dream cycle completed]"
-
-        return response
-
-    def _execute_intent(self, intent, user_input: str) -> str:
-        """Execute the parsed intent."""
-
-        # --- Authorization-required actions ---
-        if intent.action == "bugbounty_scan":
-            target = intent.target.strip()
-            if not target:
-                return "Kaunsa target scan karna hai? Example: 'scan google.com'"
-            authed, msg = self._check_auth(target)
-            if not authed:
-                return msg
-            return self._run_scan(target)
-
-        elif intent.action == "full_recon":
-            target = intent.target.strip()
-            if not target:
-                return "Full recon ke liye target do: 'full recon google.com'"
-            authed, msg = self._check_auth(target)
-            if not authed:
-                return msg
-            return self._full_recon(target)
-
-        elif intent.action == "vuln_scan":
-            target = intent.target.strip()
-            if not target:
-                return "Vuln scan ke liye target do: 'exploit http://target.com'"
-            authed, msg = self._check_auth(target)
-            if not authed:
-                return msg
-            return self._vuln_scan(target)
-
-        # --- No authorization needed (passive/OSINT) ---
-        elif intent.action == "proxy_intercept":
-            return self._proxy_intercept(intent.target)
-
-        elif intent.action == "proxy_replay":
-            return self._proxy_replay(intent.target)
-
-        elif intent.action == "proxy_stats":
-            return self._proxy_stats()
-
-        elif intent.action == "osint":
-            target = intent.target.strip()
-            if not target:
-                return "OSINT ke liye target do: 'osint username123' ya 'osint google.com'"
-            return self._run_osint(target)
-
-        elif intent.action == "osint_help":
-            return "OSINT usage: 'osint username123' (username search) ya 'osint google.com' (domain recon)"
-
-        elif intent.action == "browse":
-            return self._browse(intent.target)
-
-        elif intent.action == "full_audit":
-            target = intent.target.strip()
-            if not target:
-                return "Full audit ke liye target do: 'full audit http://target.com'"
-            authed, msg = self._check_auth(target)
-            if not authed:
-                return msg
-            return self._full_audit(target)
-
-        elif intent.action == "full_audit_help":
-            return "Full audit usage: 'full audit http://target.com' (sab kuch check karega - no tools needed!)"
-
-        elif intent.action == "waf_detect":
-            return self._waf_detect(intent.target)
-
-        elif intent.action == "cors_check":
-            return self._cors_check(intent.target)
-
-        elif intent.action == "header_check":
-            return self._header_check(intent.target)
-
-        elif intent.action == "ssl_check":
-            return self._ssl_check(intent.target)
-
-        elif intent.action == "sqlmap":
-            target = intent.target.strip()
-            if target:
-                authed, msg = self._check_auth(target)
-                if not authed:
-                    return msg
-            return self._sqlmap(intent.target)
-
-        elif intent.action == "info_disclosure":
-            target = intent.target.strip()
-            if target:
-                authed, msg = self._check_auth(target)
-                if not authed:
-                    return msg
-            return self._info_disclosure(intent.target)
-
-        elif intent.action == "open_redirect":
-            target = intent.target.strip()
-            if target:
-                authed, msg = self._check_auth(target)
-                if not authed:
-                    return msg
-            return self._open_redirect(intent.target)
-
-        elif intent.action == "xss_check":
-            target = intent.target.strip()
-            if target:
-                authed, msg = self._check_auth(target)
-                if not authed:
-                    return msg
-            return self._xss_check(intent.target)
-
-        elif intent.action == "subdomain_takeover":
-            target = intent.target.strip()
-            if target:
-                authed, msg = self._check_auth(target)
-                if not authed:
-                    return msg
-            return self._subdomain_takeover(intent.target)
-
-        # --- Authorization management ---
-        elif intent.action == "authorize":
-            target = intent.target.strip()
-            if not target:
-                return "Usage: 'authorize google.com' — adds target to authorized list"
-            return self.auth.authorize(target)
-
-        elif intent.action == "targets":
-            targets = self.auth.list_targets()
-            if not targets:
-                return "No authorized targets. Use 'authorize <domain>' to add."
-            return "Authorized targets:\n" + "\n".join(f"  - {t}" for t in targets)
-
-        # --- Knowledge base ---
-        elif intent.action == "learn_from_kb":
-            return self._learn_from_kb(intent.target)
-
-        elif intent.action == "cheatsheet":
-            return self._cheatsheet(intent.target)
-
-        elif intent.action == "playbook":
-            return self._playbook(intent.target)
-
-        elif intent.action == "get_payloads":
-            return self._get_payloads(intent.target)
-
-        elif intent.action == "bounty_info":
-            return self._bounty_info(intent.target)
-
-        elif intent.action == "kb_stats":
-            return knowledge.format_stats()
-
-        # --- Utility ---
-        elif intent.action == "generate_code":
-            return self._generate_code(intent.target)
-
-        elif intent.action == "think":
-            return self._think(intent.target or user_input)
-
-        elif intent.action == "dream":
-            return self._dream()
-
-        elif intent.action == "status":
-            return self._get_status()
-
-        elif intent.action == "providers":
-            return self.router.get_status()
-
-        elif intent.action == "mood":
-            return self._get_mood()
-
-        elif intent.action == "identity":
-            return self.identity.get_identity_statement()
-
-        elif intent.action == "recall":
-            return self._recall(intent.target)
-
-        elif intent.action == "evolve":
-            return self._evolve()
-
-        elif intent.action == "set_goal":
-            return self._set_goal(intent.target)
-
-        elif intent.action == "show_goals":
-            return self._show_goals()
-
-        elif intent.action == "run_code":
-            return self._run_system_command(intent.target)
-
-        elif intent.action == "learn":
-            return self._learn(intent.target)
-
-        elif intent.action == "quit":
-            return "__QUIT__"
-
-        else:
-            return self._chat(user_input)
-
-    def _run_system_command(self, command: str) -> str:
-        """Run a system command with permission check. No shell=True."""
-        if not command:
-            return "Kya run karna hai? Example: 'run nmap -sV target.com'"
-
-        # Ask permission for system commands
-        if not safety.ask_permission("system_command", command):
-            return "Command cancelled."
-
-        os_name = detector.info.os.value
-        console.print(f"[yellow]Running on {os_name}: {command}[/yellow]")
-
-        try:
-            # Safe: use shlex.split instead of shell=True
-            if os_name == "windows":
-                # Windows needs shell=True for built-in commands, but sanitize input
-                safe_command = command.replace(";", "").replace("&", "").replace("|", "")
-                result = subprocess.run(
-                    safe_command, shell=True, capture_output=True,
-                    text=True, timeout=60
-                )
-            else:
-                args = shlex.split(command)
-                result = subprocess.run(
-                    args, capture_output=True,
-                    text=True, timeout=60
-                )
-
-            output = result.stdout
-            if result.stderr:
-                output += f"\n[stderr]: {result.stderr}"
-
-            if not output.strip():
-                return f"Command executed (no output): {command}"
-
-            return f"Command output:\n{output[:1000]}"
-        except subprocess.TimeoutExpired:
-            return f"Command timed out (60s limit): {command}"
-        except ValueError as e:
-            return f"Invalid command syntax: {str(e)}"
-        except Exception as e:
-            return f"Command failed: {str(e)}"
-
-    def _chat(self, user_input: str) -> str:
-        """General conversation."""
-        context = self.conversation_memory.get_user_context()
-        recent = self.conversation_memory.recall_recent(5)
-        recent_text = "\n".join([f"User: {c['user'][:50]}" for c in recent])
-
-        prompt = f"""You are Prometheus - a security research assistant. You speak in Hinglish.
-
-Your personality: Helpful, technical, security-focused, concise.
-You help with authorized security testing, OSINT research, and code analysis.
-
-User context: {context}
-Recent conversation:
-{recent_text}
-
-User just said: {user_input}
-
-Respond naturally and concisely (2-4 lines). Be helpful and technical.
-"""
-
-        return self.router.generate(prompt, role="primary")
-
-    def _run_scan(self, target: str) -> str:
-        """Run bug bounty scan on authorized target."""
-        console.print(f"[yellow]Scanning {target}...[/yellow]")
-        try:
-            self.recon.target = target
-            self.scanner.target = target
-            recon = self.recon.run_full_recon()
-            scan = self.scanner.run_all_checks(f"https://{target}")
-            report = self.reporter.generate_report(scan, target)
-
-            return f"""Bug bounty scan complete for {target}:
-
-Recon: {len(recon.get('subdomains', []))} subdomains found
-Vulnerabilities: {len(scan)} findings
-Report saved: {report}
-
-Koi specific vulnerability dekhni hai?"""
-        except Exception as e:
-            return f"Scan failed: {str(e)}"
-
-    def _full_recon(self, target: str) -> str:
-        """Full recon: OSINT + vuln scan + report."""
-        console.print(f"[yellow]Full recon on {target}...[/yellow]")
-        try:
-            info = self.osint.gather_target_info(target)
-            url = f"https://{target}"
-            findings = self.web_scanner.scan_full(url)
-
-            lines = [f"Full Recon Report: {target}", ""]
-            lines.append(f"Subdomains: {len(info.get('subdomains', []))}")
-            lines.append(f"Emails: {len(info.get('emails', []))}")
-            lines.append(f"Tech: {', '.join(info.get('tech_stack', [])[:3])}")
-            lines.append(f"Vulns: {len(findings)} ({sum(1 for f in findings if f.severity == 'CRITICAL')} critical, {sum(1 for f in findings if f.severity == 'HIGH')} high)")
-
-            if findings:
-                lines.append("")
-                lines.append("Top findings:")
-                for f in findings[:5]:
-                    lines.append(f"  [{f.severity}] {f.vuln_type}: {f.url}")
-
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Full recon error: {str(e)}"
-
-    def _vuln_scan(self, target: str) -> str:
-        """Automated SQLi/XSS/SSRF scan."""
-        if not target.startswith("http"):
-            target = f"https://{target}"
-
-        console.print(f"[yellow]Vuln scan on {target}...[/yellow]")
-        try:
-            findings = self.web_scanner.scan_full(target)
-
-            if not findings:
-                return f"No vulnerabilities found on {target}."
-
-            lines = [f"Vuln Scan Results: {target}", ""]
-            for f in findings:
-                lines.append(f"[{f.severity}] {f.vuln_type}")
-                lines.append(f"  URL: {f.url}")
-                lines.append(f"  Payload: {f.payload[:80]}")
-                lines.append(f"  Fix: {f.remediation}")
-                lines.append("")
-
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Vuln scan error: {str(e)}"
-
-    def _proxy_intercept(self, target: str) -> str:
-        """Intercept an HTTP request."""
-        parts = target.split(maxsplit=1)
-        if len(parts) < 2:
-            return "Usage: 'intercept GET http://target.com'"
-
-        method = parts[0].upper()
-        url = parts[1]
-
-        console.print(f"[yellow]Intercepting {method} {url}...[/yellow]")
-        try:
-            req = self.proxy.intercept(method, url, notes="Manual intercept")
-            sent = self.proxy.send(req.id)
-
-            lines = [
-                f"Request #{req.id}: {method} {url}",
-                f"Status: {sent.response_status}",
-                f"Time: {sent.response_time_ms:.0f}ms",
-                f"Response size: {len(sent.response_body)} bytes",
-                "",
-                "Response preview:",
-                sent.response_body[:500],
-            ]
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Proxy error: {str(e)}"
-
-    def _proxy_replay(self, request_id_str: str) -> str:
-        """Replay a request."""
-        try:
-            request_id = int(request_id_str)
-        except ValueError:
-            return "Usage: 'replay 1' (request ID number)"
-
-        console.print(f"[yellow]Replaying request #{request_id}...[/yellow]")
-        try:
-            result = self.proxy.replay(request_id)
-            return f"Replay #{request_id}: Status {result.response_status}, Time: {result.response_time_ms:.0f}ms\n{result.response_body[:500]}"
-        except ValueError:
-            return f"Request #{request_id} nahi mila."
-        except Exception as e:
-            return f"Replay error: {str(e)}"
-
-    def _proxy_stats(self) -> str:
-        stats = self.proxy.get_stats()
-        return f"""Proxy Stats:
-  Intercepted: {stats['total_intercepted']}
-  Modified: {stats['modified']}
-  Rules: {stats['rules']}
-  Avg response: {stats['avg_response_ms']:.0f}ms"""
-
-    def _run_osint(self, target: str) -> str:
-        """Run OSINT on target (passive, no auth needed)."""
-        console.print(f"[yellow]OSINT on {target}...[/yellow]")
-        try:
-            if "." in target and " " not in target:
-                info = self.osint.gather_target_info(target)
-                lines = [f"OSINT Report: {target}", ""]
-                lines.append(f"Subdomains ({len(info.get('subdomains', []))}):")
-                for sub in info.get("subdomains", [])[:10]:
-                    lines.append(f"  - {sub}")
-                lines.append(f"\nEmails ({len(info.get('emails', []))}):")
-                for email in info.get("emails", [])[:10]:
-                    lines.append(f"  - {email}")
-                if info.get("tech_stack"):
-                    lines.append(f"\nTech: {', '.join(info['tech_stack'])}")
-                return "\n".join(lines)
-            else:
-                profiles = self.osint.find_username(target)
-                found = [p for p in profiles if p.exists]
-                lines = [f"Username OSINT: {target}", f"Found on {len(found)}/{len(profiles)} platforms:", ""]
-                for p in found:
-                    lines.append(f"  [+] {p.platform}: {p.url}")
-                not_found = [p for p in profiles if not p.exists]
-                if not_found:
-                    lines.append(f"\nNot found on: {', '.join(p.platform for p in not_found[:5])}")
-                return "\n".join(lines)
-        except Exception as e:
-            return f"OSINT error: {str(e)}"
-
-    def _browse(self, url: str) -> str:
-        """Browse a URL with Cloudflare bypass."""
-        if not url.startswith("http"):
-            url = f"https://{url}"
-
-        console.print(f"[yellow]Browsing {url}...[/yellow]")
-        try:
-            import asyncio
-            result = asyncio.run(self._async_browse(url))
-            return result
-        except Exception as e:
-            return f"Browser error: {str(e)}"
-
-    async def _async_browse(self, url: str) -> str:
-        started = await self.browser.start(headless=True)
-        if not started:
-            return "Playwright install nahi hai. 'pip install playwright && playwright install' chalao."
-        try:
-            result = await self.browser.navigate(url)
-            if result.get("status") == "ok":
-                return f"Page: {result.get('title', 'N/A')}\nURL: {result.get('url', url)}\n\nContent preview:\n{result.get('content', '')[:1000]}"
-            else:
-                return f"Browser failed: {result.get('error', 'unknown')}"
-        finally:
-            await self.browser.close()
-
-    def _full_audit(self, target: str) -> str:
-        """Full pure-Python audit."""
-        if not target.startswith("http"):
-            target = f"https://{target}"
-
-        console.print(f"[yellow]Full audit on {target}...[/yellow]")
-        try:
-            report = self.toolkit.full_audit(target)
-
-            lines = [
-                f"Full Audit Report: {target}",
-                f"Total: {report['total_findings']} findings",
-                f"  CRITICAL: {report['critical']}",
-                f"  HIGH: {report['high']}",
-                f"  MEDIUM: {report['medium']}",
-                f"  LOW: {report['low']}",
-                "",
-            ]
-
-            for f in report["findings"][:15]:
-                lines.append(f"[{f.get('severity', 'INFO')}] {f.get('type', 'Unknown')}")
-                if f.get("evidence"):
-                    lines.append(f"  {f['evidence'][:100]}")
-
-            if report["total_findings"] > 15:
-                lines.append(f"\n... and {report['total_findings'] - 15} more")
-
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Full audit error: {str(e)}"
-
-    def _waf_detect(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]WAF detection: {target}...[/yellow]")
-        try:
-            result = self.toolkit.detect_waf(target)
-            if result.findings:
-                wafs = [f.get("waf", "Unknown") for f in result.findings]
-                return f"WAFs detected: {', '.join(wafs)}"
-            return "No WAF detected."
-        except Exception as e:
-            return f"WAF detect error: {str(e)}"
-
-    def _cors_check(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]CORS check: {target}...[/yellow]")
-        try:
-            result = self.toolkit.cors_check(target)
-            if result.findings:
-                lines = [f"CORS issues found: {len(result.findings)}", ""]
-                for f in result.findings:
-                    lines.append(f"  [{f['severity']}] {f['evidence'][:100]}")
-                return "\n".join(lines)
-            return "CORS looks safe."
-        except Exception as e:
-            return f"CORS check error: {str(e)}"
-
-    def _header_check(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]Security headers: {target}...[/yellow]")
-        try:
-            result = self.toolkit.header_check(target)
-            if result.findings:
-                lines = [f"Header issues: {len(result.findings)}", ""]
-                for f in result.findings:
-                    lines.append(f"  [{f['severity']}] {f['type']}")
-                    if f.get("evidence"):
-                        lines.append(f"    {f['evidence'][:80]}")
-                return "\n".join(lines)
-            return "All security headers present."
-        except Exception as e:
-            return f"Header check error: {str(e)}"
-
-    def _ssl_check(self, target: str) -> str:
-        from urllib.parse import urlparse
-        parsed = urlparse(target if target.startswith("http") else f"https://{target}")
-        hostname = parsed.hostname or target
-        console.print(f"[yellow]SSL check: {hostname}...[/yellow]")
-        try:
-            result = self.toolkit.ssl_check(hostname)
-            if result.findings:
-                lines = [f"SSL issues: {len(result.findings)}", ""]
-                for f in result.findings:
-                    lines.append(f"  [{f['severity']}] {f['type']}")
-                    lines.append(f"    {f['evidence'][:100]}")
-                return "\n".join(lines)
-            return "SSL looks good."
-        except Exception as e:
-            return f"SSL check error: {str(e)}"
-
-    def _sqlmap(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]SQLMap: {target}...[/yellow]")
-        try:
-            result = self.toolkit.sqlmap(target)
-            if result.findings:
-                lines = ["SQL Injection found!", ""]
-                for f in result.findings:
-                    lines.append(f"  [{f['severity']}] {f['type']}")
-                    lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
-                return "\n".join(lines)
-            return f"SQLMap complete. No injection found.\n\nOutput preview:\n{result.raw_output[:500]}"
-        except Exception as e:
-            return f"SQLMap error: {str(e)}"
-
-    def _info_disclosure(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]Info disclosure: {target}...[/yellow]")
-        try:
-            result = self.toolkit.info_disclosure_check(target)
-            if result.findings:
-                lines = [f"Exposed files: {len(result.findings)}", ""]
-                for f in result.findings:
-                    lines.append(f"  [{f['severity']}] {f.get('url', 'N/A')} - {f['type']}")
-                return "\n".join(lines)
-            return "No sensitive files exposed."
-        except Exception as e:
-            return f"Info disclosure error: {str(e)}"
-
-    def _open_redirect(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]Open redirect: {target}...[/yellow]")
-        try:
-            result = self.toolkit.open_redirect_check(target)
-            if result.findings:
-                lines = [f"Open redirects found: {len(result.findings)}", ""]
-                for f in result.findings:
-                    lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
-                    lines.append(f"  Redirects to: {f.get('evidence', '')[:80]}")
-                return "\n".join(lines)
-            return "No open redirects found."
-        except Exception as e:
-            return f"Redirect check error: {str(e)}"
-
-    def _xss_check(self, target: str) -> str:
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        console.print(f"[yellow]XSS check: {target}...[/yellow]")
-        try:
-            result = self.toolkit.xss_reflected_check(target)
-            if result.findings:
-                lines = ["XSS vulnerabilities found!", ""]
-                for f in result.findings:
-                    lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
-                    lines.append(f"  Payload: {f.get('payload', 'N/A')[:60]}")
-                return "\n".join(lines)
-            return "No reflected XSS found."
-        except Exception as e:
-            return f"XSS check error: {str(e)}"
-
-    def _subdomain_takeover(self, target: str) -> str:
-        from urllib.parse import urlparse
-        domain = urlparse(target if target.startswith("http") else f"https://{target}").hostname or target
-        console.print(f"[yellow]Subdomain takeover: {domain}...[/yellow]")
-        try:
-            result = self.toolkit.subdomain_takeover_check(domain)
-            if result.findings:
-                lines = ["TAKEOVER VULNERABILITIES FOUND!", ""]
-                for f in result.findings:
-                    lines.append(f"  [{f['severity']}] {f['evidence'][:100]}")
-                return "\n".join(lines)
-            return "No subdomain takeover vulnerabilities."
-        except Exception as e:
-            return f"Takeover check error: {str(e)}"
-
-    def _learn_from_kb(self, topic: str) -> str:
-        prompt = knowledge.get_learning_prompt(topic, count=3)
-        return self.router.generate(prompt, role="primary")
-
-    def _cheatsheet(self, vuln_type: str) -> str:
-        sheet = knowledge.get_cheatsheet(vuln_type)
-        if not sheet:
-            for key in knowledge.vuln_cheatsheet:
-                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
-                    sheet = knowledge.vuln_cheatsheet[key]
-                    break
-        if not sheet:
-            return f"Cheatsheet not found for '{vuln_type}'. Available: {', '.join(knowledge.vuln_cheatsheet.keys())}"
-
-        lines = [f"Cheatsheet: {vuln_type}", ""]
-        for key, val in sheet.items():
-            if isinstance(val, list):
-                lines.append(f"{key}:")
-                for item in val[:5]:
-                    lines.append(f"  - {item}")
-            else:
-                lines.append(f"{key}: {val}")
-        return "\n".join(lines)
-
-    def _playbook(self, vuln_type: str) -> str:
-        playbook = knowledge.get_playbook(vuln_type)
-        if not playbook:
-            for key in knowledge.playbooks:
-                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
-                    playbook = knowledge.playbooks[key]
-                    break
-        if not playbook:
-            return f"Playbook not found for '{vuln_type}'"
-
-        lines = [f"Attack Playbook: {vuln_type}", ""]
-        steps = playbook.get("steps", playbook.get("methodology", []))
-        if isinstance(steps, list):
-            for i, step in enumerate(steps, 1):
-                lines.append(f"Step {i}: {step}")
-        elif isinstance(steps, dict):
-            for k, v in steps.items():
-                lines.append(f"{k}: {v}")
-        else:
-            lines.append(str(steps)[:1000])
-
-        if playbook.get("tools"):
-            lines.append(f"\nTools: {', '.join(playbook['tools'])}")
-        if playbook.get("tips"):
-            lines.append(f"\nTips: {playbook['tips']}")
-        return "\n".join(lines)
-
-    def _get_payloads(self, vuln_type: str) -> str:
-        payloads = knowledge.get_payloads(vuln_type)
-        if not payloads:
-            for key in knowledge.payloads:
-                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
-                    payloads = knowledge.payloads[key]
-                    break
-        if not payloads:
-            return f"Payloads not found for '{vuln_type}'"
-
-        lines = [f"Payloads for {vuln_type} ({len(payloads)} total):", ""]
-        for p in payloads[:20]:
-            lines.append(f"  {p}")
-        if len(payloads) > 20:
-            lines.append(f"  ... and {len(payloads) - 20} more")
-        return "\n".join(lines)
-
-    def _bounty_info(self, vuln_type: str) -> str:
-        info = knowledge.get_bounty_info(vuln_type)
-        if not info:
-            for key in knowledge.bounty_ranges:
-                if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
-                    info = knowledge.bounty_ranges[key]
-                    break
-        if not info:
-            return f"Bounty info not found for '{vuln_type}'"
-
-        lines = [f"Bounty Ranges: {vuln_type}", ""]
-        for key, val in info.items():
-            if isinstance(val, dict):
-                lines.append(f"{key}:")
-                for k, v in val.items():
-                    lines.append(f"  {k}: {v}")
-            else:
-                lines.append(f"{key}: {val}")
-        return "\n".join(lines)
-
-    def _generate_code(self, description: str) -> str:
-        if not description:
-            return "Kya code chahiye? Example: 'code banao for a REST API'"
-        try:
-            code = self.codegen.generate(description)
-            return f"Generated code:\n\n{code}"
-        except Exception as e:
-            return f"Code generation error: {str(e)}"
-
-    def _think(self, topic: str) -> str:
-        result = self.monologue.think(topic)
-        return f"""Soch raha hoon...
-
-{result['thought']}
-
-Emotional charge: {result['emotional_charge']}"""
-
-    def _dream(self) -> str:
-        result = self.dreaming.dream()
-        if result.get("status") == "no_memories_to_process":
-            return "Abhi koi yaad nahi hai jo consolidate karoon."
-        return f"""Dream state complete:
-
-Memories processed: {result.get('memories_processed', 0)}
-Consolidated: {result.get('consolidation', {}).get('preserved', 0)} preserved
-
-Insights: {result.get('insights', 'None')[:200]}..."""
-
-    def _get_status(self) -> str:
-        providers = self.router.list_available_providers()
-        emotional = self.emotions.get_emotional_state()
-        goals = self.goal_manager.get_stats()
-        conv_count = self.conversation_memory.count()
-        platform = detector.info.os.value.upper()
-
-        primary = self.router.get_provider("primary")
-        primary_name = primary.name if primary else "none"
-
-        return f"""System Status:
-  Platform: {platform}
-  Primary AI: {primary_name}
-  Providers: {len(providers)} active ({', '.join(providers[:5])})
-  Emotion: {emotional['current_emotion']} (dominant: {emotional['dominant_recent']})
-  Conversations: {conv_count}
-  Goals: {goals['total']} total, {goals['completed']} completed
-  Thoughts: {len(self.monologue.thoughts)}
-  Authorized targets: {len(self.auth.list_targets())}"""
-
-    def _get_mood(self) -> str:
-        state = self.emotions.get_emotional_state()
-        thought = self.monologue.get_thinking_style()
-        return f"""Mood: {state['current_emotion']}
-Dominant: {state['dominant_recent']}
-Empathy: {state['empathy_level']:.0%}
-Thinking style: {thought}
-Total emotional history: {state['history_length']} entries"""
-
-    def _recall(self, topic: str) -> str:
-        if not topic:
-            recent = self.conversation_memory.recall_recent(5)
-            if not recent:
-                return "Abhi tak koi conversation nahi hui."
-            lines = [f"  [{c['emotion']}] {c['user'][:60]}..." for c in recent]
-            return "Pichli conversations:\n" + "\n".join(lines)
-
-        results = self.conversation_memory.recall_about(topic)
-        if not results:
-            return f"'{topic}' ke baare mein kuch yaad nahi."
-        lines = [f"  - {c['user'][:50]}..." for c in results[:3]]
-        return f"'{topic}' ke baare mein yaadein:\n" + "\n".join(lines)
-
-    def _evolve(self) -> str:
-        from src.autonomy.evolution.self_modifier import SelfModifier
-        modifier = SelfModifier(self.router)
-        console.print("[yellow]Analyzing codebase...[/yellow]")
-        result = modifier.analyze_codebase()
-        if "error" in result:
-            return f"Evolution error: {result['error']}"
-        return f"Found {result.get('improvements_suggested', 0)} improvements.\n{result.get('raw_analysis', '')[:300]}..."
-
-    def _set_goal(self, description: str) -> str:
-        if not description:
-            return "Kya goal set karna hai?"
-        goal = self.goal_manager.create_goal(description, Priority.HIGH)
-        return f"Goal set: {goal.description} (Priority: {goal.priority.name})"
-
-    def _show_goals(self) -> str:
-        stats = self.goal_manager.get_stats()
-        active = self.goal_manager.get_active_goals()
-        lines = [f"  - {g.description} [{g.status}]" for g in active[:5]]
-        return f"Goals: {stats['total']} total, {stats['completed']} done\n" + "\n".join(lines) if lines else "Koi goals nahi abhi."
-
-    def _learn(self, topic: str) -> str:
-        prompt = f"""Research and explain: {topic}
-
-1. What is it?
-2. Why is it important?
-3. How does it relate to security testing?
-
-Be concise but informative."""
-        return self.router.generate(prompt, role="primary")
-
-    def _self_reflect(self, user_input: str, response: str) -> str:
-        return self.router.self_reflect(response, user_input)
-
-
-def main():
-    """Main chat loop."""
-    prometheus = Prometheus()
-
-    console.print("[bold cyan]========================================[/bold cyan]")
-    console.print("[bold cyan]  PROMETHEUS v2.0 - Security Research[/bold cyan]")
-    console.print("[bold cyan]========================================[/bold cyan]")
-    console.print()
-    console.print(prometheus.identity.get_identity_statement())
-    console.print()
-    console.print("[green]Commands:[/green]")
-    console.print("[green]  'commands' - all available commands[/green]")
-    console.print("[green]  'authorize <domain>' - add scan target[/green]")
-    console.print("[green]  'targets' - show authorized targets[/green]")
-    console.print("[green]  'quit' - exit[/green]\n")
-
-    while True:
-        try:
-            user_input = console.input("[bold cyan]Tum: [/bold cyan]").strip()
-
-            if not user_input:
-                continue
-
-            if user_input.lower() == "commands":
-                console.print(prometheus.intent_parser.get_available_commands())
-                continue
-
-            if user_input.lower() == "tools":
-                from src.bugbounty.cross_platform_checker import CrossPlatformToolChecker
-                checker = CrossPlatformToolChecker()
-                checker.print_status()
-                missing = checker.get_missing()
-                outdated = checker.get_outdated()
-                if missing or outdated:
-                    console.print(f"\n[yellow]Install commands:[/yellow]")
-                    console.print(checker.get_all_install_commands())
-                else:
-                    console.print(f"\n[green]Sab tools latest hain![/green]")
-                continue
-
-            if user_input.lower() == "hacker":
-                from src.bugbounty.hacker_tools import HackerTools
-                ht = HackerTools()
-                ht.print_status()
-                continue
-
-            if user_input.lower() == "platform":
-                detector.print_info()
-                continue
-
-            response = prometheus.process(user_input)
-
-            if response == "__QUIT__":
-                console.print("[yellow]Alvida![/yellow]")
+    """Main Prometheus security assessment engine.
+
+    Usage:
+        prometheus = Prometheus()
+        prometheus.assess("example.com")  # full autonomous assessment
+        prometheus.status()                # system status
+    """
+
+    def __init__(self, router: Optional[ModelRouter] = None):
+        self.router = router or ModelRouter()
+        self.planner = AttackPlanner(self.router)
+        self.chain_builder = ChainBuilder(self.router)
+        self.memory: Optional[WorkingMemory] = None
+
+    def assess(self, target: str, max_steps: int = 15) -> Dict[str, Any]:
+        """Run a full autonomous security assessment on a target.
+
+        1. Check authorization
+        2. Generate attack plan
+        3. Execute tools step by step
+        4. Analyze results
+        5. Build exploit chains
+        6. Generate report
+        """
+        # Authorization check
+        if not auth.require_auth(target):
+            return {"error": "Target not authorized", "target": target}
+
+        console.print(f"\n[bold blue]═══ Prometheus Security Assessment ═══[/bold blue]")
+        console.print(f"[target]Target: {target}[/target]")
+        console.print(f"[info]Max steps: {max_steps}[/info]\n")
+
+        # Initialize working memory
+        self.memory = WorkingMemory(target)
+        executor = ToolExecutor(self.memory)
+
+        # Load knowledge base context
+        kb_context = knowledge.search(target, limit=5)
+        if kb_context:
+            self.memory.add_note(f"Found {len(kb_context)} relevant knowledge base entries")
+            for entry in kb_context[:3]:
+                self.memory.add_note(f"KB: {entry.title}")
+
+        # Generate initial plan
+        initial_steps = self.planner.plan_initial(target)
+        self.memory.set_plan([str(s) for s in initial_steps])
+
+        console.print(f"[info]Plan: {len(initial_steps)} initial steps[/info]\n")
+
+        # Execute initial plan
+        for i, step in enumerate(initial_steps):
+            if i >= max_steps:
+                break
+            console.print(f"\n[bold]Step {i+1}/{min(len(initial_steps), max_steps)}: {step.reasoning}[/bold]")
+            executor.execute(step.tool, step.target, **step.args)
+
+        # AI-guided continuation
+        steps_done = len(initial_steps)
+        while steps_done < max_steps:
+            context = self.memory.get_context()
+            available = executor.get_available_tools()
+
+            next_step = self.planner.plan_next(target, context, available)
+            if next_step is None:
+                console.print("\n[success]✓ Assessment complete — no more actions needed.[/success]")
                 break
 
-            console.print(f"\n[bold green]Prometheus:[/bold green] {response}\n")
+            steps_done += 1
+            console.print(
+                f"\n[bold]AI Step {steps_done}: {next_step.reasoning}[/bold]"
+            )
+            executor.execute_plan(next_step.tool, next_step.target, next_step.args)
 
-        except KeyboardInterrupt:
-            console.print("\n[yellow]Band kiya. 'quit' se properly band karo.[/yellow]")
+        # Analyze exploit chains
+        if len(self.memory.findings) >= 2:
+            console.print("\n[bold cyan]Analyzing exploit chains...[/bold cyan]")
+            chains = self.chain_builder.find_chains(self.memory)
+            if chains:
+                console.print(f"  [warning]Found {len(chains)} exploit chains![/warning]")
+                for chain in chains:
+                    console.print(f"  [critical]⚡ {chain.name}[/critical]")
+                    console.print(f"    Impact: {chain.impact[:100]}")
+
+        # Generate final analysis
+        stats = self.memory.get_stats()
+        report = self._generate_report(stats)
+
+        console.print(f"\n[bold blue]═══ Assessment Complete ═══[/bold blue]")
+        console.print(f"  Findings: {stats['total_findings']}")
+        for sev, count in stats.get('findings_by_severity', {}).items():
+            console.print(f"    [{sev.lower()}]{sev}: {count}[/{sev.lower()}]")
+        console.print(f"  Tools run: {stats['tools_run']}")
+        console.print(f"  Duration: {stats['duration_minutes']} min")
+
+        return report
+
+    def _generate_report(self, stats: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate final assessment report."""
+        report = {
+            "target": self.memory.target,
+            "timestamp": datetime.now().isoformat(),
+            "stats": stats,
+            "findings": [f.to_dict() for f in self.memory.findings],
+            "subdomains": self.memory.subdomains[:50],
+            "open_ports": self.memory.open_ports,
+            "http_services": self.memory.http_services[:20],
+            "tech_stack": self.memory.tech_stack,
+            "usernames": self.memory.usernames,
+        }
+
+        # Generate LLM analysis if findings exist
+        if self.memory.findings:
+            context = self.memory.get_context()
+            try:
+                analysis = self.planner.analyze_findings(context)
+                report["analysis"] = analysis
+            except Exception:
+                report["analysis"] = "Analysis generation failed."
+
+        # Save report
+        output_dir = config.output_dir / self.memory.target.replace(".", "_")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        report_file = output_dir / f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        try:
+            import json
+            with open(report_file, "w") as f:
+                json.dump(report, f, indent=2, default=str)
+            console.print(f"\n  [info]Report saved: {report_file}[/info]")
         except Exception as e:
-            console.print(f"[red]Error: {e}[/red]")
+            logger.error(f"Failed to save report: {e}")
 
+        return report
 
-if __name__ == "__main__":
-    main()
+    def status(self) -> str:
+        """Get system status."""
+        lines = [
+            "\n[bold]Prometheus v3.0 — AI Security Researcher[/bold]",
+            "",
+            f"  Model: {self.router.get_status()[:200]}",
+            "",
+        ]
+
+        # Tool status
+        from .tools.registry import registry
+        lines.append(registry.status())
+
+        # Knowledge base
+        kb_stats = knowledge.get_stats()
+        lines.append(f"\n  Knowledge Base: {kb_stats['total_entries']} entries")
+
+        # Auth
+        lines.append(f"\n  {auth.list_targets()}")
+
+        return "\n".join(lines)
+
+    def osint(self, target: str) -> Dict[str, Any]:
+        """Run OSINT on a target (no auth needed for passive recon)."""
+        from .tools.registry import registry
+
+        console.print(f"\n[bold cyan]OSINT: {target}[/bold cyan]")
+
+        results = {"target": target, "findings": []}
+
+        # Username search
+        if not target.startswith(("http://", "https://", ".")):
+            result = registry.run("sherlock", target)
+            results["findings"].extend(result.findings)
+
+        # Subdomain + HTTP probe for domains
+        if "." in target:
+            sub_result = registry.run("subfinder", target)
+            results["findings"].extend(sub_result.findings)
+
+            subdomains = [f["value"] for f in sub_result.findings]
+            if subdomains:
+                http_result = registry.run("httpx", target, targets=subdomains[:20])
+                results["findings"].extend(http_result.findings)
+
+        console.print(f"\n  [success]OSINT complete: {len(results['findings'])} findings[/success]")
+        return results
