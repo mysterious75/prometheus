@@ -17,6 +17,20 @@
 
 ---
 
+## ⚠️ Disclaimer
+
+**This tool is for authorized security testing and educational purposes only.**
+
+- Users must obtain proper authorization before testing any target
+- Unauthorized access to computer systems is illegal in most jurisdictions
+- The authors are not responsible for any misuse of this tool
+- All scanning requires explicit target authorization (`authorize <target>`)
+- Like Nmap, SQLMap, Metasploit, and other security tools, Prometheus is a dual-use tool with legitimate applications in security research, bug bounty programs, and authorized penetration testing
+
+See [SECURITY.md](SECURITY.md) for our full security policy.
+
+---
+
 ## What Is Prometheus?
 
 Prometheus is an **open-source, AI-powered security testing platform** that autonomously discovers and validates vulnerabilities in web applications, APIs, networks, and cloud infrastructure.
