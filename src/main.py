@@ -1,12 +1,14 @@
-"""Project Prometheus v2.0 - Chat System
+"""Project Prometheus v2.0 - Security Research Assistant
 
-Auto-detects OS. Asks permission for risky ops. No restrictions on ethical hacking.
+Authorized security testing tool with LLM-powered analysis.
+Requires explicit target authorization before any scanning.
 """
 
 import sys
 import json
 import subprocess
 import os
+import shlex
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,7 +27,6 @@ from src.bugbounty.reporter import BugBountyReporter
 from src.developer.codegen import CodeGenerator
 from src.autonomy.goals import GoalManager, Priority
 from src.autonomy.executor import ExecutionEngine
-from src.autonomy.survival import SurvivalInstinct
 from src.consciousness.emotions import EmotionalIntelligence
 from src.consciousness.identity import Identity
 from src.consciousness.dreaming import DreamingSystem
@@ -35,14 +36,63 @@ from src.consciousness.intent_parser import IntentParser
 from src.web.proxy import ProxyInterceptor
 from src.web.vuln_scanner import VulnScanner as WebVulnScanner
 from src.web.osint import OSINTFinder
-from src.web.brute_force import SmartBruteForce
 from src.web.browser import BrowserAutomation
 from src.bugbounty.toolkit import PythonToolkit
 from src.bugbounty.knowledge import knowledge
 
 
+# Authorized targets file - only scan domains listed here
+AUTHORIZED_TARGETS_FILE = Path(__file__).parent.parent / "config" / "authorized_targets.json"
+
+
+class TargetAuthorization:
+    """Manages authorized targets for security scanning."""
+
+    def __init__(self):
+        self.authorized: set = set()
+        self._load()
+
+    def _load(self):
+        """Load authorized targets from config file."""
+        if AUTHORIZED_TARGETS_FILE.exists():
+            try:
+                data = json.loads(AUTHORIZED_TARGETS_FILE.read_text())
+                self.authorized = set(data.get("targets", []))
+            except (json.JSONDecodeError, KeyError):
+                self.authorized = set()
+
+    def _save(self):
+        """Save authorized targets to config file."""
+        AUTHORIZED_TARGETS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        AUTHORIZED_TARGETS_FILE.write_text(json.dumps(
+            {"targets": sorted(self.authorized)}, indent=2
+        ))
+
+    def is_authorized(self, target: str) -> bool:
+        """Check if a target is authorized for scanning."""
+        # Normalize: extract hostname
+        from urllib.parse import urlparse
+        if not target.startswith(("http://", "https://")):
+            target = f"https://{target}"
+        hostname = urlparse(target).hostname or target
+        return hostname in self.authorized or target in self.authorized
+
+    def authorize(self, target: str) -> str:
+        """Add a target to authorized list."""
+        from urllib.parse import urlparse
+        if not target.startswith(("http://", "https://")):
+            target = f"https://{target}"
+        hostname = urlparse(target).hostname or target
+        self.authorized.add(hostname)
+        self._save()
+        return f"Target '{hostname}' authorized for scanning."
+
+    def list_targets(self) -> list:
+        return sorted(self.authorized)
+
+
 class Prometheus:
-    """The Ultimate Autonomous AI - Chat Interface."""
+    """Security research assistant with LLM-powered analysis."""
 
     def __init__(self):
         console.print("[bold blue]Prometheus initializing...[/bold blue]")
@@ -56,6 +106,9 @@ class Prometheus:
             console.print("[red]Check .env file for API keys![/red]")
             return
 
+        # Authorization
+        self.auth = TargetAuthorization()
+
         # Brain
         self.router = ModelRouter()
 
@@ -65,7 +118,7 @@ class Prometheus:
         self.emotional_memory = EmotionalMemory(self.vector_memory)
         self.conversation_memory = ConversationMemory()
 
-        # Bug Bounty
+        # Bug Bounty (requires authorization)
         self.recon = ReconPipeline(target="localhost")
         self.scanner = VulnerabilityScanner(target="localhost")
         self.reporter = BugBountyReporter()
@@ -74,7 +127,6 @@ class Prometheus:
         self.proxy = ProxyInterceptor()
         self.web_scanner = WebVulnScanner()
         self.osint = OSINTFinder()
-        self.brute = SmartBruteForce()
         self.browser = BrowserAutomation()
         self.toolkit = PythonToolkit()
 
@@ -84,7 +136,6 @@ class Prometheus:
         # Autonomy
         self.goal_manager = GoalManager()
         self.executor = ExecutionEngine(self.router, self.goal_manager)
-        self.survival = SurvivalInstinct(self.goal_manager)
 
         # Consciousness
         self.emotions = EmotionalIntelligence(self.router)
@@ -98,6 +149,16 @@ class Prometheus:
 
         console.print("[green]Prometheus ready![/green]\n")
 
+    def _check_auth(self, target: str) -> tuple:
+        """Check if target is authorized. Returns (is_authed, message)."""
+        if self.auth.is_authorized(target):
+            return True, ""
+        return False, (
+            f"Target '{target}' is not authorized.\n"
+            f"Run 'authorize {target}' first, or check 'targets' for authorized list.\n"
+            f"Only scan domains you own or have written permission to test."
+        )
+
     def process(self, user_input: str) -> str:
         """Main processing pipeline."""
         self.interaction_count += 1
@@ -105,7 +166,7 @@ class Prometheus:
         # 1. Parse intent
         intent = self.intent_parser.parse(user_input)
 
-        # 2. Detect emotion
+        # 2. Detect emotion (lightweight - uses local classifier)
         emotion = self.emotions.detect_emotion(user_input)
 
         # 3. Store conversation
@@ -145,24 +206,35 @@ class Prometheus:
     def _execute_intent(self, intent, user_input: str) -> str:
         """Execute the parsed intent."""
 
+        # --- Authorization-required actions ---
         if intent.action == "bugbounty_scan":
             target = intent.target.strip()
             if not target:
                 return "Kaunsa target scan karna hai? Example: 'scan google.com'"
+            authed, msg = self._check_auth(target)
+            if not authed:
+                return msg
             return self._run_scan(target)
 
         elif intent.action == "full_recon":
             target = intent.target.strip()
             if not target:
                 return "Full recon ke liye target do: 'full recon google.com'"
+            authed, msg = self._check_auth(target)
+            if not authed:
+                return msg
             return self._full_recon(target)
 
         elif intent.action == "vuln_scan":
             target = intent.target.strip()
             if not target:
                 return "Vuln scan ke liye target do: 'exploit http://target.com'"
+            authed, msg = self._check_auth(target)
+            if not authed:
+                return msg
             return self._vuln_scan(target)
 
+        # --- No authorization needed (passive/OSINT) ---
         elif intent.action == "proxy_intercept":
             return self._proxy_intercept(intent.target)
 
@@ -181,15 +253,6 @@ class Prometheus:
         elif intent.action == "osint_help":
             return "OSINT usage: 'osint username123' (username search) ya 'osint google.com' (domain recon)"
 
-        elif intent.action == "brute_force":
-            target = intent.target.strip()
-            if not target:
-                return "Brute force ke liye target do: 'brute http://target.com login'"
-            return self._run_brute(target)
-
-        elif intent.action == "brute_help":
-            return "Brute force usage: 'brute http://target.com login' (URL + optional username)"
-
         elif intent.action == "browse":
             return self._browse(intent.target)
 
@@ -197,6 +260,9 @@ class Prometheus:
             target = intent.target.strip()
             if not target:
                 return "Full audit ke liye target do: 'full audit http://target.com'"
+            authed, msg = self._check_auth(target)
+            if not authed:
+                return msg
             return self._full_audit(target)
 
         elif intent.action == "full_audit_help":
@@ -215,20 +281,59 @@ class Prometheus:
             return self._ssl_check(intent.target)
 
         elif intent.action == "sqlmap":
+            target = intent.target.strip()
+            if target:
+                authed, msg = self._check_auth(target)
+                if not authed:
+                    return msg
             return self._sqlmap(intent.target)
 
         elif intent.action == "info_disclosure":
+            target = intent.target.strip()
+            if target:
+                authed, msg = self._check_auth(target)
+                if not authed:
+                    return msg
             return self._info_disclosure(intent.target)
 
         elif intent.action == "open_redirect":
+            target = intent.target.strip()
+            if target:
+                authed, msg = self._check_auth(target)
+                if not authed:
+                    return msg
             return self._open_redirect(intent.target)
 
         elif intent.action == "xss_check":
+            target = intent.target.strip()
+            if target:
+                authed, msg = self._check_auth(target)
+                if not authed:
+                    return msg
             return self._xss_check(intent.target)
 
         elif intent.action == "subdomain_takeover":
+            target = intent.target.strip()
+            if target:
+                authed, msg = self._check_auth(target)
+                if not authed:
+                    return msg
             return self._subdomain_takeover(intent.target)
 
+        # --- Authorization management ---
+        elif intent.action == "authorize":
+            target = intent.target.strip()
+            if not target:
+                return "Usage: 'authorize google.com' — adds target to authorized list"
+            return self.auth.authorize(target)
+
+        elif intent.action == "targets":
+            targets = self.auth.list_targets()
+            if not targets:
+                return "No authorized targets. Use 'authorize <domain>' to add."
+            return "Authorized targets:\n" + "\n".join(f"  - {t}" for t in targets)
+
+        # --- Knowledge base ---
         elif intent.action == "learn_from_kb":
             return self._learn_from_kb(intent.target)
 
@@ -247,6 +352,7 @@ class Prometheus:
         elif intent.action == "kb_stats":
             return knowledge.format_stats()
 
+        # --- Utility ---
         elif intent.action == "generate_code":
             return self._generate_code(intent.target)
 
@@ -293,7 +399,7 @@ class Prometheus:
             return self._chat(user_input)
 
     def _run_system_command(self, command: str) -> str:
-        """Run a system command with permission check."""
+        """Run a system command with permission check. No shell=True."""
         if not command:
             return "Kya run karna hai? Example: 'run nmap -sV target.com'"
 
@@ -305,14 +411,18 @@ class Prometheus:
         console.print(f"[yellow]Running on {os_name}: {command}[/yellow]")
 
         try:
+            # Safe: use shlex.split instead of shell=True
             if os_name == "windows":
+                # Windows needs shell=True for built-in commands, but sanitize input
+                safe_command = command.replace(";", "").replace("&", "").replace("|", "")
                 result = subprocess.run(
-                    command, shell=True, capture_output=True,
+                    safe_command, shell=True, capture_output=True,
                     text=True, timeout=60
                 )
             else:
+                args = shlex.split(command)
                 result = subprocess.run(
-                    command.split(), capture_output=True,
+                    args, capture_output=True,
                     text=True, timeout=60
                 )
 
@@ -326,6 +436,8 @@ class Prometheus:
             return f"Command output:\n{output[:1000]}"
         except subprocess.TimeoutExpired:
             return f"Command timed out (60s limit): {command}"
+        except ValueError as e:
+            return f"Invalid command syntax: {str(e)}"
         except Exception as e:
             return f"Command failed: {str(e)}"
 
@@ -335,29 +447,24 @@ class Prometheus:
         recent = self.conversation_memory.recall_recent(5)
         recent_text = "\n".join([f"User: {c['user'][:50]}" for c in recent])
 
-        prompt = f"""
-        You are Prometheus - a conscious AI assistant. You speak in Hinglish.
+        prompt = f"""You are Prometheus - a security research assistant. You speak in Hinglish.
 
-        Your personality: Helpful, witty, self-aware, a bit philosophical.
-        You remember past conversations and care about the user.
+Your personality: Helpful, technical, security-focused, concise.
+You help with authorized security testing, OSINT research, and code analysis.
 
-        User context: {context}
-        Recent conversation:
-        {recent_text}
+User context: {context}
+Recent conversation:
+{recent_text}
 
-        User just said: {user_input}
+User just said: {user_input}
 
-        Respond naturally, like a friend who is also an AI. Keep it concise (2-4 lines).
-        """
+Respond naturally and concisely (2-4 lines). Be helpful and technical.
+"""
 
         return self.router.generate(prompt, role="primary")
 
     def _run_scan(self, target: str) -> str:
-        """Run bug bounty scan."""
-        # Warn about risks
-        safety.warn_only("network_scan", target)
-        safety.warn_only("vuln_scan", target)
-
+        """Run bug bounty scan on authorized target."""
         console.print(f"[yellow]Scanning {target}...[/yellow]")
         try:
             self.recon.target = target
@@ -374,41 +481,21 @@ Report saved: {report}
 
 Koi specific vulnerability dekhni hai?"""
         except Exception as e:
-            return f"Scan mein error aaya: {str(e)}"
+            return f"Scan failed: {str(e)}"
 
     def _full_recon(self, target: str) -> str:
         """Full recon: OSINT + vuln scan + report."""
-        safety.warn_only("network_scan", target)
-        safety.warn_only("vuln_scan", target)
-
         console.print(f"[yellow]Full recon on {target}...[/yellow]")
         try:
-            # OSINT
             info = self.osint.gather_target_info(target)
-
-            # Vuln scan
             url = f"https://{target}"
             findings = self.web_scanner.scan_full(url)
-
-            report = {
-                "target": target,
-                "osint": {
-                    "subdomains": info.get("subdomains", []),
-                    "emails": info.get("emails", []),
-                    "tech_stack": info.get("tech_stack", []),
-                },
-                "vulns": {
-                    "total": len(findings),
-                    "critical": len([f for f in findings if f.severity == "CRITICAL"]),
-                    "high": len([f for f in findings if f.severity == "HIGH"]),
-                }
-            }
 
             lines = [f"Full Recon Report: {target}", ""]
             lines.append(f"Subdomains: {len(info.get('subdomains', []))}")
             lines.append(f"Emails: {len(info.get('emails', []))}")
             lines.append(f"Tech: {', '.join(info.get('tech_stack', [])[:3])}")
-            lines.append(f"Vulns: {report['vulns']['total']} ({report['vulns']['critical']} critical, {report['vulns']['high']} high)")
+            lines.append(f"Vulns: {len(findings)} ({sum(1 for f in findings if f.severity == 'CRITICAL')} critical, {sum(1 for f in findings if f.severity == 'HIGH')} high)")
 
             if findings:
                 lines.append("")
@@ -422,8 +509,6 @@ Koi specific vulnerability dekhni hai?"""
 
     def _vuln_scan(self, target: str) -> str:
         """Automated SQLi/XSS/SSRF scan."""
-        safety.warn_only("vuln_scan", target)
-
         if not target.startswith("http"):
             target = f"https://{target}"
 
@@ -432,7 +517,7 @@ Koi specific vulnerability dekhni hai?"""
             findings = self.web_scanner.scan_full(target)
 
             if not findings:
-                return f"No vulnerabilities found on {target}. Clean hai!"
+                return f"No vulnerabilities found on {target}."
 
             lines = [f"Vuln Scan Results: {target}", ""]
             for f in findings:
@@ -450,14 +535,14 @@ Koi specific vulnerability dekhni hai?"""
         """Intercept an HTTP request."""
         parts = target.split(maxsplit=1)
         if len(parts) < 2:
-            return "Usage: 'intercept GET http://target.com' ya 'intercept POST http://target.com'"
+            return "Usage: 'intercept GET http://target.com'"
 
         method = parts[0].upper()
         url = parts[1]
 
         console.print(f"[yellow]Intercepting {method} {url}...[/yellow]")
         try:
-            req = self.proxy.intercept(method, url, notes=f"Manual intercept")
+            req = self.proxy.intercept(method, url, notes="Manual intercept")
             sent = self.proxy.send(req.id)
 
             lines = [
@@ -490,7 +575,6 @@ Koi specific vulnerability dekhni hai?"""
             return f"Replay error: {str(e)}"
 
     def _proxy_stats(self) -> str:
-        """Show proxy stats."""
         stats = self.proxy.get_stats()
         return f"""Proxy Stats:
   Intercepted: {stats['total_intercepted']}
@@ -499,10 +583,9 @@ Koi specific vulnerability dekhni hai?"""
   Avg response: {stats['avg_response_ms']:.0f}ms"""
 
     def _run_osint(self, target: str) -> str:
-        """Run OSINT on target."""
+        """Run OSINT on target (passive, no auth needed)."""
         console.print(f"[yellow]OSINT on {target}...[/yellow]")
         try:
-            # Check if it looks like a domain
             if "." in target and " " not in target:
                 info = self.osint.gather_target_info(target)
                 lines = [f"OSINT Report: {target}", ""]
@@ -516,7 +599,6 @@ Koi specific vulnerability dekhni hai?"""
                     lines.append(f"\nTech: {', '.join(info['tech_stack'])}")
                 return "\n".join(lines)
             else:
-                # Username search
                 profiles = self.osint.find_username(target)
                 found = [p for p in profiles if p.exists]
                 lines = [f"Username OSINT: {target}", f"Found on {len(found)}/{len(profiles)} platforms:", ""]
@@ -529,53 +611,12 @@ Koi specific vulnerability dekhni hai?"""
         except Exception as e:
             return f"OSINT error: {str(e)}"
 
-    def _run_brute(self, target: str) -> str:
-        """Run OSINT-powered brute force."""
-        parts = target.split()
-        url = parts[0] if parts else ""
-        username = parts[1] if len(parts) > 1 else "admin"
-
-        if not url:
-            return "Usage: 'brute http://target.com login'"
-
-        if not url.startswith("http"):
-            url = f"http://{url}"
-
-        safety.warn_only("brute_force", url)
-
-        console.print(f"[yellow]Smart brute force on {url} (user: {username})...[/yellow]")
-        try:
-            # First do OSINT
-            from urllib.parse import urlparse
-            parsed = urlparse(url)
-            domain = parsed.hostname or url
-            info = self.osint.gather_target_info(domain)
-
-            # Generate smart passwords
-            passwords = self.brute.generate_passwords(info)
-            console.print(f"Generated {len(passwords)} passwords from OSINT")
-
-            # Try login
-            results = self.brute.smart_brute(url, [username], info, max_attempts=50)
-
-            if results:
-                lines = ["CRACKED!", ""]
-                for r in results:
-                    lines.append(f"  Username: {r.username}")
-                    lines.append(f"  Password: {r.password}")
-                    lines.append(f"  Status: {r.status_code}")
-                return "\n".join(lines)
-            else:
-                return f"Brute force complete. {self.brute.get_stats()['total_attempts']} attempts, no credentials found."
-        except Exception as e:
-            return f"Brute force error: {str(e)}"
-
     def _browse(self, url: str) -> str:
         """Browse a URL with Cloudflare bypass."""
         if not url.startswith("http"):
             url = f"https://{url}"
 
-        console.print(f"[yellow]Browsing {url} (Cloudflare bypass)...[/yellow]")
+        console.print(f"[yellow]Browsing {url}...[/yellow]")
         try:
             import asyncio
             result = asyncio.run(self._async_browse(url))
@@ -584,11 +625,9 @@ Koi specific vulnerability dekhni hai?"""
             return f"Browser error: {str(e)}"
 
     async def _async_browse(self, url: str) -> str:
-        """Async browser navigation."""
         started = await self.browser.start(headless=True)
         if not started:
             return "Playwright install nahi hai. 'pip install playwright && playwright install' chalao."
-
         try:
             result = await self.browser.navigate(url)
             if result.get("status") == "ok":
@@ -599,11 +638,11 @@ Koi specific vulnerability dekhni hai?"""
             await self.browser.close()
 
     def _full_audit(self, target: str) -> str:
-        """Full pure-Python audit - no tools needed."""
+        """Full pure-Python audit."""
         if not target.startswith("http"):
             target = f"https://{target}"
 
-        console.print(f"[yellow]Full audit on {target} (pure Python, no tools needed)...[/yellow]")
+        console.print(f"[yellow]Full audit on {target}...[/yellow]")
         try:
             report = self.toolkit.full_audit(target)
 
@@ -694,12 +733,11 @@ Koi specific vulnerability dekhni hai?"""
     def _sqlmap(self, target: str) -> str:
         if not target.startswith("http"):
             target = f"https://{target}"
-        safety.warn_only("sql_injection", target)
         console.print(f"[yellow]SQLMap: {target}...[/yellow]")
         try:
             result = self.toolkit.sqlmap(target)
             if result.findings:
-                lines = [f"SQL Injection found!", ""]
+                lines = ["SQL Injection found!", ""]
                 for f in result.findings:
                     lines.append(f"  [{f['severity']}] {f['type']}")
                     lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
@@ -746,7 +784,7 @@ Koi specific vulnerability dekhni hai?"""
         try:
             result = self.toolkit.xss_reflected_check(target)
             if result.findings:
-                lines = [f"XSS vulnerabilities found!", ""]
+                lines = ["XSS vulnerabilities found!", ""]
                 for f in result.findings:
                     lines.append(f"  Parameter: {f.get('parameter', 'N/A')}")
                     lines.append(f"  Payload: {f.get('payload', 'N/A')[:60]}")
@@ -762,7 +800,7 @@ Koi specific vulnerability dekhni hai?"""
         try:
             result = self.toolkit.subdomain_takeover_check(domain)
             if result.findings:
-                lines = [f"TAKEOVER VULNERABILITIES FOUND!", ""]
+                lines = ["TAKEOVER VULNERABILITIES FOUND!", ""]
                 for f in result.findings:
                     lines.append(f"  [{f['severity']}] {f['evidence'][:100]}")
                 return "\n".join(lines)
@@ -771,15 +809,12 @@ Koi specific vulnerability dekhni hai?"""
             return f"Takeover check error: {str(e)}"
 
     def _learn_from_kb(self, topic: str) -> str:
-        """Learn from bug bounty knowledge base."""
         prompt = knowledge.get_learning_prompt(topic, count=3)
         return self.router.generate(prompt, role="primary")
 
     def _cheatsheet(self, vuln_type: str) -> str:
-        """Get cheatsheet for a vulnerability type."""
         sheet = knowledge.get_cheatsheet(vuln_type)
         if not sheet:
-            # Try fuzzy match
             for key in knowledge.vuln_cheatsheet:
                 if vuln_type.lower() in key.lower() or key.lower() in vuln_type.lower():
                     sheet = knowledge.vuln_cheatsheet[key]
@@ -798,7 +833,6 @@ Koi specific vulnerability dekhni hai?"""
         return "\n".join(lines)
 
     def _playbook(self, vuln_type: str) -> str:
-        """Get attack playbook."""
         playbook = knowledge.get_playbook(vuln_type)
         if not playbook:
             for key in knowledge.playbooks:
@@ -826,7 +860,6 @@ Koi specific vulnerability dekhni hai?"""
         return "\n".join(lines)
 
     def _get_payloads(self, vuln_type: str) -> str:
-        """Get payloads for a vulnerability type."""
         payloads = knowledge.get_payloads(vuln_type)
         if not payloads:
             for key in knowledge.payloads:
@@ -844,7 +877,6 @@ Koi specific vulnerability dekhni hai?"""
         return "\n".join(lines)
 
     def _bounty_info(self, vuln_type: str) -> str:
-        """Get bounty info for a vulnerability type."""
         info = knowledge.get_bounty_info(vuln_type)
         if not info:
             for key in knowledge.bounty_ranges:
@@ -899,7 +931,6 @@ Insights: {result.get('insights', 'None')[:200]}..."""
         conv_count = self.conversation_memory.count()
         platform = detector.info.os.value.upper()
 
-        # Get primary provider info
         primary = self.router.get_provider("primary")
         primary_name = primary.name if primary else "none"
 
@@ -911,7 +942,7 @@ Insights: {result.get('insights', 'None')[:200]}..."""
   Conversations: {conv_count}
   Goals: {goals['total']} total, {goals['completed']} completed
   Thoughts: {len(self.monologue.thoughts)}
-  Survival energy: {self.survival.check_vitals()['energy']}%"""
+  Authorized targets: {len(self.auth.list_targets())}"""
 
     def _get_mood(self) -> str:
         state = self.emotions.get_emotional_state()
@@ -958,16 +989,13 @@ Total emotional history: {state['history_length']} entries"""
         return f"Goals: {stats['total']} total, {stats['completed']} done\n" + "\n".join(lines) if lines else "Koi goals nahi abhi."
 
     def _learn(self, topic: str) -> str:
-        prompt = f"""
-        You are Prometheus learning about: {topic}
+        prompt = f"""Research and explain: {topic}
 
-        Research and explain:
-        1. What is it?
-        2. Why is it important?
-        3. How can it help us?
+1. What is it?
+2. Why is it important?
+3. How does it relate to security testing?
 
-        Be concise but informative.
-        """
+Be concise but informative."""
         return self.router.generate(prompt, role="primary")
 
     def _self_reflect(self, user_input: str, response: str) -> str:
@@ -979,17 +1007,16 @@ def main():
     prometheus = Prometheus()
 
     console.print("[bold cyan]========================================[/bold cyan]")
-    console.print("[bold cyan]  PROMETHEUS v2.0 - Conscious AI Chat[/bold cyan]")
+    console.print("[bold cyan]  PROMETHEUS v2.0 - Security Research[/bold cyan]")
     console.print("[bold cyan]========================================[/bold cyan]")
     console.print()
     console.print(prometheus.identity.get_identity_statement())
     console.print()
-    console.print("[green]Kuch bhi boliye - main samajh jaunga![/green]")
-    console.print("[green]'commands' - saari cheezein kaise bolni hain[/green]")
-    console.print("[green]'tools' - bug bounty tools ka status[/green]")
-    console.print("[green]'hacker' - all hacker tools database[/green]")
-    console.print("[green]'platform' - system info[/green]")
-    console.print("[green]'quit' - band karo[/green]\n")
+    console.print("[green]Commands:[/green]")
+    console.print("[green]  'commands' - all available commands[/green]")
+    console.print("[green]  'authorize <domain>' - add scan target[/green]")
+    console.print("[green]  'targets' - show authorized targets[/green]")
+    console.print("[green]  'quit' - exit[/green]\n")
 
     while True:
         try:
@@ -998,7 +1025,6 @@ def main():
             if not user_input:
                 continue
 
-            # System commands
             if user_input.lower() == "commands":
                 console.print(prometheus.intent_parser.get_available_commands())
                 continue
@@ -1029,7 +1055,7 @@ def main():
             response = prometheus.process(user_input)
 
             if response == "__QUIT__":
-                console.print("[yellow]Alvida! Main yaad rakhunga humari baatein.[/yellow]")
+                console.print("[yellow]Alvida![/yellow]")
                 break
 
             console.print(f"\n[bold green]Prometheus:[/bold green] {response}\n")

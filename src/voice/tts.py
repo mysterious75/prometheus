@@ -1,3 +1,5 @@
+# NOTE: Not integrated with main system - reserved for future work
+
 """Text-to-Speech using Kokoro."""
 
 import os

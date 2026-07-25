@@ -1,7 +1,6 @@
-"""Autonomy package - Goal setting, execution, survival."""
+"""Autonomy package - Goal setting and execution."""
 
-from .goals import GoalManager
+from .goals import GoalManager, Priority
 from .executor import ExecutionEngine
-from .survival import SurvivalInstinct
 
-__all__ = ["GoalManager", "ExecutionEngine", "SurvivalInstinct"]
+__all__ = ["GoalManager", "Priority", "ExecutionEngine"]

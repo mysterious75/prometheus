@@ -1,3 +1,5 @@
+# NOTE: Not integrated with main system - reserved for future work
+
 """DevOps Manager - Infrastructure automation."""
 
 from typing import Dict, Any, List, Optional

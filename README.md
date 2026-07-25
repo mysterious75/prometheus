@@ -1,182 +1,263 @@
-# PROJECT PROMETHEUS
-## The Ultimate Autonomous AI - Bug Bounty + Consciousness + Developer
+# Prometheus
+
+<div align="center">
+
+**Security Research Assistant with LLM-Powered Analysis**
+
+[![Python](https://img.shields.io/badge/python-3.10+-blue?style=flat-square)]()
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)]()
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)]()
+
+</div>
 
 ---
 
+## What Is This?
+
+Prometheus is a **security research assistant** that combines:
+
+- **Automated vulnerability scanning** (SQLi, XSS, SSRF, command injection)
+- **OSINT reconnaissance** (username search, domain intel, subdomain enumeration)
+- **LLM-powered analysis** (14 provider support with smart routing)
+- **Knowledge base** (1242+ bug bounty reports, attack playbooks, cheatsheets)
+
+It's designed for **authorized security testing** — you must explicitly authorize targets before scanning.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│              CLI Chat Interface              │
+└─────────────────┬───────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│          Intent Parser (regex + LLM)        │
+└─────────────────┬───────────────────────────┘
+                  │
+    ┌─────────────┼─────────────┐
+    ▼             ▼             ▼
+┌────────┐  ┌──────────┐  ┌──────────┐
+│  Scan  │  │  OSINT   │  │   Chat   │
+│ Engine │  │  Finder  │  │  (LLM)   │
+└────┬───┘  └────┬─────┘  └────┬─────┘
+     │           │              │
+     ▼           ▼              ▼
+┌────────┐  ┌──────────┐  ┌──────────┐
+│VulnScan│  │ Username │  │ 14 LLM   │
+│SQLi/XSS│  │ 20+ plat │  │ providers│
+└────────┘  └──────────┘  └──────────┘
+```
+
 ## Quick Start
 
-### Windows (Recommended)
-```powershell
-# 1. Clone
+```bash
+# Clone
 git clone https://github.com/mysterious75/prometheus.git
 cd prometheus
 
-# 2. Auto Install (sab kuch khud install hoga)
-.\install.ps1
-
-# 3. Run
-python -m src.main
-```
-
-### Linux/Mac
-```bash
-# 1. Clone
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
-
-# 2. Auto Install
-chmod +x install.sh
-./install.sh
-
-# 3. Run
-python -m src.main
-```
-
-### Manual Install
-```bash
-# Create venv
-python -m venv venv
-
-# Activate
-# Windows:
-.\venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Install deps
+# Install
 pip install -r requirements.txt
 
-# Setup .env (copy and edit)
-copy .env.example .env   # Windows
-cp .env.example .env     # Linux/Mac
+# Configure (at least one API key needed)
+cp .env.example .env
+# Edit .env — add your API key(s)
 
 # Run
 python -m src.main
 ```
 
----
-
-## AI Providers
-
-Works with ANY API key. System auto-detects and tests keys on startup.
+### Supported LLM Providers
 
 | Provider | Role | Free Tier |
 |----------|------|-----------|
-| OpenRouter | Primary (openrouter/free) | Unlimited free models |
 | DeepSeek | Primary | Cheap, long context |
-| Gemini (1-3 keys) | Consciousness only | 150K tokens/day each |
+| Gemini (1-3 keys) | Consciousness | 150K tokens/day each |
+| OpenRouter | Fallback | Free models available |
 | OpenAI | Backup | Paid |
 | Anthropic | Backup | Paid |
 | Qwen, Kimi, GLM | Backup | Free tier |
 
-### Setup .env
-```env
-# At least 1 key needed
-OPENROUTER_API_KEY=sk-or-v1-...
+## Usage
 
-# Or any other provider
-DEEPSEEK_API_KEY=sk-...
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY_1=AIza...
+### Authorization First
 
-# Custom provider (any OpenAI-compatible API)
-CUSTOM_API_KEY=sk-...
-CUSTOM_BASE_URL=https://your-api.com/v1
-CUSTOM_MODEL=your-model
+```bash
+Tum: authorize google.com
+Prometheus: Target 'google.com' authorized for scanning.
+
+Tum: targets
+Prometheus: Authorized targets:
+  - google.com
 ```
 
----
+### Vulnerability Scanning
+
+```bash
+Tum: scan google.com
+Tum: full recon example.com
+Tum: exploit http://authorized-target.com
+Tum: full audit http://my-app.com
+```
+
+### OSINT (No Authorization Needed)
+
+```bash
+Tum: osint username123
+# Searches 20+ platforms for username
+
+Tum: osint google.com
+# Domain recon: subdomains, emails, tech stack
+```
+
+### Individual Checks
+
+```bash
+Tum: headers google.com        # Security headers
+Tum: ssl google.com            # SSL/TLS check
+Tum: cors http://target.com    # CORS misconfig
+Tum: waf http://target.com     # WAF detection
+Tum: xss http://target.com     # Reflected XSS
+Tum: sqlmap http://target.com  # SQL injection
+```
+
+### Knowledge Base
+
+```bash
+Tum: cheatsheet sqli           # SQL injection cheatsheet
+Tum: playbook xss              # XSS attack playbook
+Tum: payloads sqli             # Attack payloads
+Tum: bounty xss                # Bounty ranges
+```
 
 ## Project Structure
+
 ```
 prometheus/
-├── .env                    # API keys (NEVER commit)
-├── install.ps1             # Windows auto installer
-├── install.sh              # Linux/Mac auto installer
-├── requirements.txt        # Python dependencies
 ├── config/
-│   └── models.json         # 13 AI provider configs
+│   ├── models.json              # LLM provider configs
+│   └── authorized_targets.json  # Authorized scan targets
 ├── src/
-│   ├── main.py             # Main chat system
-│   ├── brain/              # AI brain
-│   │   ├── llm.py          # 13 LLM providers
-│   │   ├── router.py       # Auto-detect + role routing
-│   │   └── critic.py       # Multi-model consensus
-│   ├── memory/             # Memory system
-│   │   ├── chroma.py       # Vector DB (in-memory fallback)
-│   │   ├── episodic.py     # Experience memory
-│   │   └── emotional.py    # Emotional memory
-│   ├── consciousness/      # Consciousness
-│   │   ├── emotions.py     # 20 emotions
-│   │   ├── identity.py     # Self-identity
-│   │   ├── dreaming.py     # Memory consolidation
-│   │   └── intent_parser.py # Hinglish command parser
-│   ├── web/                # Web tools
-│   │   ├── proxy.py        # HTTP interceptor
-│   │   ├── vuln_scanner.py # SQLi/XSS/SSRF
-│   │   ├── osint.py        # OSINT 20+ platforms
-│   │   ├── brute_force.py  # Smart brute
-│   │   └── browser.py      # Playwright stealth
-│   ├── bugbounty/          # Bug bounty
-│   │   ├── toolkit.py      # Python audit (zero tools)
-│   │   ├── knowledge.py    # 1242 reports DB
-│   │   └── recon.py        # Recon pipeline
-│   ├── autonomy/           # Self-evolution
-│   │   ├── goals.py        # Goal management
-│   │   ├── survival.py     # Self-preservation
-│   │   └── evolution/      # GitHub scanner
-│   └── utils/
-│       ├── config.py       # Auto-detect config
-│       └── logger.py       # Logging
-├── learn-from-others/      # Bug bounty knowledge
-│   ├── knowledge_base.json # 1242 reports
-│   └── patterns/           # Cheatsheets, playbooks, payloads
-├── tests/                  # 40 tests
-└── docs/                   # GitHub Pages
+│   ├── main.py                  # Chat system + authorization
+│   ├── brain/                   # LLM routing + multi-provider
+│   │   ├── llm.py               # 14 provider integrations
+│   │   ├── router.py            # Smart routing + fallback
+│   │   └── critic.py            # Multi-model consensus
+│   ├── memory/                  # Vector memory (ChromaDB)
+│   │   ├── chroma.py            # Vector store + in-memory fallback
+│   │   ├── episodic.py          # Event memory
+│   │   └── emotional.py         # Emotional context
+│   ├── consciousness/           # NLP components
+│   │   ├── emotions.py          # Keyword + LLM emotion detection
+│   │   ├── identity.py          # System persona
+│   │   ├── intent_parser.py     # Command parsing
+│   │   ├── conversation_memory.py
+│   │   ├── monologue.py         # Internal reasoning
+│   │   ├── dreaming.py          # Memory consolidation
+│   │   └── reflection.py        # Self-reflection
+│   ├── web/                     # Web security tools
+│   │   ├── vuln_scanner.py      # SQLi/XSS/SSRF/CMDi scanner
+│   │   ├── osint.py             # Username + domain OSINT
+│   │   ├── proxy.py             # HTTP interceptor
+│   │   └── browser.py           # Playwright automation
+│   ├── bugbounty/               # Bug bounty toolkit
+│   │   ├── toolkit.py           # Pure Python security checks
+│   │   ├── knowledge.py         # 1242+ report knowledge base
+│   │   ├── recon.py             # Recon pipeline
+│   │   ├── scanner.py           # Vulnerability scanner
+│   │   └── reporter.py          # Report generation
+│   ├── autonomy/                # Goal management
+│   │   ├── goals.py             # Goal tracking
+│   │   ├── executor.py          # Task execution
+│   │   └── evolution/           # Self-improvement
+│   └── developer/
+│       └── codegen.py           # Code generation
+├── learn-from-others/           # Bug bounty knowledge base
+│   ├── knowledge_base.json      # 1242 reports
+│   └── patterns/                # Cheatsheets, payloads
+├── tests/                       # Test suite
+├── requirements.txt
+└── .env.example
 ```
 
----
+## Key Design Decisions
+
+### Why Authorization-First?
+
+Security tools must not be used for unauthorized scanning. Prometheus requires explicit target authorization before any active scanning. This prevents misuse and keeps you legal.
+
+### Why 14 LLM Providers?
+
+Different providers have different strengths:
+- **DeepSeek**: Cheap, long context (primary brain)
+- **Gemini**: Free tier, good for consciousness/emotions
+- **OpenRouter**: Free model fallback
+- Multiple backups = no single point of failure
+
+### Why ChromaDB with In-Memory Fallback?
+
+Vector search enables semantic memory (recall by meaning, not keywords). The in-memory fallback means the system works even without ChromaDB installed — you just lose persistence.
+
+### Why Pure Python Security Toolkit?
+
+Most security tools require external binaries (nmap, sqlmap, etc.). The `PythonToolkit` does security checks with pure Python (httpx, ssl, socket), so it works anywhere Python runs.
 
 ## Testing
+
 ```bash
 # Run all tests
 python -m pytest tests/ -v
 
-# Quick test
+# Quick smoke test
 python test_all.py
 
-# Specific test
+# Specific module
 python -m pytest tests/test_brain.py -v
 ```
 
----
+## Configuration
 
-## Knowledge Base
+### Environment Variables
 
-1242 bug bounty reports across 20 vulnerability types:
-- SQL Injection, XSS, SSRF, IDOR, RCE
-- Auth Bypass, Privilege Escalation, XXE
-- CSRF, File Upload, Subdomain Takeover
-- Open Redirect, Business Logic, JWT
-- GraphQL, Race Condition, Cache Poisoning
-- SSTI, LFI, CRLF Injection
+```bash
+# .env file — at least one key needed
+DEEPSEEK_API_KEY=sk-...           # Primary (recommended)
+GEMINI_API_KEY_1=AIza...          # Consciousness (free)
+OPENROUTER_API_KEY=sk-or-v1-...   # Fallback (free models)
+# OPENAI_API_KEY=sk-...           # Backup (paid)
+# ANTHROPIC_API_KEY=sk-ant-...    # Backup (paid)
+```
 
----
+### Model Configuration
+
+Edit `config/models.json` to:
+- Add/remove providers
+- Change routing strategy
+- Configure rate limits
+- Set token budgets
 
 ## Security
 
-- NEVER commit `.env`
-- NEVER share API keys
-- Rotate keys if compromised
-- GitHub push protection enabled
+- **Authorization required**: Only scan authorized targets
+- **No shell injection**: Commands use `shlex.split()`, never `shell=True`
+- **API keys stay local**: `.env` is gitignored
+- **Client-side hashing**: VORA protocol computes hashes locally
 
----
+## Limitations
 
-## Support
+- This is a **research tool**, not a replacement for professional security audits
+- Vulnerability detection is pattern-based — it may miss novel attack vectors
+- LLM responses are probabilistic — always verify findings manually
+- Some features require external tools (nmap, sqlmap) for full functionality
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+## Contact
 
 - Issues: https://github.com/mysterious75/prometheus/issues
-- Docs: See docs/ folder
+- Twitter: [@VEDKUMAR00143](https://x.com/VEDKUMAR00143)
 
 ---
 
-**Built with love by mysterious75**
+**Built for authorized security testing. Use responsibly.**

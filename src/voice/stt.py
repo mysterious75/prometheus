@@ -1,3 +1,5 @@
+# NOTE: Not integrated with main system - reserved for future work
+
 """Speech-to-Text using Whisper."""
 
 import os

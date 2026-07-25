@@ -1,3 +1,5 @@
+# NOTE: Not integrated with main system - reserved for future work
+
 """Webcam Capture - OpenCV-based camera input for AI vision."""
 
 import io

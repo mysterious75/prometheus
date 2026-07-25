@@ -77,12 +77,20 @@ print(f"  Created: {goal.description} ({goal.priority})")
 gm.complete_goal(goal)
 print(f"  Completed: {goal.status}")
 
-# 9. Survival
-print("\n[9] SURVIVAL TEST")
-from src.autonomy.survival import SurvivalInstinct
-si = SurvivalInstinct(gm)
-vitals = si.check_vitals()
-print(f"  Vitals: {vitals}")
+# 9. GoalManager (extended)
+print("\n[9] GOAL MANAGER EXTENDED TEST")
+goal2 = gm.create_goal("Scan all subdomains", Priority.MEDIUM)
+print(f"  Created second goal: {goal2.description} ({goal2.priority})")
+active = gm.get_active_goals()
+print(f"  Active goals: {len(active)}")
+for g in active:
+    print(f"    - {g.description} [{g.status}]")
+stats = gm.get_stats()
+print(f"  Stats: {stats}")
+next_action = gm.get_next_action()
+print(f"  Next action: {next_action.description if next_action else 'None'}")
+gm.complete_goal(goal2)
+print(f"  Completed: {goal2.description} -> {goal2.status}")
 
 # 10. Bug Bounty Knowledge
 print("\n[10] BUG BOUNTY KNOWLEDGE TEST")
