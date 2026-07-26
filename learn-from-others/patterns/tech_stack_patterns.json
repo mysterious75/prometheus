@@ -2,32 +2,85 @@
   "technology_stacks": {
     "php": {
       "language": "PHP",
-      "common_frameworks": ["Laravel", "Symfony", "CodeIgniter", "CakePHP", "WordPress", "Drupal", "Joomla", "Magento", "Yii", "Phalcon"],
+      "common_frameworks": [
+        "Laravel",
+        "Symfony",
+        "CodeIgniter",
+        "CakePHP",
+        "WordPress",
+        "Drupal",
+        "Joomla",
+        "Magento",
+        "Yii",
+        "Phalcon"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_causes": ["mysql_query()", "mysqli_query()", "PDO with string concatenation", "WordPress $wpdb->query()"],
+          "common_causes": [
+            "mysql_query()",
+            "mysqli_query()",
+            "PDO with string concatenation",
+            "WordPress $wpdb->query()"
+          ],
           "testing_approach": "Test all database query points, check for prepared statement usage",
-          "specific_tests": ["MariaDB/MySQL specific syntax", "WordPress meta_query injection", "Laravel Eloquent raw queries"]
+          "specific_tests": [
+            "MariaDB/MySQL specific syntax",
+            "WordPress meta_query injection",
+            "Laravel Eloquent raw queries"
+          ]
         },
         "File Inclusion": {
-          "common_causes": ["include()", "require()", "include_once()", "require_once()", "file_get_contents() with user input"],
+          "common_causes": [
+            "include()",
+            "require()",
+            "include_once()",
+            "require_once()",
+            "file_get_contents() with user input"
+          ],
           "testing_approach": "Test file path parameters for path traversal and PHP wrapper abuse",
-          "specific_tests": ["PHP wrappers (php://filter, php://input)", "Null byte injection", "Log poisoning to RCE"]
+          "specific_tests": [
+            "PHP wrappers (php://filter, php://input)",
+            "Null byte injection",
+            "Log poisoning to RCE"
+          ]
         },
         "Code Injection": {
-          "common_causes": ["eval()", "assert()", "preg_replace() with /e modifier", "call_user_func()", "create_function()"],
+          "common_causes": [
+            "eval()",
+            "assert()",
+            "preg_replace() with /e modifier",
+            "call_user_func()",
+            "create_function()"
+          ],
           "testing_approach": "Identify eval/assert/function call points, test for code execution",
-          "specific_tests": ["PHP code injection via preg_replace /e", "Dynamic function calls"]
+          "specific_tests": [
+            "PHP code injection via preg_replace /e",
+            "Dynamic function calls"
+          ]
         },
         "Deserialization": {
-          "common_causes": ["unserialize() with user input", "unserialize() on session data"],
+          "common_causes": [
+            "unserialize() with user input",
+            "unserialize() on session data"
+          ],
           "testing_approach": "Identify unserialize calls, craft PHP object injection payloads",
-          "specific_tests": ["Magic method exploitation (__destruct, __wakeup)", "POP chain creation"]
+          "specific_tests": [
+            "Magic method exploitation (__destruct, __wakeup)",
+            "POP chain creation"
+          ]
         },
         "File Upload": {
-          "common_causes": ["move_uploaded_file()", "Incomplete MIME type validation", "PHP file execution in upload directories"],
+          "common_causes": [
+            "move_uploaded_file()",
+            "Incomplete MIME type validation",
+            "PHP file execution in upload directories"
+          ],
           "testing_approach": "Test file extension filters, Content-Type validation, double extensions",
-          "specific_tests": ["Double extensions (shell.php.jpg)", "Null byte injection", "Apache .htaccess upload"]
+          "specific_tests": [
+            "Double extensions (shell.php.jpg)",
+            "Null byte injection",
+            "Apache .htaccess upload"
+          ]
         }
       },
       "common_vulns": [
@@ -40,36 +93,92 @@
         "Type juggling",
         "Null byte injection"
       ],
-      "testing_tools": ["phpinfo()", "php -r", " Composer audit"]
+      "testing_tools": [
+        "phpinfo()",
+        "php -r",
+        " Composer audit"
+      ]
     },
     "python": {
       "language": "Python",
-      "common_frameworks": ["Django", "Flask", "FastAPI", "Tornado", "Pyramid", "Bottle", "CherryPy", "web2py"],
+      "common_frameworks": [
+        "Django",
+        "Flask",
+        "FastAPI",
+        "Tornado",
+        "Pyramid",
+        "Bottle",
+        "CherryPy",
+        "web2py"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_cuses": ["Django raw()", "execute() with string formatting", "SQLAlchemy text()", "Psycopg2 with %s formatting"],
+          "common_cuses": [
+            "Django raw()",
+            "execute() with string formatting",
+            "SQLAlchemy text()",
+            "Psycopg2 with %s formatting"
+          ],
           "testing_approach": "Test raw SQL queries, ORM raw() calls, string formatting in queries",
-          "specific_tests": ["PostgreSQL specific syntax", "Django ORM bypass", "SQLAlchemy injection"]
+          "specific_tests": [
+            "PostgreSQL specific syntax",
+            "Django ORM bypass",
+            "SQLAlchemy injection"
+          ]
         },
         "Template Injection": {
-          "common_causes": ["Jinja2 render_template_string()", "Tornado templates", "Mako templates", "User input in template context"],
+          "common_causes": [
+            "Jinja2 render_template_string()",
+            "Tornado templates",
+            "Mako templates",
+            "User input in template context"
+          ],
           "testing_approach": "Test for SSTI, escalate to RCE via Python import mechanisms",
-          "specific_tests": ["Jinja2 sandbox escape", "Tornado template injection", "Mako template RCE"]
+          "specific_tests": [
+            "Jinja2 sandbox escape",
+            "Tornado template injection",
+            "Mako template RCE"
+          ]
         },
         "Code Injection": {
-          "common_causes": ["eval()", "exec()", "compile()", "__import__()", "getattr() with user input"],
+          "common_causes": [
+            "eval()",
+            "exec()",
+            "compile()",
+            "__import__()",
+            "getattr() with user input"
+          ],
           "testing_approach": "Identify eval/exec calls, test for code execution",
-          "specific_tests": ["Python AST injection", "Dynamic import exploitation"]
+          "specific_tests": [
+            "Python AST injection",
+            "Dynamic import exploitation"
+          ]
         },
         "Deserialization": {
-          "common_cuses": ["pickle.loads()", "yaml.load() without SafeLoader", "marshal.loads()"],
+          "common_cuses": [
+            "pickle.loads()",
+            "yaml.load() without SafeLoader",
+            "marshal.loads()"
+          ],
           "testing_approach": "Identify pickle/yaml deserialization, craft RCE payloads",
-          "specific_tests": ["Pickle RCE via __reduce__", "YAML deserialization", "Marshaled object injection"]
+          "specific_tests": [
+            "Pickle RCE via __reduce__",
+            "YAML deserialization",
+            "Marshaled object injection"
+          ]
         },
         "SSTI": {
-          "common_causes": ["Jinja2 with user input", "Flask render_template_string()", "Tornado templates"],
+          "common_causes": [
+            "Jinja2 with user input",
+            "Flask render_template_string()",
+            "Tornado templates"
+          ],
           "testing_approach": "Test for template injection, escalate to RCE",
-          "specific_tests": ["Jinja2 sandbox escape", "Python class traversal", "os module access"]
+          "specific_tests": [
+            "Jinja2 sandbox escape",
+            "Python class traversal",
+            "os module access"
+          ]
         }
       },
       "common_vulns": [
@@ -81,36 +190,94 @@
         "CORS misconfiguration",
         "Insecure direct object references"
       ],
-      "testing_tools": ["Python shell", "requests library", "flask-debugtoolbar"]
+      "testing_tools": [
+        "Python shell",
+        "requests library",
+        "flask-debugtoolbar"
+      ]
     },
     "java": {
       "language": "Java",
-      "common_frameworks": ["Spring", "Spring Boot", "Jakarta EE", "JSF", "Struts", "Play Framework", "Vert.x", "Micronaut", "Quarkus"],
+      "common_frameworks": [
+        "Spring",
+        "Spring Boot",
+        "Jakarta EE",
+        "JSF",
+        "Struts",
+        "Play Framework",
+        "Vert.x",
+        "Micronaut",
+        "Quarkus"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_causes": ["Statement.executeQuery() with string concatenation", "JPA native queries", "Hibernate HQL injection", "MyBatis ${} syntax"],
+          "common_causes": [
+            "Statement.executeQuery() with string concatenation",
+            "JPA native queries",
+            "Hibernate HQL injection",
+            "MyBatis ${} syntax"
+          ],
           "testing_approach": "Test JDBC queries, JPA native queries, HQL queries",
-          "specific_tests": ["HQL injection", "JPA Criteria API bypass", "MyBatis XML injection"]
+          "specific_tests": [
+            "HQL injection",
+            "JPA Criteria API bypass",
+            "MyBatis XML injection"
+          ]
         },
         "Deserialization": {
-          "common_causes": ["ObjectInputStream.readObject()", "XStream fromXML()", "SnakeYAML yaml.load()", "Kryo deserialization"],
+          "common_causes": [
+            "ObjectInputStream.readObject()",
+            "XStream fromXML()",
+            "SnakeYAML yaml.load()",
+            "Kryo deserialization"
+          ],
           "testing_approach": "Identify deserialization points, craft gadget chain payloads",
-          "specific_tests": ["Apache Commons Collections gadget chain", "Fastjson RCE", "Jackson polymorphic deserialization"]
+          "specific_tests": [
+            "Apache Commons Collections gadget chain",
+            "Fastjson RCE",
+            "Jackson polymorphic deserialization"
+          ]
         },
         "Expression Language Injection": {
-          "common_causes": ["Spring EL injection", "OGNL injection (Struts)", "JSP EL manipulation"],
+          "common_causes": [
+            "Spring EL injection",
+            "OGNL injection (Struts)",
+            "JSP EL manipulation"
+          ],
           "testing_approach": "Test EL evaluation points, escalate to RCE",
-          "specific_tests": ["Spring SpEL injection", "Struts OGNL injection", "JSP expression language"]
+          "specific_tests": [
+            "Spring SpEL injection",
+            "Struts OGNL injection",
+            "JSP expression language"
+          ]
         },
         "XXE": {
-          "common_causes": ["DocumentBuilderFactory", "SAXParser", "XMLReader", "TransformerFactory", "DOMParser"],
+          "common_causes": [
+            "DocumentBuilderFactory",
+            "SAXParser",
+            "XMLReader",
+            "TransformerFactory",
+            "DOMParser"
+          ],
           "testing_approach": "Test XML processing endpoints for XXE",
-          "specific_tests": ["Java XXE bypasses", "External DTD references", "Parameter entity injection"]
+          "specific_tests": [
+            "Java XXE bypasses",
+            "External DTD references",
+            "Parameter entity injection"
+          ]
         },
         "JNDI Injection": {
-          "common_causes": ["InitialContext.lookup()", "LDAP/RMI lookup with user input", "Spring Boot Actuator JNDI"],
+          "common_causes": [
+            "InitialContext.lookup()",
+            "LDAP/RMI lookup with user input",
+            "Spring Boot Actuator JNDI"
+          ],
           "testing_approach": "Identify JNDI lookup points, test for remote class loading",
-          "specific_tests": ["Log4Shell (CVE-2021-44228)", "JNDI LDAP injection", "RMI registry abuse"]
+          "specific_tests": [
+            "Log4Shell (CVE-2021-44228)",
+            "JNDI LDAP injection",
+            "RMI registry abuse"
+          ]
         }
       },
       "common_vulns": [
@@ -122,36 +289,90 @@
         "Path traversal",
         "Expression language injection"
       ],
-      "testing_tools": [" ysoserial", "JNDIExploit", "Burp Suite"]
+      "testing_tools": [
+        " ysoserial",
+        "JNDIExploit",
+        "Burp Suite"
+      ]
     },
     "nodejs": {
       "language": "Node.js",
-      "common_frameworks": ["Express", "Koa", "Fastify", "NestJS", "Hapi", "Sails.js", "AdonisJS"],
+      "common_frameworks": [
+        "Express",
+        "Koa",
+        "Fastify",
+        "NestJS",
+        "Hapi",
+        "Sails.js",
+        "AdonisJS"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_causes": ["mysql.query() with string concatenation", "pg.query() with template literals", "Sequelize raw queries", "Knex.js raw queries"],
+          "common_causes": [
+            "mysql.query() with string concatenation",
+            "pg.query() with template literals",
+            "Sequelize raw queries",
+            "Knex.js raw queries"
+          ],
           "testing_approach": "Test database queries, check for parameterized queries",
-          "specific_tests": ["MySQL specific syntax", "PostgreSQL specific syntax", "MongoDB injection"]
+          "specific_tests": [
+            "MySQL specific syntax",
+            "PostgreSQL specific syntax",
+            "MongoDB injection"
+          ]
         },
         "NoSQL Injection": {
-          "common_causes": ["MongoDB queries with $gt, $ne operators", "Mongoose queries with user input", "CouchDB view queries"],
+          "common_causes": [
+            "MongoDB queries with $gt, $ne operators",
+            "Mongoose queries with user input",
+            "CouchDB view queries"
+          ],
           "testing_approach": "Test for NoSQL injection via JSON operators",
-          "specific_tests": ["MongoDB operator injection", "Mongoose query manipulation", "CouchDB views"]
+          "specific_tests": [
+            "MongoDB operator injection",
+            "Mongoose query manipulation",
+            "CouchDB views"
+          ]
         },
         "Template Injection": {
-          "common_causes": ["EJS render() with user input", "Pug templates", "Handlebars", "Nunjucks", "Art-template"],
+          "common_causes": [
+            "EJS render() with user input",
+            "Pug templates",
+            "Handlebars",
+            "Nunjucks",
+            "Art-template"
+          ],
           "testing_approach": "Test template rendering with user input",
-          "specific_tests": ["EJS RCE", "Pug code injection", "Handlebars prototype pollution"]
+          "specific_tests": [
+            "EJS RCE",
+            "Pug code injection",
+            "Handlebars prototype pollution"
+          ]
         },
         "Prototype Pollution": {
-          "common_causes": ["Object.assign() with user input", "merge/extend functions", "JSON.parse() with user input"],
+          "common_causes": [
+            "Object.assign() with user input",
+            "merge/extend functions",
+            "JSON.parse() with user input"
+          ],
           "testing_approach": "Test for prototype pollution via __proto__, constructor",
-          "specific_tests": ["lodash merge prototype pollution", "jQuery $.extend pollution", "Express query pollution"]
+          "specific_tests": [
+            "lodash merge prototype pollution",
+            "jQuery $.extend pollution",
+            "Express query pollution"
+          ]
         },
         "Deserialization": {
-          "common_causes": ["node-serialize", "serialize-javascript", "JSON.parse() on untrusted input"],
+          "common_causes": [
+            "node-serialize",
+            "serialize-javascript",
+            "JSON.parse() on untrusted input"
+          ],
           "testing_approach": "Identify serialization libraries, craft RCE payloads",
-          "specific_tests": ["node-serialize RCE", "serialize-javascript pollution"]
+          "specific_tests": [
+            "node-serialize RCE",
+            "serialize-javascript pollution"
+          ]
         }
       },
       "common_vulns": [
@@ -163,36 +384,80 @@
         "Open redirect",
         "ReDoS (Regular Expression Denial of Service)"
       ],
-      "testing_tools": ["npm audit", "Snyk", "Node.js debugger"]
+      "testing_tools": [
+        "npm audit",
+        "Snyk",
+        "Node.js debugger"
+      ]
     },
     "ruby": {
       "language": "Ruby",
-      "common_frameworks": ["Ruby on Rails", "Sinatra", "Hanami", "Grape", "Padrino"],
+      "common_frameworks": [
+        "Ruby on Rails",
+        "Sinatra",
+        "Hanami",
+        "Grape",
+        "Padrino"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_causes": ["ActiveRecord.where() with string interpolation", "find_by_sql() with string concatenation", "execute() with user input"],
+          "common_causes": [
+            "ActiveRecord.where() with string interpolation",
+            "find_by_sql() with string concatenation",
+            "execute() with user input"
+          ],
           "testing_approach": "Test ActiveRecord queries, check for parameterized queries",
-          "specific_tests": ["Rails ActiveRecord injection", "PostgreSQL specific syntax"]
+          "specific_tests": [
+            "Rails ActiveRecord injection",
+            "PostgreSQL specific syntax"
+          ]
         },
         "Mass Assignment": {
-          "common_causes": ["permit() not properly configured", "attr_accessible missing", "Strong parameters bypass"],
+          "common_causes": [
+            "permit() not properly configured",
+            "attr_accessible missing",
+            "Strong parameters bypass"
+          ],
           "testing_approach": "Test for mass assignment by adding extra parameters",
-          "specific_tests": ["Rails mass assignment", "Parameter pollution for role escalation"]
+          "specific_tests": [
+            "Rails mass assignment",
+            "Parameter pollution for role escalation"
+          ]
         },
         "Deserialization": {
-          "common_causes": ["Marshal.load() with user input", "YAML.load() without safe_load"],
+          "common_causes": [
+            "Marshal.load() with user input",
+            "YAML.load() without safe_load"
+          ],
           "testing_approach": "Identify deserialization points, craft RCE payloads",
-          "specific_tests": ["Marshal deserialization RCE", "YAML deserialization"]
+          "specific_tests": [
+            "Marshal deserialization RCE",
+            "YAML deserialization"
+          ]
         },
         "Template Injection": {
-          "common_causes": ["ERB templates with user input", "Haml templates", "Slim templates"],
+          "common_causes": [
+            "ERB templates with user input",
+            "Haml templates",
+            "Slim templates"
+          ],
           "testing_approach": "Test template injection, escalate to RCE",
-          "specific_tests": ["ERB injection", "Haml code execution"]
+          "specific_tests": [
+            "ERB injection",
+            "Haml code execution"
+          ]
         },
         "Server-Side Request Forgery": {
-          "common_causes": ["Net::HTTP with user-controlled URLs", "open-uri with user input", "HTTParty with user URLs"],
+          "common_causes": [
+            "Net::HTTP with user-controlled URLs",
+            "open-uri with user input",
+            "HTTParty with user URLs"
+          ],
           "testing_approach": "Test URL parameters for SSRF",
-          "specific_tests": ["Ruby SSRF via open-uri", "HTTP protocol handler abuse"]
+          "specific_tests": [
+            "Ruby SSRF via open-uri",
+            "HTTP protocol handler abuse"
+          ]
         }
       },
       "common_vulns": [
@@ -204,36 +469,82 @@
         "Path traversal",
         "CSRF token bypass"
       ],
-      "testing_tools": ["Brakeman", "Bundler-audit", "Rails console"]
+      "testing_tools": [
+        "Brakeman",
+        "Bundler-audit",
+        "Rails console"
+      ]
     },
     "dotnet": {
       "language": ".NET",
-      "common_frameworks": ["ASP.NET Core", "ASP.NET MVC", "ASP.NET WebForms", "Blazor", ".NET MAUI"],
+      "common_frameworks": [
+        "ASP.NET Core",
+        "ASP.NET MVC",
+        "ASP.NET WebForms",
+        "Blazor",
+        ".NET MAUI"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_causes": ["SqlCommand with string concatenation", "Entity Framework raw SQL", "Dapper with string interpolation", "LINQ injection"],
+          "common_causes": [
+            "SqlCommand with string concatenation",
+            "Entity Framework raw SQL",
+            "Dapper with string interpolation",
+            "LINQ injection"
+          ],
           "testing_approach": "Test SQL queries, check for parameterized queries",
-          "specific_tests": ["MSSQL specific syntax", "Entity Framework LINQ injection", "Dapper injection"]
+          "specific_tests": [
+            "MSSQL specific syntax",
+            "Entity Framework LINQ injection",
+            "Dapper injection"
+          ]
         },
         "Deserialization": {
-          "common_causes": ["BinaryFormatter.Deserialize()", "JsonConvert.DeserializeObject() with TypeNameHandling", "DataContractSerializer"],
+          "common_causes": [
+            "BinaryFormatter.Deserialize()",
+            "JsonConvert.DeserializeObject() with TypeNameHandling",
+            "DataContractSerializer"
+          ],
           "testing_approach": "Identify deserialization points, craft gadget chain payloads",
-          "specific_tests": [".NET deserialization gadget chains", "TypeNameHandling abuse", "JavaScriptSerializer"]
+          "specific_tests": [
+            ".NET deserialization gadget chains",
+            "TypeNameHandling abuse",
+            "JavaScriptSerializer"
+          ]
         },
         "XXE": {
-          "common_causes": ["XmlDocument.Load()", "XmlSerializer.Deserialize()", "XPathExpression with user input"],
+          "common_causes": [
+            "XmlDocument.Load()",
+            "XmlSerializer.Deserialize()",
+            "XPathExpression with user input"
+          ],
           "testing_approach": "Test XML processing for XXE",
-          "specific_tests": [".NET XXE bypasses", "XML parser configuration"]
+          "specific_tests": [
+            ".NET XXE bypasses",
+            "XML parser configuration"
+          ]
         },
         "LDAP Injection": {
-          "common_causes": ["DirectorySearcher with user input", "SearchFilter with string concatenation"],
+          "common_causes": [
+            "DirectorySearcher with user input",
+            "SearchFilter with string concatenation"
+          ],
           "testing_approach": "Test LDAP query points for injection",
-          "specific_tests": ["Active Directory LDAP injection", "Filter manipulation"]
+          "specific_tests": [
+            "Active Directory LDAP injection",
+            "Filter manipulation"
+          ]
         },
         "View State Manipulation": {
-          "common_causes": ["ASP.NET WebForms ViewState without MAC validation", "ViewState deserialization"],
+          "common_causes": [
+            "ASP.NET WebForms ViewState without MAC validation",
+            "ViewState deserialization"
+          ],
           "testing_approach": "Test ViewState manipulation for code execution",
-          "specific_tests": ["ViewState RCE via LosFormatter", "MAC validation bypass"]
+          "specific_tests": [
+            "ViewState RCE via LosFormatter",
+            "MAC validation bypass"
+          ]
         }
       },
       "common_vulns": [
@@ -245,36 +556,83 @@
         "Path traversal",
         "Request validation bypass"
       ],
-      "testing_tools": ["Visual Studio", "dotnet-security-guard", "NuGet audit"]
+      "testing_tools": [
+        "Visual Studio",
+        "dotnet-security-guard",
+        "NuGet audit"
+      ]
     },
     "go": {
       "language": "Go",
-      "common_frameworks": ["Gin", "Echo", "Fiber", "Beego", "Chi", "Buffalo", "Gorilla"],
+      "common_frameworks": [
+        "Gin",
+        "Echo",
+        "Fiber",
+        "Beego",
+        "Chi",
+        "Buffalo",
+        "Gorilla"
+      ],
       "vulnerability_patterns": {
         "SQL Injection": {
-          "common_causes": ["database/sql with string concatenation", "GORM with Raw() queries", "Squirrel with string interpolation"],
+          "common_causes": [
+            "database/sql with string concatenation",
+            "GORM with Raw() queries",
+            "Squirrel with string interpolation"
+          ],
           "testing_approach": "Test SQL queries, check for parameterized queries",
-          "specific_tests": ["PostgreSQL specific syntax", "MySQL specific syntax", "GORM injection"]
+          "specific_tests": [
+            "PostgreSQL specific syntax",
+            "MySQL specific syntax",
+            "GORM injection"
+          ]
         },
         "SSRF": {
-          "common_causes": ["http.Get() with user-controlled URLs", "net/http with user input", "HTTP client without URL validation"],
+          "common_causes": [
+            "http.Get() with user-controlled URLs",
+            "net/http with user input",
+            "HTTP client without URL validation"
+          ],
           "testing_approach": "Test URL parameters for SSRF",
-          "specific_tests": ["Go SSRF via http.Client", "Protocol handler abuse"]
+          "specific_tests": [
+            "Go SSRF via http.Client",
+            "Protocol handler abuse"
+          ]
         },
         "Template Injection": {
-          "common_cuses": ["html/template with user input", "text/template with user input"],
+          "common_cuses": [
+            "html/template with user input",
+            "text/template with user input"
+          ],
           "testing_approach": "Test template injection, check for sandbox escape",
-          "specific_tests": ["Go template injection", "HTML template context escape"]
+          "specific_tests": [
+            "Go template injection",
+            "HTML template context escape"
+          ]
         },
         "Deserialization": {
-          "common_causes": ["encoding/gob with user input", "json.Decoder with user input", "XML decoder with user input"],
+          "common_causes": [
+            "encoding/gob with user input",
+            "json.Decoder with user input",
+            "XML decoder with user input"
+          ],
           "testing_approach": "Identify deserialization points, test for object injection",
-          "specific_tests": ["Go deserialization", "XML XXE in Go"]
+          "specific_tests": [
+            "Go deserialization",
+            "XML XXE in Go"
+          ]
         },
         "Path Traversal": {
-          "common_causes": ["os.Open() with user input", "filepath.Join() with user input", "http.ServeFile() with user input"],
+          "common_causes": [
+            "os.Open() with user input",
+            "filepath.Join() with user input",
+            "http.ServeFile() with user input"
+          ],
           "testing_approach": "Test file path parameters for traversal",
-          "specific_tests": ["Go path traversal", "Symlink following"]
+          "specific_tests": [
+            "Go path traversal",
+            "Symlink following"
+          ]
         }
       },
       "common_vulns": [
@@ -286,7 +644,11 @@
         "Race conditions",
         "Memory safety issues"
       ],
-      "testing_tools": ["go vet", "staticcheck", "gosec"]
+      "testing_tools": [
+        "go vet",
+        "staticcheck",
+        "gosec"
+      ]
     }
   },
   "framework_specific_patterns": {
@@ -310,8 +672,16 @@
         "Verify authorization decorators"
       ],
       "payloads": {
-        "debug_info": "/admin/", "/static/admin/", "/settings.py",
-        "ssti": "{{request}}", "{{config}}", "{{self.__class__.__mro__}}"
+        "debug_info": [
+          "/admin/",
+          "/static/admin/",
+          "/settings.py"
+        ],
+        "ssti": [
+          "{{request}}",
+          "{{config}}",
+          "{{self.__class__.__mro__}}"
+        ]
       }
     },
     "laravel": {
@@ -334,8 +704,16 @@
         "Verify CSRF protections"
       ],
       "payloads": {
-        "debug_info": "/_ignition/health-check", "/telescope",
-        "deserialization": "O:8:\"App\\User\":1:{s:8:\"username\";s:5:\"admin\";}"
+        "debug_info": [
+          "/_ignition/health-check",
+          "/telescope"
+        ],
+        "deserialization": [
+          "O:8:\\",
+          ":1:{s:8:\\",
+          ";s:5:\\",
+          ";}"
+        ]
       }
     },
     "express": {
@@ -358,8 +736,18 @@
         "Check CORS configuration"
       ],
       "payloads": {
-        "nosql": "{\"$gt\": \"\"}", "{\"$ne\": null}",
-        "prototype": "{\"__proto__\":{\"admin\":true}}"
+        "nosql": [
+          "{\\",
+          ": \\",
+          "}",
+          "{\\",
+          ": null}"
+        ],
+        "prototype": [
+          "{\\",
+          ":{\\",
+          ":true}}"
+        ]
       }
     },
     "spring": {
@@ -383,7 +771,11 @@
       ],
       "payloads": {
         "spel": "#{T(java.lang.Runtime).getRuntime().exec('id')}",
-        "actuator": "/actuator", "/actuator/env", "/actuator/heapdump"
+        "actuator": [
+          "/actuator",
+          "/actuator/env",
+          "/actuator/heapdump"
+        ]
       }
     },
     "rails": {

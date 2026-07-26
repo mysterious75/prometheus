@@ -28,6 +28,9 @@ python-whois>=0.9.4              # WHOIS queries
 pytest>=8.0.0                    # Test framework
 pytest-cov>=5.0.0                # Coverage reporting
 
+# === GRAPH / KNOWLEDGE BASE ===
+networkx>=3.0                    # Graph-based knowledge base
+
 # === UTILITIES ===
 rich>=13.0.0                     # Terminal formatting & tables
 asyncio-throttle>=1.0.0          # Rate limiting for async tasks

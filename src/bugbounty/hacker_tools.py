@@ -5,8 +5,8 @@ import shutil
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
+import platform as platform_mod
 from ..utils.logger import logger
-from ..platform import detector
 
 
 @dataclass
@@ -25,7 +25,7 @@ ALL_TOOLS = {
     "nmap": ToolInfo(
         name="nmap", category="recon",
         description="Network scanner - port scan, service detection, OS fingerprint",
-        install_cmd="apt install nmap" if detector.info.os.value != "windows" else "choco install nmap",
+        install_cmd="apt install nmap" if platform_mod.system().lower() != "windows" else "choco install nmap",
         platform="all",
         use_case="Port scanning, service enumeration, OS detection"
     ),

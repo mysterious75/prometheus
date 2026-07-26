@@ -1,0 +1,78 @@
+name: Cloud Misconfiguration
+category: cloud
+description: >
+  Detects common cloud misconfigurations in AWS, GCP, and Azure.
+  Covers S3 bucket exposure, IAM misconfig, metadata service abuse, and more.
+
+severity_range: ["MEDIUM", "HIGH", "CRITICAL"]
+tools: ["aws_cli", "gcloud", "az_cli", "curl", "custom_scripts"]
+
+methodology:
+  - "Identify cloud provider from DNS, headers, IP ranges, or tech stack"
+  - "Test S3/GCS/Azure Blob for public access and listing"
+  - "Test for exposed cloud metadata service (IMDS)"
+  - "Check for overly permissive CORS on cloud resources"
+  - "Test for exposed management interfaces (console, API)"
+  - "Check for default or weak credentials on cloud services"
+  - "Test for exposed cloud storage with sensitive data"
+  - "Check IAM policies for privilege escalation paths"
+  - "Test for unauthenticated access to cloud functions/lambda"
+  - "Check for exposed secrets in cloud environment variables"
+  - "Test cloud CDN for cache poisoning"
+  - "Verify encryption at rest and in transit"
+
+payloads:
+  # S3 bucket enumeration
+  - "http://{bucket}.s3.amazonaws.com/"
+  - "http://s3.amazonaws.com/{bucket}/"
+  - "http://{bucket}.s3.{region}.amazonaws.com/"
+  # GCS bucket
+  - "https://storage.googleapis.com/{bucket}/"
+  - "https://{bucket}.storage.googleapis.com/"
+  # Azure Blob
+  - "https://{account}.blob.core.windows.net/{container}/"
+  # Cloud metadata
+  - "http://169.254.169.254/latest/meta-data/"
+  - "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+  - "http://169.254.169.254/latest/user-data/"
+  - "http://metadata.google.internal/computeMetadata/v1/"
+  - "http://169.254.169.254/metadata/instance?api-version=2021-02-01"
+  # Common exposed services
+  - "http://{target}:8500/v1/catalog/services"  # Consul
+  - "http://{target}:2379/v2/keys/"  # etcd
+  - "http://{target}:9200/_cat/indices"  # Elasticsearch
+  - "http://{target}:8088/services/search/jobs"  # Splunk
+
+detection_patterns:
+  - "(?:AccessDenied|AllAccessDisabled|InvalidAccessKeyId)"
+  - "(?:NoSuchBucket|BucketNotEmpty|AccessDenied)"
+  - "\"(?:ami-id|instance-id|instance-type|local-hostname)\""
+  - "(?:\"accessKeyId\"|\"secretAccessKey\"|\"Token\"|\"Expiration\")"
+  - "(?:tenantId|subscriptionId|resourceGroup)"
+  - "(?:api_key|apikey|api_secret|aws_access_key|aws_secret)"
+
+remediation: >
+  Enable Block Public Access on S3 buckets. Use IMDSv2 with token requirement.
+  Implement least-privilege IAM policies. Enable cloud logging and monitoring.
+  Use secrets manager for credentials. Enable encryption at rest and in transit.
+  Regularly audit cloud configurations with tools like ScoutSuite, Prowler.
+
+references:
+  - "CWE-538: Insertion of Sensitive Information into Externally-Accessible File"
+  - "OWASP Cloud Security"
+  - "AWS Well-Architected Framework - Security Pillar"
+
+triggers:
+  - "aws"
+  - "amazon"
+  - "s3"
+  - "gcp"
+  - "google cloud"
+  - "azure"
+  - "microsoft cloud"
+  - "lambda"
+  - "cloud function"
+  - "bucket"
+  - "storage"
+  - "kubernetes"
+  - "docker"

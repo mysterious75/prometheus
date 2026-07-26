@@ -7,7 +7,7 @@ import re
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
-from ..platform import detector, OS
+import platform as platform_mod
 from ..utils.logger import logger
 
 
@@ -60,7 +60,7 @@ class CrossPlatformToolChecker:
     """Checks bug bounty tools across all platforms."""
 
     def __init__(self):
-        self.platform = detector.info
+        self._os_name = platform_mod.system().lower()  # 'windows', 'linux', 'darwin'
         self.tools: Dict[str, ToolStatus] = {}
         self._check_all()
 
@@ -78,12 +78,12 @@ class CrossPlatformToolChecker:
     def _check_tool(self, name: str, version_cmd: List[str]) -> ToolStatus:
         """Check a single tool with platform awareness."""
         # Check platform availability
-        if self.platform.os == OS.WINDOWS and name in WINDOWS_LIMITATIONS:
+        if self._os_name == 'windows' and name in WINDOWS_LIMITATIONS:
             # Still check, but note limitations
             pass
 
         # Find tool
-        path = detector.find_tool(name)
+        path = shutil.which(name)
         if not path:
             return ToolStatus(
                 name=name, installed=False, status="missing"
@@ -171,7 +171,7 @@ class CrossPlatformToolChecker:
 
     def print_status(self):
         """Print formatted status."""
-        os_name = self.platform.os.value.upper()
+        os_name = self._os_name.upper()
         print(f"\n  Bug Bounty Tools - {os_name}")
         print(f"  {'=' * 50}")
 
@@ -190,7 +190,7 @@ class CrossPlatformToolChecker:
                 detail = "Unknown version"
 
             limitation = WINDOWS_LIMITATIONS.get(name, "")
-            limit_note = f" (!{limitation[:30]})" if limitation and self.platform.os == OS.WINDOWS else ""
+            limit_note = f" (!{limitation[:30]})" if limitation and self._os_name == 'windows' else ""
             print(f"  {icon:10s} {name:15s} {detail}{limit_note}")
 
         print(f"  {'=' * 50}")
@@ -213,10 +213,7 @@ class CrossPlatformToolChecker:
         if not repo:
             return f"# Unknown tool: {tool}"
 
-        if self.platform.os == OS.WINDOWS:
-            return f"go install {repo}@latest"
-        else:
-            return f"go install {repo}@latest"
+        return f"go install {repo}@latest"
 
     def get_all_install_commands(self) -> str:
         """Get install commands for all missing/outdated tools."""

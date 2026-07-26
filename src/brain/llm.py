@@ -2,7 +2,7 @@
 
 Supports 13+ providers with auto-detection, key testing, and smart routing.
 Primary: DeepSeek (long context, cheap)
-Consciousness: Google Gemini (3 keys for rotation)
+Fast: Google Gemini (3 keys for rotation)
 """
 
 import os
@@ -157,10 +157,10 @@ class OpenAICompatibleProvider(LLMProvider):
 
 
 class GeminiProvider(LLMProvider):
-    """Google Gemini - Consciousness/emotions only (free tier: ~150K tokens/day)."""
+    """Google Gemini - Fast responses (free tier: ~150K tokens/day)."""
 
     def __init__(self, api_key: str, model: str = "gemini-2.0-flash",
-                 key_name: str = "gemini_1", role: str = "consciousness"):
+                 key_name: str = "gemini_1", role: str = "fast"):
         super().__init__(key_name, api_key, model)
         self.role = role
         self.genai = None

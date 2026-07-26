@@ -1,28 +1,24 @@
 """Model Router - Auto-configures from ANY API keys available.
 
-Works with 1 key or 13 keys. Auto-detects, tests, assigns roles.
+Works with 1 key or 14 keys. Auto-detects, tests, assigns roles.
 No fixed provider list - whatever works, gets used.
 """
 
-import json
 import random
 from typing import Optional, Dict, Any, List
-from pathlib import Path
 
 from .llm import LLMProvider, GeminiProvider, OpenAICompatibleProvider
 from .critic import CriticAgent, ConsensusResult
-from ..utils.config import config
-from ..utils.logger import logger, console
+from ..core.config import config
+from ..core.logger import logger, console
 
 
 # Role assignment priority based on provider name patterns
 ROLE_PATTERNS = {
-    "consciousness": ["gemini", "google"],
-    "coding": ["opencode", "code"],
-    "reasoning": ["zen", "reason"],
-    "primary": ["deepseek"],
-    "backup": ["openai", "anthropic", "openrouter", "qwen", "kimi", "glm",
-               "xiaomi", "nvidia", "nemotron"],
+    "primary": ["deepseek", "openai", "anthropic"],
+    "fast": ["gemini", "google", "qwen", "kimi"],
+    "reasoning": ["openrouter", "nvidia", "nemotron"],
+    "backup": ["glm", "custom"],
 }
 
 
@@ -106,16 +102,15 @@ class ModelRouter:
         console.print(f"\n  [bold green]{count} provider(s) active[/bold green]")
 
         if count == 0:
-            console.print("[red]No working keys! Check .env file.[/red]")
+            console.print("[yellow]No working keys! Running in offline mode.[/yellow]")
 
     def _create_provider(self, name: str, key: str, base_url: str,
                          model: str, provider_type: str) -> Optional[LLMProvider]:
         """Create a provider instance."""
         if provider_type == "gemini":
-            return GeminiProvider(key, model or "gemini-2.0-flash", name, "consciousness")
+            return GeminiProvider(key, model or "gemini-2.0-flash", name, "fast")
 
         if provider_type == "anthropic":
-            # Anthropic uses different API format - use OpenAI compatible endpoint
             if not base_url:
                 base_url = "https://api.anthropic.com/v1"
             return OpenAICompatibleProvider(name, key, model, base_url)
@@ -136,7 +131,6 @@ class ModelRouter:
             "by_role": by_role,
             "primary": by_role.get("primary", [])[0] if by_role.get("primary") else
                        (list(self.providers.keys())[0] if self.providers else ""),
-            "consciousness": by_role.get("consciousness", []),
             "all": list(self.providers.keys()),
         }
 
@@ -153,19 +147,13 @@ class ModelRouter:
 
         # Try role aliases
         role_map = {
-            "primary": ["primary", "backup"],
-            "logic": ["primary", "backup"],
-            "chat": ["primary", "backup"],
-            "coding": ["coding", "primary", "backup"],
-            "consciousness": ["consciousness", "backup"],
-            "emotions": ["consciousness", "backup"],
-            "mood": ["consciousness", "backup"],
+            "primary": ["primary", "fast", "backup"],
+            "fast": ["fast", "primary", "backup"],
             "reasoning": ["reasoning", "primary", "backup"],
-            "guardrail": ["backup", "primary"],
-            "vision": ["consciousness", "backup"],
+            "scan": ["primary", "fast", "backup"],
         }
 
-        for alias_role in role_map.get(role, ["primary", "backup"]):
+        for alias_role in role_map.get(role, ["primary", "fast", "backup"]):
             if alias_role in by_role and by_role[alias_role]:
                 return self.providers[by_role[alias_role][0]]
 
@@ -185,7 +173,7 @@ class ModelRouter:
 
         provider = self.get_provider(role, preferred)
         if not provider:
-            return "[ERROR] No LLM providers available. Add API key to .env"
+            return "[ERROR] No LLM providers available. Add API key to .env or use offline mode."
 
         logger.info(f"Using {provider.name} ({provider.role})")
         return provider.generate(prompt, **kwargs)
@@ -239,5 +227,5 @@ class ModelRouter:
             lines.append(f"  {status} {name:15s} [{role:10s}] {models} ({tokens})")
 
         if not self.providers:
-            lines.append("  No providers. Add API key to .env")
+            lines.append("  No providers. Add API key to .env for AI-guided scanning.")
         return "\n".join(lines)

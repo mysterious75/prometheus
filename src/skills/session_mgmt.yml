@@ -1,0 +1,75 @@
+name: Session Management
+category: web
+description: >
+  Tests session management security including cookie attributes,
+  session fixation, token entropy, and session lifecycle flaws.
+
+severity_range: ["LOW", "MEDIUM", "HIGH"]
+tools: ["curl", "custom_scripts", "burp"]
+
+methodology:
+  - "Inspect all Set-Cookie headers for HttpOnly, Secure, SameSite flags"
+  - "Check session cookie entropy (length, character set, randomness)"
+  - "Test session fixation: does session ID change after authentication?"
+  - "Test session timeout: how long until session expires?"
+  - "Test session invalidation: does logout actually invalidate the session?"
+  - "Check for concurrent session handling (multiple logins)"
+  - "Test for session token in URL (GET parameter leakage)"
+  - "Check for proper session rotation on privilege escalation"
+  - "Test for anti-CSRF tokens on state-changing operations"
+  - "Check for session token reuse after password change"
+  - "Test cookie scope: Domain and Path attributes"
+  - "Analyze JWT/session token for information disclosure"
+
+payloads:
+  # Cookie attribute tests
+  - "Check: Set-Cookie header should contain HttpOnly"
+  - "Check: Set-Cookie header should contain Secure"
+  - "Check: Set-Cookie header should contain SameSite=Strict or Lax"
+  - "Check: Cookie Domain should be as restrictive as possible"
+  # Session fixation
+  - "1. Note session cookie before login"
+  - "2. Authenticate"
+  - "3. Compare session cookie — should be DIFFERENT"
+  # Session token analysis
+  - "Collect 10+ session tokens and check for patterns"
+  - "Check token length (should be >= 128 bits of entropy)"
+  - "Check if tokens are sequential or predictable"
+  # CSRF
+  - "Check for CSRF tokens in forms"
+  - "Test if state-changing requests work without CSRF token"
+  - "Test if CSRF token is tied to the session"
+
+detection_patterns:
+  - "Set-Cookie:.*(?:session|token|sid|auth)(?!.*HttpOnly)"
+  - "Set-Cookie:.*(?:session|token|sid|auth)(?!.*Secure)"
+  - "Set-Cookie:.*(?:session|token|sid|auth)(?!.*SameSite)"
+  - "(?:csrf|xsrf|_token|authenticity_token)"
+  - "(?:session_id|sid|PHPSESSID|JSESSIONID|ASP\\.NET_SessionId)=([a-zA-Z0-9]+)"
+
+remediation: >
+  Set HttpOnly, Secure, and SameSite flags on all session cookies.
+  Generate session IDs with at least 128 bits of entropy. Regenerate
+  session ID on login and privilege changes. Implement proper session
+  timeout (idle and absolute). Invalidate sessions on logout.
+  Use anti-CSRF tokens tied to the session.
+
+references:
+  - "CWE-384: Session Fixation"
+  - "CWE-613: Insufficient Session Expiration"
+  - "OWASP Session Management Cheat Sheet"
+  - "OWASP A07:2021 – Identification and Authentication Failures"
+
+triggers:
+  - "session"
+  - "cookie"
+  - "auth"
+  - "login"
+  - "csrf"
+  - "token"
+  - "jwt"
+  - "stateful"
+  - "express"
+  - "django"
+  - "rails"
+  - "php"

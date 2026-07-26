@@ -1,0 +1,72 @@
+name: Insecure Direct Object Reference
+category: web
+description: >
+  Detects IDOR vulnerabilities where users can access resources
+  belonging to other users by manipulating object identifiers.
+
+severity_range: ["MEDIUM", "HIGH", "CRITICAL"]
+tools: ["auth_session", "curl", "custom_scripts"]
+
+methodology:
+  - "Map all endpoints that accept object IDs (user IDs, order IDs, file IDs)"
+  - "Create two test accounts (attacker and victim) for verification"
+  - "Capture requests from both accounts and note object identifiers"
+  - "Replace victim's object ID with attacker's ID in request — check if access is denied"
+  - "Test sequential IDs: try incrementing/decrementing by 1"
+  - "Test UUID prediction if IDs are UUIDs (check for sequential UUIDs)"
+  - "Test with unauthenticated requests — some endpoints skip auth checks"
+  - "Check for IDOR in API responses (data returned includes other users' data)"
+  - "Test horizontal privilege escalation (same role, different user)"
+  - "Test vertical privilege escalation (access admin resources as regular user)"
+  - "Check file download endpoints for IDOR"
+  - "Test bulk endpoints for mixed user data leakage"
+
+payloads:
+  # Common IDOR test patterns (replace {id} with actual IDs)
+  - "GET /api/users/{other_user_id}"
+  - "GET /api/users/{other_user_id}/profile"
+  - "GET /api/orders/{other_order_id}"
+  - "GET /api/invoices/{other_invoice_id}"
+  - "GET /api/files/{other_file_id}/download"
+  - "GET /api/documents/{other_doc_id}"
+  - "PUT /api/users/{other_user_id} (modify other user)"
+  - "DELETE /api/users/{other_user_id} (delete other user)"
+  # Sequential ID testing
+  - "GET /api/resource/1"
+  - "GET /api/resource/2"
+  - "GET /api/resource/100"
+  # Parameter manipulation
+  - "user_id=TARGET_ID (in POST body)"
+  - "id=TARGET_ID (in query string)"
+  - "account=TARGET_ID (in cookie)"
+
+detection_patterns:
+  - "\"(?:user_?id|account_?id|owner_?id|author_?id)\"\\s*:\\s*\\d+"
+  - "\"email\"\\s*:\\s*\"[^\"]+@[^\"]+\""
+  - "\"(?:password|hash|secret|token|api_?key)\"\\s*:"
+  - "\"(?:ssn|credit_card|card_number|phone)\"\\s*:"
+
+remediation: >
+  Implement proper authorization checks on EVERY request. Use indirect
+  references (session-scoped IDs mapped server-side). Never rely on
+  client-side access control. Implement row-level security in the database.
+  Use UUIDs instead of sequential IDs where appropriate. Log access
+  to sensitive resources for audit.
+
+references:
+  - "CWE-639: Authorization Bypass Through User-Controlled Key"
+  - "OWASP A01:2021 – Broken Access Control"
+  - "OWASP Testing Guide: IDOR"
+
+triggers:
+  - "idor"
+  - "api"
+  - "user"
+  - "profile"
+  - "account"
+  - "order"
+  - "file"
+  - "document"
+  - "resource"
+  - "rest"
+  - "graphql"

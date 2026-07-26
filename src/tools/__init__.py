@@ -1,1 +1,1 @@
-"""Security tool wrappers — integrate, don't reinvent."""
+"""Tools package - External security tool wrappers."""

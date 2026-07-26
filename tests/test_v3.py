@@ -195,12 +195,11 @@ class TestPortScannerFallback:
         assert result.success is True
         assert isinstance(result.findings, list)
 
-    def test_guess_service(self):
+    def test_port_remediation(self):
         from src.tools.portscan import PortScanner
-        assert PortScanner._guess_service(80) == "http"
-        assert PortScanner._guess_service(443) == "https"
-        assert PortScanner._guess_service(22) == "ssh"
-        assert PortScanner._guess_service(99999) == "unknown"
+        assert "FTP" in PortScanner._port_remediation(21, "ftp")
+        assert "SSH" in PortScanner._port_remediation(22, "ssh")
+        assert "HTTPS" in PortScanner._port_remediation(443, "https") or "TLS" in PortScanner._port_remediation(443, "https")
 
 
 # =========================================================================

