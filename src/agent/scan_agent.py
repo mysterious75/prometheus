@@ -182,7 +182,7 @@ class ScanAgent:
 
             for f in scan_result.findings:
                 findings.append({
-                    "type": f.vuln_type,
+                    "vuln_type": f.vuln_type,
                     "title": f.title,
                     "severity": f.severity,
                     "url": f.url,

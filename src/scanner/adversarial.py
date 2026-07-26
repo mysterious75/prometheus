@@ -11,8 +11,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Any
 
-from src.scanner.findings import Finding
-from src.core.logger import logger
+from .findings import Finding
+from ..core.logger import logger
 
 
 @dataclass
@@ -29,7 +29,7 @@ class ValidationResult:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "finding_id": self.original_finding.id,
+            "finding_id": self.original_finding.finding_id,
             "vuln_type": self.original_finding.vuln_type,
             "url": self.original_finding.url,
             "verdict": self.verdict,
@@ -116,7 +116,7 @@ class AdversarialValidator:
             try:
                 results.append(self.validate(finding))
             except Exception as e:
-                logger.error(f"Validation failed for finding {finding.id}: {e}")
+                logger.error(f"Validation failed for finding {finding.finding_id}: {e}")
                 results.append(ValidationResult(
                     original_finding=finding,
                     verdict="needs_manual_review",
@@ -227,7 +227,16 @@ class AdversarialValidator:
 
         # 1. Is the payload actually reflected in the response?
         if finding.payload:
-            if finding.payload not in (finding.response_snippet or ""):
+            _is_blind = (
+                "blind" in finding.vuln_type.lower()
+                or "time-based" in finding.vuln_type.lower()
+                or "out-of-band" in finding.vuln_type.lower()
+                or "oob" in finding.vuln_type.lower()
+                or getattr(finding, "detection_method", "") in ("timing", "out_of_band")
+            )
+            if _is_blind:
+                notes.append("Blind technique — payload reflection not expected, skipping penalty.")
+            elif finding.payload not in (finding.response_snippet or ""):
                 penalty += 0.25
                 fp_flags.append("payload_not_reflected")
                 notes.append("Payload is NOT actually in the response — weak evidence.")
@@ -323,8 +332,12 @@ class AdversarialValidator:
         fp_flags = skeptic.get("fp_flags", [])
 
         if net_score >= 0.6 and evidence_strength in ("strong", "moderate"):
-            verdict = "confirmed"
-            confidence = min(0.95, 0.6 + net_score * 0.4)
+            if fp_flags:
+                verdict = "likely_false_positive"
+                confidence = min(0.8, 0.4 + (0.45 - net_score) * 2)
+            else:
+                verdict = "confirmed"
+                confidence = min(0.95, 0.6 + net_score * 0.4)
         elif "static_page" in fp_flags or "documentation_page" in fp_flags:
             verdict = "false_positive"
             confidence = min(0.9, 0.5 + skeptic_penalty * 0.4)

@@ -1,5 +1,6 @@
 """Critic Agent - Multi-model consensus and debate system."""
 
+import re
 import concurrent.futures
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
@@ -157,18 +158,21 @@ class CriticAgent:
         return result
 
     def _parse_critic_output(self, text: str) -> Dict[str, str]:
-        """Parse structured critic output."""
+        """Parse structured critic output using case-insensitive regex."""
         parsed = {}
-        for line in text.split("\n"):
-            line = line.strip()
-            if line.startswith("BEST_PROVIDER:"):
-                parsed["best_provider"] = line.split(":", 1)[1].strip().lower()
-            elif line.startswith("CONFIDENCE:"):
-                parsed["confidence"] = line.split(":", 1)[1].strip()
-            elif line.startswith("ANALYSIS:"):
-                parsed["analysis"] = line.split(":", 1)[1].strip()
-            elif line.startswith("CONSENSUS:"):
-                parsed["consensus"] = line.split(":", 1)[1].strip()
+        patterns = {
+            "best_provider": r'(?i)BEST_PROVIDER\s*:\s*(\w+)',
+            "confidence": r'(?i)CONFIDENCE\s*:\s*([\d.]+)',
+            "analysis": r'(?i)ANALYSIS\s*:\s*(.+)',
+            "consensus": r'(?i)CONSENSUS\s*:\s*(.+)',
+        }
+        for key, pattern in patterns.items():
+            match = re.search(pattern, text)
+            if match:
+                value = match.group(1).strip()
+                if key == "best_provider":
+                    value = value.lower()
+                parsed[key] = value
         return parsed
 
     def self_reflect(self, last_response: str, user_input: str) -> str:

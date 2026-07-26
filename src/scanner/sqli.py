@@ -1139,24 +1139,48 @@ class SQLiScanner:
         base_params: dict, baseline: BaselineMetrics, host: str
     ) -> Optional[int]:
         """Find the number of columns using ORDER BY binary search."""
+        # Control request — verify baseline is stable before each probe
+        def _control_ok() -> bool:
+            """Send a benign request to check for transient server errors."""
+            try:
+                ctrl_params = dict(base_params)
+                ctrl_params[param] = "1"
+                ctrl_url = self._build_url(url, ctrl_params)
+                self.limiter.wait(host)
+                ctrl = client.get(ctrl_url)
+                return ctrl.status_code < 500 and not self._has_sql_error(ctrl.text)
+            except Exception:
+                return False
+
         # Try ORDER BY 1..20
         for n in range(1, 21):
+            if not _control_ok():
+                continue
             payload = f"' ORDER BY {n}--"
             test_params = dict(base_params)
             test_params[param] = payload
             test_url = self._build_url(url, test_params)
 
+            errors = 0
+            for _ in range(2):
+                self.limiter.wait(host)
+                try:
+                    resp = client.get(test_url)
+                    body = resp.text
+                    if resp.status_code >= 500 or self._has_sql_error(body):
+                        errors += 1
+                except Exception:
+                    errors += 1
+
+            # Only conclude column count after 2 consistent errors
+            if errors >= 2:
+                return max(1, n - 1)
+
+            # Significant length change often means ORDER BY failed
             self.limiter.wait(host)
             try:
                 resp = client.get(test_url)
                 body = resp.text
-
-                # If we get an error or very different response, column count is n-1
-                if resp.status_code >= 500:
-                    return max(1, n - 1)
-                if self._has_sql_error(body):
-                    return max(1, n - 1)
-                # Significant length change often means ORDER BY failed
                 if abs(len(body) - baseline.response_length) > baseline.response_length * 0.3:
                     return max(1, n - 1)
             except Exception:
@@ -1273,6 +1297,11 @@ class SQLiScanner:
 
         parsed = urlparse(url)
 
+        second_order_pages = ["/profile", "/settings", "/dashboard", "/account", "/admin"]
+
+        parsed_base = urlparse(url)
+        base_origin = f"{parsed_base.scheme}://{parsed_base.netloc}"
+
         for payload in test_payloads:
             # Try POST with the payload
             for param_name in base_params:
@@ -1285,12 +1314,15 @@ class SQLiScanner:
                 except Exception:
                     continue
 
-            # Now visit the same page (or a profile/results page) to check
-            # if the payload was stored and executed
-            self.limiter.wait(host)
-            try:
-                check_resp = client.get(url)
-                body = check_resp.text
+            # Crawl common pages that might render user data
+            for page in second_order_pages:
+                check_url = base_origin + page
+                self.limiter.wait(host)
+                try:
+                    check_resp = client.get(check_url)
+                    body = check_resp.text
+                except Exception:
+                    continue
 
                 # Check if our marker appeared in an error context
                 if marker in body:
@@ -1302,19 +1334,19 @@ class SQLiScanner:
                                     vuln_type="SQL Injection (Second-order)",
                                     title=f"Second-order SQLi detected ({dbms})",
                                     severity="CRITICAL",
-                                    url=url,
+                                    url=check_url,
                                     parameter=", ".join(base_params.keys()),
                                     method="POST",
                                     payload=payload,
                                     evidence=(
-                                        f"Payload stored and triggered on subsequent GET. "
+                                        f"Payload stored and triggered on subsequent GET at {check_url}. "
                                         f"Marker '{marker}' found in response with SQL error. "
                                         f"Error pattern: {pattern}"
                                     ),
                                     description=(
                                         f"Second-order SQL injection ({dbms}). "
                                         f"Input was stored and later executed in a SQL context "
-                                        f"when the page was reloaded."
+                                        f"when page {check_url} was loaded."
                                     ),
                                     remediation=DBMS_REMEDIATION.get(dbms, DEFAULT_SQLI_REMEDIATION),
                                     cvss=9.8,
@@ -1322,12 +1354,10 @@ class SQLiScanner:
                                     tool=self.NAME,
                                     verified=True,
                                     confidence="HIGH",
-                                    request=f"POST {url} with payload\nGET {url} (check)",
+                                    request=f"POST {url} with payload\nGET {check_url} (check)",
                                     response_snippet=body[:2000],
                                 ))
                                 return findings
-            except Exception:
-                continue
 
         return findings
 

@@ -9,6 +9,7 @@ import time
 import json
 import secrets
 import asyncio
+import ipaddress
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -320,6 +321,27 @@ class APIRateLimiter:
 # Startup timestamp
 _startup_time = datetime.now()
 
+# Track cancelled scans
+_scan_cancelled: Dict[str, bool] = {}
+
+
+def _validate_target(target: str) -> bool:
+    """Reject private/loopback targets to prevent SSRF."""
+    from urllib.parse import urlparse
+    parsed = urlparse(target)
+    host = parsed.hostname or target
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.is_loopback:
+            return False
+        if ip.is_private:
+            return False
+    except ValueError:
+        pass
+    if host and host.lower() in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):
+        return False
+    return True
+
 # Default data directory
 _data_dir = Path(__file__).parent.parent.parent / "data" / "api"
 
@@ -353,7 +375,6 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -453,6 +474,8 @@ def create_app(
     async def _run_scan_background(scan_id: str, target: str, scan_type: str, options: dict):
         """Execute scan in background thread."""
         try:
+            if _scan_cancelled.get(scan_id):
+                return
             store.update_scan(scan_id, status="running", progress=5)
 
             if not target.startswith(("http://", "https://")):
@@ -482,12 +505,10 @@ def create_app(
                 runner = ScanRunner(rps=2.0)
                 result = runner.scan(target, full=True)
                 findings_list = result.findings
-                store.update_scan(scan_id, progress=90)
 
             elif scan_type in ("owasp", "business", "session", "crypto", "api"):
                 # Specialized scan types
                 findings_list = await _run_specialized_scan(scan_type, target)
-                store.update_scan(scan_id, progress=90)
 
             else:
                 # Full scan
@@ -495,7 +516,10 @@ def create_app(
                 runner = ScanRunner(rps=float(options.get("rps", 10.0)))
                 result = runner.scan(target, full=True)
                 findings_list = result.findings
-                store.update_scan(scan_id, progress=90)
+
+            store.update_scan(scan_id, progress=90)
+            if _scan_cancelled.get(scan_id):
+                return
 
             # Convert findings to dicts
             findings_dicts = [f.to_dict() for f in findings_list]
@@ -565,6 +589,12 @@ def create_app(
                 detail=f"Invalid scan_type '{request.scan_type}'. Valid: {', '.join(sorted(valid_types))}",
             )
 
+        if not _validate_target(request.target):
+            raise HTTPException(status_code=400, detail="Target is not allowed (private/loopback address).")
+
+        if not auth_mgr.is_authorized(request.target):
+            raise HTTPException(status_code=403, detail="Target not authorized. Use POST /authorize first.")
+
         scan_id = str(uuid.uuid4())[:12]
         scan = store.create_scan(scan_id, request.target, request.scan_type, request.options)
 
@@ -606,6 +636,7 @@ def create_app(
             raise HTTPException(status_code=404, detail=f"Scan '{scan_id}' not found.")
 
         if scan["status"] in ("pending", "running"):
+            _scan_cancelled[scan_id] = True
             store.update_scan(scan_id, status="failed", error="Cancelled by user",
                               completed_at=datetime.now().isoformat())
             return {"message": f"Scan '{scan_id}' cancelled.", "scan_id": scan_id}
@@ -781,7 +812,7 @@ def create_app(
         keys = key_mgr.list_keys()
         return {
             "keys": [
-                {"key": k[:8] + "..." + k[-4:], "full_key": k}
+                {"key": k[:8] + "..." + k[-4:]}
                 for k in keys
             ],
             "count": len(keys),

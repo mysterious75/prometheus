@@ -74,7 +74,7 @@ class CloudScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=8, verify=False)
+        client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
 
         # Generate bucket names
         base_names = [name, name.replace(".", "-"), name.replace(".", "")]
@@ -129,14 +129,14 @@ class CloudScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=8, verify=False)
+        client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
 
         base_names = [name, name.replace(".", "-"), name.replace(".", "")]
         container_names = set()
         for base in base_names:
             for pattern in self.BUCKET_PATTERNS:
                 container_names.add(pattern.format(name=base))
-
+        
         for container in container_names:
             self.limiter.wait("blob.core.windows.net")
             try:
@@ -169,14 +169,14 @@ class CloudScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=8, verify=False)
+        client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
 
         base_names = [name, name.replace(".", "-"), name.replace(".", "")]
         bucket_names = set()
         for base in base_names:
             for pattern in self.BUCKET_PATTERNS:
                 bucket_names.add(pattern.format(name=base))
-
+        
         for bucket in bucket_names:
             self.limiter.wait("storage.googleapis.com")
             try:
@@ -184,7 +184,7 @@ class CloudScanner:
                 resp = client.get(url)
 
                 if resp.status_code == 200:
-                    files = re.findall(r'<Key>([^<]+)</Key>', resp.text)
+                    files = re.findall(r'<Contents>.*?<Name>([^<]+)</Name>', resp.text, re.DOTALL)
                     findings.append(CloudFinding(
                         service="GCP Cloud Storage",
                         bucket=bucket,
@@ -205,7 +205,7 @@ class CloudScanner:
         """Check S3 bucket permissions."""
         try:
             import httpx
-            client = httpx.Client(timeout=8, verify=False)
+            client = httpx.Client(timeout=8, verify=True)
 
             # Check ACL
             acl_url = f"https://{bucket}.s3.amazonaws.com/?acl"

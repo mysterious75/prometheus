@@ -45,12 +45,11 @@ class TestExecutiveReportGenerator:
         ]
         compliance = gen._map_compliance(findings)
         assert "A03:2021" in compliance["owasp_top10"]
-        assert compliance["owasp_compliant"] is False
 
     def test_map_compliance_clean(self):
         gen = ExecutiveReportGenerator()
         compliance = gen._map_compliance([])
-        assert compliance["owasp_compliant"] is True
+        assert compliance["owasp_compliant"] == "unknown"
 
     def test_generate_remediation(self):
         gen = ExecutiveReportGenerator()

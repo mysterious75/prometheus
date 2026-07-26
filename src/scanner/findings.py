@@ -3,6 +3,7 @@
 Every finding must have evidence. No evidence = not a finding.
 """
 
+import urllib.parse
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -11,7 +12,7 @@ from datetime import datetime
 @dataclass
 class Finding:
     """A verified security finding. Evidence is mandatory."""
-    id: int = 0
+    finding_id: int = 0
     vuln_type: str = ""
     title: str = ""
     severity: str = "INFO"  # CRITICAL, HIGH, MEDIUM, LOW, INFO
@@ -33,7 +34,7 @@ class Finding:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "id": self.id,
+            "id": self.finding_id,
             "vuln_type": self.vuln_type,
             "title": self.title,
             "severity": self.severity,
@@ -56,9 +57,11 @@ class Finding:
     def poc_command(self) -> str:
         """Generate a curl PoC command."""
         if self.method == "GET":
-            return f'curl -k "{self.url}"'
+            encoded = urllib.parse.quote(self.payload, safe='')
+            return f'curl -k "{self.url}?{self.parameter}={encoded}"'
         elif self.method == "POST":
-            return f'curl -k -X POST "{self.url}" -d "{self.payload}"'
+            encoded = urllib.parse.quote(self.payload, safe='')
+            return f'curl -k -X POST "{self.url}" -d "{self.parameter}={encoded}"'
         return f'curl -k "{self.url}"'
 
 
@@ -72,8 +75,13 @@ class ScanResult:
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
     def add(self, finding: Finding):
-        """Add a finding with auto-incrementing ID."""
-        finding.id = len(self.findings) + 1
+        """Add a finding with auto-incrementing ID and dedup."""
+        dedup_key = (finding.url, finding.parameter, finding.vuln_type, finding.payload)
+        for existing in self.findings:
+            existing_key = (existing.url, existing.parameter, existing.vuln_type, existing.payload)
+            if existing_key == dedup_key:
+                return
+        finding.finding_id = len(self.findings) + 1
         self.findings.append(finding)
 
     @property

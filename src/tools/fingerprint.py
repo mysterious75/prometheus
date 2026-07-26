@@ -180,24 +180,26 @@ class WebFingerprinter:
         """Analyze HTTP headers for technology detection."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=False,
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
                                   headers={"User-Agent": "Mozilla/5.0"})
             resp = client.get(target)
             result.headers = dict(resp.headers)
             result.cookies = resp.headers.get("set-cookie", "").split(",") if "set-cookie" in resp.headers else []
 
+            header_techs = {}
             for header_name, patterns in self.HEADER_PATTERNS.items():
                 header_value = resp.headers.get(header_name, "")
                 if header_value:
                     for pattern, (tech_name, category) in patterns.items():
                         if pattern.lower() in header_value.lower():
-                            result.technologies.append(TechFingerprint(
+                            header_techs.setdefault(tech_name, TechFingerprint(
                                 name=tech_name,
                                 version=self._extract_version(header_value, pattern),
                                 category=category,
                                 confidence="high",
                                 source="headers",
                             ))
+            result.technologies.extend(header_techs.values())
 
             # Check for specific cookie patterns
             cookies = resp.headers.get("set-cookie", "")
@@ -219,15 +221,17 @@ class WebFingerprinter:
         """Analyze HTML content for technology detection."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=10)
             resp = client.get(target)
             body = resp.text
+
+            html_techs = {}
 
             # CMS detection
             for cms, patterns in self.CMS_PATTERNS.items():
                 for pattern in patterns:
                     if re.search(pattern, body, re.I):
-                        result.technologies.append(TechFingerprint(
+                        html_techs.setdefault(cms, TechFingerprint(
                             name=cms, category="cms", confidence="high", source="html"
                         ))
                         break
@@ -236,7 +240,7 @@ class WebFingerprinter:
             for framework, patterns in self.JS_FRAMEWORK_PATTERNS.items():
                 for pattern in patterns:
                     if re.search(pattern, body, re.I):
-                        result.technologies.append(TechFingerprint(
+                        html_techs.setdefault(framework, TechFingerprint(
                             name=framework, category="framework", confidence="medium", source="html"
                         ))
                         break
@@ -254,16 +258,19 @@ class WebFingerprinter:
             # JavaScript file analysis
             js_files = re.findall(r'<script[^>]+src=["\']([^"\']+\.js[^"\']*)["\']', body, re.I)
             for js in js_files[:10]:
-                if "react" in js.lower():
-                    result.technologies.append(TechFingerprint(name="React", category="framework", source="js"))
-                elif "vue" in js.lower():
-                    result.technologies.append(TechFingerprint(name="Vue.js", category="framework", source="js"))
-                elif "angular" in js.lower():
-                    result.technologies.append(TechFingerprint(name="Angular", category="framework", source="js"))
-                elif "jquery" in js.lower():
-                    result.technologies.append(TechFingerprint(name="jQuery", category="library", source="js"))
-                elif "bootstrap" in js.lower():
-                    result.technologies.append(TechFingerprint(name="Bootstrap", category="library", source="js"))
+                js_lower = js.lower()
+                if "react" in js_lower:
+                    html_techs.setdefault("React", TechFingerprint(name="React", category="framework", source="js"))
+                elif "vue" in js_lower:
+                    html_techs.setdefault("Vue.js", TechFingerprint(name="Vue.js", category="framework", source="js"))
+                elif "angular" in js_lower:
+                    html_techs.setdefault("Angular", TechFingerprint(name="Angular", category="framework", source="js"))
+                elif "jquery" in js_lower:
+                    html_techs.setdefault("jQuery", TechFingerprint(name="jQuery", category="library", source="js"))
+                elif "bootstrap" in js_lower:
+                    html_techs.setdefault("Bootstrap", TechFingerprint(name="Bootstrap", category="library", source="js"))
+
+            result.technologies.extend(html_techs.values())
 
         except Exception as e:
             logger.debug(f"HTML analysis failed: {e}")
@@ -272,7 +279,7 @@ class WebFingerprinter:
         """Detect Web Application Firewall."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=10)
 
             # Normal request
             resp = client.get(target)
@@ -290,7 +297,7 @@ class WebFingerprinter:
 
             # Try a malicious request to trigger WAF
             try:
-                test_url = f"{target.rstrip('/')}?id=1' OR '1'='1"
+                test_url = f"{target.rstrip('/')}?q=<script>alert(1)</script>"
                 waf_resp = client.get(test_url)
                 if waf_resp.status_code in (403, 406, 419, 429, 503):
                     body_lower = waf_resp.text.lower()

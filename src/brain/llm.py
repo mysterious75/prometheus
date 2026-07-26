@@ -8,6 +8,7 @@ Fast: Google Gemini (3 keys for rotation)
 import os
 import json
 import time
+import re
 import concurrent.futures
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any, List, Tuple
@@ -19,6 +20,11 @@ env_path = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(env_path)
 
 from ..utils.logger import logger
+
+
+def _redact_api_keys(text: str) -> str:
+    """Redact common API key patterns (sk-..., pk-...) from error strings."""
+    return re.sub(r'(sk-|pk-)[A-Za-z0-9]{3,}', r'\1***', str(text))
 
 
 class LLMProvider(ABC):
@@ -37,6 +43,10 @@ class LLMProvider(ABC):
         self.last_error = ""
         self.models_available = []
         self.tokens_remaining = None
+
+    def __repr__(self):
+        masked = self.api_key[:6] + "..." + self.api_key[-4:] if len(self.api_key) > 12 else self.api_key[:4] + "..." + self.api_key[-4:] if len(self.api_key) > 8 else "***"
+        return f"{self.__class__.__name__}(name='{self.name}', api_key='{masked}')"
 
     @abstractmethod
     def generate(self, prompt: str, **kwargs) -> str:
@@ -105,37 +115,52 @@ class OpenAICompatibleProvider(LLMProvider):
 
             return True, f"{len(model_ids)} models available", model_ids
         except Exception as e:
-            self.last_error = str(e)
+            self.last_error = _redact_api_keys(str(e))
             self.available = False
             return False, str(e), []
 
     def generate(self, prompt: str, **kwargs) -> str:
-        try:
-            client = self._get_client()
-            # Free models have very limited tokens - use lower max_tokens
-            is_free = ":free" in (self.model or "") or "free" in (self.model or "").lower()
-            default_tokens = 200 if is_free else 1024
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=kwargs.get("max_tokens", default_tokens),
-                temperature=kwargs.get("temperature", 0.7)
-            )
-            tokens = response.usage.total_tokens if response.usage else 0
-            self.total_tokens_used += tokens
-            self.daily_tokens_used += tokens
-            content = response.choices[0].message.content
-            # Some models return reasoning instead of content - extract actual content
-            if content is None or (isinstance(content, str) and len(content.strip()) == 0):
-                # Try to get from reasoning or other fields
-                msg = response.choices[0].message
-                if hasattr(msg, 'reasoning') and msg.reasoning:
-                    # Return last line of reasoning as it often contains the answer
-                    lines = msg.reasoning.strip().split('\n')
-                    content = lines[-1] if lines else msg.reasoning
-            return content or ""
-        except Exception as e:
-            return f"[{self.name} Error] {str(e)}"
+        last_exception = None
+        for attempt in range(3):
+            try:
+                client = self._get_client()
+                # Free models have very limited tokens - use lower max_tokens
+                is_free = ":free" in (self.model or "") or "free" in (self.model or "").lower()
+                default_tokens = 200 if is_free else 1024
+                response = client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=kwargs.get("max_tokens", default_tokens),
+                    temperature=kwargs.get("temperature", 0.7)
+                )
+                tokens = 0
+                if response and hasattr(response, 'usage') and response.usage:
+                    tokens = response.usage.total_tokens
+                self.total_tokens_used += tokens
+                self.daily_tokens_used += tokens
+                content = response.choices[0].message.content
+                if content is None or (isinstance(content, str) and len(content.strip()) == 0):
+                    msg = response.choices[0].message
+                    if hasattr(msg, 'reasoning') and msg.reasoning:
+                        lines = msg.reasoning.strip().split('\n')
+                        content = lines[-1] if lines else msg.reasoning
+                return content or ""
+            except Exception as e:
+                last_exception = e
+                error_str = str(e).lower()
+                is_retryable = (
+                    "429" in error_str
+                    or "rate limit" in error_str
+                    or "timeout" in error_str
+                    or "connection" in error_str
+                    or "service unavailable" in error_str
+                    or "too many requests" in error_str
+                )
+                if is_retryable and attempt < 2:
+                    time.sleep(2 ** attempt)
+                    continue
+                break
+        return f"[{self.name} Error] {_redact_api_keys(str(last_exception))}"
 
     def generate_stream(self, prompt: str, **kwargs):
         try:
@@ -194,21 +219,38 @@ class GeminiProvider(LLMProvider):
                 self.models_available = [self.model]
                 return True, "Key works (single model test)", [self.model]
             except Exception as e2:
-                self.last_error = str(e2)
+                self.last_error = _redact_api_keys(str(e2))
                 self.available = False
                 return False, str(e2), []
 
     def generate(self, prompt: str, **kwargs) -> str:
-        try:
-            self._init_genai()
-            model = self.genai.GenerativeModel(self.model)
-            response = model.generate_content(prompt)
-            tokens = response.usage_metadata.total_token_count
-            self.total_tokens_used += tokens
-            self.daily_tokens_used += tokens
-            return response.text
-        except Exception as e:
-            return f"[Gemini Error] {str(e)}"
+        last_exception = None
+        for attempt in range(3):
+            try:
+                self._init_genai()
+                model = self.genai.GenerativeModel(self.model)
+                response = model.generate_content(prompt)
+                tokens = 0
+                if response and hasattr(response, 'usage_metadata') and response.usage_metadata:
+                    tokens = response.usage_metadata.total_token_count
+                self.total_tokens_used += tokens
+                self.daily_tokens_used += tokens
+                return response.text
+            except Exception as e:
+                last_exception = e
+                error_str = str(e).lower()
+                is_retryable = (
+                    "429" in error_str
+                    or "rate limit" in error_str
+                    or "timeout" in error_str
+                    or "connection" in error_str
+                    or "service unavailable" in error_str
+                )
+                if is_retryable and attempt < 2:
+                    time.sleep(2 ** attempt)
+                    continue
+                break
+        return f"[Gemini Error] {_redact_api_keys(str(last_exception))}"
 
     def generate_stream(self, prompt: str, **kwargs):
         try:
@@ -229,7 +271,9 @@ class GeminiProvider(LLMProvider):
             image_part = Part.from_data(data=image_bytes, mime_type=mime_type)
             model = self.genai.GenerativeModel(self.model)
             response = model.generate_content([prompt, image_part])
-            tokens = response.usage_metadata.total_token_count
+            tokens = 0
+            if response and hasattr(response, 'usage_metadata') and response.usage_metadata:
+                tokens = response.usage_metadata.total_token_count
             self.total_tokens_used += tokens
             self.daily_tokens_used += tokens
             return response.text

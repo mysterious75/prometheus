@@ -3,6 +3,7 @@
 Uses time-based detection to avoid false positives.
 """
 
+import re
 import time
 from typing import List
 from urllib.parse import urlparse, urlencode, urlunparse, parse_qs
@@ -32,8 +33,8 @@ class CMDiScanner:
     OUTPUT_PAYLOADS = [
         ("; id", "uid="),
         ("| id", "uid="),
-        ("; whoami", None),
-        ("| whoami", None),
+        ("; whoami", r'^[a-z_][a-z0-9_-]{0,32}$'),
+        ("| whoami", r'^[a-z_][a-z0-9_-]{0,32}$'),
         ("; cat /etc/passwd", "root:"),
         ("| cat /etc/passwd", "root:"),
     ]
@@ -58,14 +59,23 @@ class CMDiScanner:
         client = httpx.Client(follow_redirects=True, timeout=15, verify=False,
                               headers={"User-Agent": "Mozilla/5.0"})
 
-        # Get baseline timing
-        try:
-            self.limiter.wait(parsed.netloc)
-            start = time.time()
-            baseline = client.get(url)
-            baseline_time = time.time() - start
-        except Exception:
+        # Get baseline timing — average over 3 requests with benign value, use monotonic
+        baseline_times = []
+        for _ in range(3):
+            try:
+                self.limiter.wait(parsed.netloc)
+                bl_params = dict(test_params)
+                for k in bl_params:
+                    bl_params[k] = "1"
+                bl_url = urlunparse(urlparse(url)._replace(query=urlencode(bl_params)))
+                start = time.monotonic()
+                client.get(bl_url)
+                baseline_times.append(time.monotonic() - start)
+            except Exception:
+                continue
+        if not baseline_times:
             return []
+        baseline_time = sum(baseline_times) / len(baseline_times)
 
         for param_name in test_params:
             # Time-based detection (most reliable)
@@ -142,7 +152,7 @@ class CMDiScanner:
                 resp = client.get(test_url)
                 body = resp.text
 
-                if expected_output and expected_output in body:
+                if expected_output and (re.search(expected_output, body) if expected_output.startswith('^') else expected_output in body):
                     findings.append(Finding(
                         vuln_type="OS Command Injection",
                         title=f"Command injection via parameter '{param}' (output-based)",

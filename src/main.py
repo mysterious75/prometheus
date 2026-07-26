@@ -5,6 +5,7 @@ to conduct autonomous security assessments.
 """
 
 from typing import Dict, Any, Optional
+import re
 from datetime import datetime
 
 from .agent.planner import AttackPlanner, AttackStep
@@ -139,7 +140,7 @@ class Prometheus:
                 report["analysis"] = "Analysis generation failed."
 
         # Save report
-        output_dir = config.output_dir / self.memory.target.replace(".", "_")
+        output_dir = config.output_dir / re.sub(r'[^a-zA-Z0-9._-]', '_', self.memory.target)
         output_dir.mkdir(parents=True, exist_ok=True)
         report_file = output_dir / f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         try:

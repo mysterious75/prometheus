@@ -55,20 +55,22 @@ class TestScanResult:
     def test_add_finding(self):
         from src.scanner.findings import ScanResult, Finding
         result = ScanResult(target="http://example.com")
-        result.add(Finding(vuln_type="XSS", severity="HIGH"))
-        result.add(Finding(vuln_type="SQLi", severity="CRITICAL"))
+        f1 = Finding(vuln_type="XSS", severity="HIGH", url="http://example.com", parameter="q", payload="<script>")
+        f2 = Finding(vuln_type="SQLi", severity="CRITICAL", url="http://example.com", parameter="id", payload="' OR 1=1")
+        result.add(f1)
+        result.add(f2)
         assert len(result.findings) == 2
-        assert result.findings[0].id == 1
-        assert result.findings[1].id == 2
+        assert result.findings[0].finding_id == 1
+        assert result.findings[1].finding_id == 2
 
     def test_severity_filters(self):
         from src.scanner.findings import ScanResult, Finding
         result = ScanResult(target="http://example.com")
-        result.add(Finding(severity="CRITICAL"))
-        result.add(Finding(severity="HIGH"))
-        result.add(Finding(severity="HIGH"))
-        result.add(Finding(severity="MEDIUM"))
-        result.add(Finding(severity="LOW"))
+        result.add(Finding(severity="CRITICAL", url="http://example.com/a", vuln_type="SQLi"))
+        result.add(Finding(severity="HIGH", url="http://example.com/b", vuln_type="XSS"))
+        result.add(Finding(severity="HIGH", url="http://example.com/c", vuln_type="XSS"))
+        result.add(Finding(severity="MEDIUM", url="http://example.com/d", vuln_type="INFO"))
+        result.add(Finding(severity="LOW", url="http://example.com/e", vuln_type="INFO"))
         assert len(result.critical) == 1
         assert len(result.high) == 2
         assert len(result.medium) == 1
@@ -77,8 +79,8 @@ class TestScanResult:
     def test_summary(self):
         from src.scanner.findings import ScanResult, Finding
         result = ScanResult(target="http://example.com", duration=10.5)
-        result.add(Finding(severity="CRITICAL"))
-        result.add(Finding(severity="HIGH"))
+        result.add(Finding(severity="CRITICAL", url="http://example.com/a", vuln_type="SQLi"))
+        result.add(Finding(severity="HIGH", url="http://example.com/b", vuln_type="XSS"))
         s = result.summary()
         assert s["total"] == 2
         assert s["critical"] == 1
@@ -127,7 +129,7 @@ class TestCrawler:
         assert len(forms) == 1
         assert forms[0].method == "POST"
         assert len(forms[0].inputs) == 2  # username + password (submit has no name)
-        assert forms[0].inputs[0]["name"] == "username"
+        assert forms[0].inputs[0].name == "username"
 
     def test_crawl_result_structure(self):
         from src.scanner.crawler import CrawlResult
@@ -224,13 +226,13 @@ class TestSQLiScanner:
         from src.scanner.sqli import SQLiScanner
         s = SQLiScanner()
         body = "You have an error in your SQL syntax; check the manual..."
-        assert s._validate_sql_error(body, "SQL syntax") is True
+        assert s._validate_sql_error(body, "SQL syntax", "SQL syntax") is True
 
     def test_validate_sql_error_false_positive(self):
         from src.scanner.sqli import SQLiScanner
         s = SQLiScanner()
         body = "This tutorial explains SQL syntax errors and how to fix them..."
-        assert s._validate_sql_error(body, "SQL syntax") is False
+        assert s._validate_sql_error(body, "SQL syntax", "SQL syntax") is False
 
     def test_build_url(self):
         from src.scanner.sqli import SQLiScanner
@@ -254,13 +256,13 @@ class TestXSSScanner:
         from src.scanner.xss import XSSScanner
         s = XSSScanner()
         body = '<html><body><script>alert(1)</script></body></html>'
-        assert s._is_executable_context(body, "<script>alert(1)</script>", "HTML") is True
+        assert s._is_executable_context(body, "<script>alert(1)</script>", "HTML", body.find("<script>")) is True
 
     def test_is_executable_context_comment(self):
         from src.scanner.xss import XSSScanner
         s = XSSScanner()
         body = '<html><!-- <script>alert(1)</script> --></html>'
-        assert s._is_executable_context(body, "<script>alert(1)</script>", "HTML") is False
+        assert s._is_executable_context(body, "<script>alert(1)</script>", "HTML", body.find("<script>")) is False
 
 
 # =========================================================================

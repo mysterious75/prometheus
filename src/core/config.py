@@ -5,9 +5,12 @@ Includes scan profiles, rate limits, API settings, and report configuration.
 
 import os
 import json
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -184,7 +187,7 @@ class RateLimitConfig:
 @dataclass
 class APIServerConfig:
     """API server configuration."""
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"
     port: int = 8000
     require_auth: bool = True
     requests_per_minute: int = 60
@@ -379,8 +382,8 @@ def load_config() -> PrometheusConfig:
                     config.output.format = out_data["format"]
                 if "verbose" in out_data:
                     config.output.verbose = out_data["verbose"]
-        except (json.JSONDecodeError, KeyError):
-            pass
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.warning(f"Failed to load config from {config_file}: {e}")
 
     # Environment variable overrides
     if os.environ.get("PROMETHEUS_API_HOST"):

@@ -359,6 +359,7 @@ class TestModelRouter:
         router.routing = {"by_role": {"primary": ["preferred"]}, "primary": "preferred", "all": ["preferred", "other"]}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         result = router.get_provider(preferred="preferred")
         assert result is mock_p
 
@@ -370,6 +371,7 @@ class TestModelRouter:
         router.routing = {"by_role": {"fast": ["fast_provider"]}, "primary": "fast_provider", "all": ["fast_provider"]}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         result = router.get_provider(role="fast")
         assert result is mock_p
 
@@ -380,6 +382,7 @@ class TestModelRouter:
         router.routing = {"by_role": {}, "primary": "fallback", "all": ["fallback"]}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         result = router.get_provider(role="nonexistent_role")
         assert result is mock_p
 
@@ -389,6 +392,7 @@ class TestModelRouter:
         router.routing = {"by_role": {}, "primary": "", "all": []}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         result = router.generate("Hello")
         assert "ERROR" in result or "No LLM" in result
 
@@ -402,6 +406,7 @@ class TestModelRouter:
         router.routing = {"by_role": {"primary": ["test"]}, "primary": "test", "all": ["test"]}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         result = router.generate("Hello")
         assert result == "Generated response"
         mock_p.generate.assert_called_once_with("Hello")
@@ -412,6 +417,7 @@ class TestModelRouter:
         router.routing = {}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         names = router.list_available_providers()
         assert "a" in names
         assert "b" in names
@@ -429,6 +435,7 @@ class TestModelRouter:
         router.routing = {}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         status = router.get_status()
         assert "test" in status
         assert "primary" in status
@@ -442,6 +449,7 @@ class TestModelRouter:
         router.routing = {}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
         stats = router.get_usage_stats()
         assert "test" in stats
 
@@ -518,6 +526,7 @@ class TestModelRouterConsensus:
         router.routing = {"by_role": {"primary": ["test"]}, "primary": "test", "all": ["test"]}
         router.use_consensus = False
         router.critic = None
+        router._provider_tested = set()
 
         chunks = list(router.generate_stream("Hello"))
         assert chunks == ["chunk1", "chunk2"]

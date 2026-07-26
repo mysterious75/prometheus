@@ -49,28 +49,28 @@ class ReportGenerator:
         if result.critical:
             lines.append(f"## 🔴 Critical Findings")
             lines.append(f"")
-            for f in result.critical:
+            for f in sorted(result.critical, key=lambda x: x.cvss if x.cvss > 0 else -1, reverse=True):
                 lines.extend(self._finding_section(f))
 
         # High Findings
         if result.high:
             lines.append(f"## 🟠 High Findings")
             lines.append(f"")
-            for f in result.high:
+            for f in sorted(result.high, key=lambda x: x.cvss if x.cvss > 0 else -1, reverse=True):
                 lines.extend(self._finding_section(f))
 
         # Medium Findings
         if result.medium:
             lines.append(f"## 🟡 Medium Findings")
             lines.append(f"")
-            for f in result.medium:
+            for f in sorted(result.medium, key=lambda x: x.cvss if x.cvss > 0 else -1, reverse=True):
                 lines.extend(self._finding_section(f))
 
         # Low Findings
         if result.low:
             lines.append(f"## 🔵 Low Findings")
             lines.append(f"")
-            for f in result.low:
+            for f in sorted(result.low, key=lambda x: x.cvss if x.cvss > 0 else -1, reverse=True):
                 lines.extend(self._finding_section(f))
 
         # Crawl Summary
@@ -108,7 +108,10 @@ class ReportGenerator:
         lines.append(f"- Race Condition Testing")
         lines.append(f"- Default Credential Testing")
         lines.append(f"")
-        lines.append(f"**All findings are verified** — no false positives.")
+        if all(f.verified for f in result.findings):
+            lines.append(f"**All findings are verified** — no false positives.")
+        else:
+            lines.append(f"**Findings reported as detected** — manual verification recommended.")
         lines.append(f"")
 
         return "\n".join(lines)

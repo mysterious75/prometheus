@@ -325,7 +325,7 @@ class TestExecutiveReport:
         from src.scanner.executive_report import ExecutiveReportGenerator
         gen = ExecutiveReportGenerator()
         compliance = gen._map_compliance([])
-        assert compliance["owasp_compliant"] is True
+        assert compliance["owasp_compliant"] == "unknown"
 
     def test_owasp_top10_mapping(self):
         from src.scanner.executive_report import ExecutiveReportGenerator

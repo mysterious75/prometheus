@@ -219,7 +219,7 @@ class AutoFixGenerator:
                 return None
 
         return CodeFix(
-            finding_id=finding.id,
+            finding_id=finding.finding_id,
             vuln_type=vuln_type,
             language=language,
             framework=framework,

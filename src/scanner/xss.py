@@ -340,28 +340,34 @@ class XSSScanner:
         """Detect where parameter values are reflected in the HTML.
 
         Returns a dict mapping parameter names to their injection context.
+        Uses a unique marker string per parameter to avoid ambiguity.
         """
+        import random
         contexts: Dict[str, InjectionContext] = {}
 
         for param_name, param_value in params.items():
             if not param_value:
                 continue
 
-            # Find all occurrences of the parameter value in the HTML
+            # Generate a unique marker to avoid matching the parameter's default value
+            marker = f"XSSCTX_{random.randint(100000, 999999)}"
+            marker_html = html.replace(param_value, marker)
+
+            # Find all occurrences of the unique marker in the HTML
             idx = 0
             detected_ctx = InjectionContext.UNKNOWN
 
             while True:
-                idx = html.find(param_value, idx)
+                idx = marker_html.find(marker, idx)
                 if idx == -1:
                     break
 
-                ctx = self._classify_context(html, idx, param_value)
+                ctx = self._classify_context(marker_html, idx, marker)
                 if ctx != InjectionContext.UNKNOWN:
                     detected_ctx = ctx
                     break
 
-                idx += len(param_value)
+                idx += len(marker)
 
             contexts[param_name] = detected_ctx
 
@@ -381,7 +387,7 @@ class XSSScanner:
         # Check if inside an attribute
         # Look for pattern: attribute="...value..." or attribute='...value...'
         attr_pattern = re.search(
-            r'(\w+)\s*=\s*(["\'])([^"\']{0,100})$',
+            r'(\w+)\s*=\s*(["\'])([^"\']{0,500})$',
             before
         )
         if attr_pattern:
@@ -915,7 +921,7 @@ class XSSScanner:
                 continue
 
             # Check if marker appears in the response (immediate stored XSS)
-            if f"alert({marker})" in resp.text or f"alert({marker})" in resp.text:
+            if f"alert({marker})" in resp.text or f"alert%28{marker}%29" in resp.text:
                 findings.append(Finding(
                     vuln_type="Cross-Site Scripting (Stored)",
                     title=f"Stored XSS via form at {action}",
@@ -950,7 +956,7 @@ class XSSScanner:
             self.limiter.wait(host)
             try:
                 check_resp = client.get(url)
-                if f"alert({marker})" in check_resp.text:
+                if f"alert({marker})" in check_resp.text or f"alert%28{marker}%29" in check_resp.text:
                     findings.append(Finding(
                         vuln_type="Cross-Site Scripting (Stored)",
                         title=f"Stored XSS persists on {url}",

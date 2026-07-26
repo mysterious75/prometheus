@@ -14,6 +14,7 @@ import re
 import os
 import json
 import hashlib
+import threading
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
 from dataclasses import dataclass, field
@@ -89,6 +90,7 @@ class PayloadEngine:
 
     # Singleton pattern
     _instance = None
+    _lock = threading.Lock()
     _payloads: Dict[str, List[Payload]] = {}  # vuln_type -> payloads
     _patterns: Dict[str, List[DetectionPattern]] = {}
     _learned: Dict[str, List[str]] = {}  # vuln_type -> learned successful payloads
@@ -97,8 +99,10 @@ class PayloadEngine:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._init_engine()
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._init_engine()
         return cls._instance
 
     def _init_engine(self):
@@ -1166,7 +1170,35 @@ class PayloadEngine:
                                    encoding="whitespace", source="generated",
                                    dbms=payload.dbms, context=payload.context,
                                    waf_bypass=True))
-        
+
+        # Hex encoding — encode numeric payloads as 0x + hex
+        if value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
+            hex_val = hex(int(value))
+            hex_enc = value.replace(value, f"0x{hex_val[2:]}")
+            if hex_enc != value:
+                variants.append(Payload(hex_enc, payload.vuln_type, payload.sub_type,
+                                       description=f"Hex encoding: {payload.description}",
+                                       encoding="hex", source="generated",
+                                       dbms=payload.dbms, waf_bypass=True))
+
+        # Unicode normalization variants — replace chars with unicode lookalikes
+        unicode_norm = self._unicode_normalization(value)
+        if unicode_norm != value:
+            variants.append(Payload(unicode_norm, payload.vuln_type, payload.sub_type,
+                                   description=f"Unicode normalization: {payload.description}",
+                                   encoding="unicode_norm", source="generated",
+                                   dbms=payload.dbms, context=payload.context,
+                                   waf_bypass=True))
+
+        # Mixed case variants — systematic alternating case
+        if payload.vuln_type in ("sqli", "xss", "cmdi"):
+            mixed_var = self._mixed_case_variation(value)
+            if mixed_var != value:
+                variants.append(Payload(mixed_var, payload.vuln_type, payload.sub_type,
+                                       description=f"Mixed case: {payload.description}",
+                                       encoding="mixed_case", source="generated",
+                                       dbms=payload.dbms, waf_bypass=True))
+
         return variants[:max_variants]
 
     def _url_encode(self, s: str) -> str:
@@ -1191,6 +1223,7 @@ class PayloadEngine:
     def _case_variation(self, s: str) -> str:
         """Random case variation for SQL keywords."""
         import random
+        random.seed(hash(s))
         keywords = ['SELECT', 'UNION', 'FROM', 'WHERE', 'AND', 'OR', 'INSERT',
                      'UPDATE', 'DELETE', 'DROP', 'TABLE', 'VERSION', 'SLEEP',
                      'BENCHMARK', 'WAITFOR', 'DELAY', 'EXEC', 'CONVERT',
@@ -1203,22 +1236,52 @@ class PayloadEngine:
         return result
 
     def _comment_injection(self, s: str) -> str:
-        """Inject SQL comments around keywords."""
+        """Inject SQL comments around keywords, using word boundaries to avoid substring corruption."""
         import random
         keywords = ['SELECT', 'UNION', 'FROM', 'WHERE', 'AND', 'OR', 'ORDER', 'GROUP']
         result = s
         for kw in keywords:
-            if kw.lower() in result.lower():
+            if re.search(rf'\b{re.escape(kw)}\b', result, re.IGNORECASE):
                 comment = f'/**/{kw}/**/'
-                result = re.sub(re.escape(kw), comment, result, flags=re.IGNORECASE)
+                result = re.sub(rf'\b{re.escape(kw)}\b', comment, result, flags=re.IGNORECASE)
         return result
 
     def _whitespace_substitution(self, s: str) -> str:
-        """Replace spaces with alternative whitespace."""
-        import random
-        ws_chars = ['%09', '%0a', '%0d', '%0b', '%0c', '%a0', '/**/']
-        ws = random.choice(ws_chars)
-        return s.replace(' ', ws)
+        """Replace spaces with alternative whitespace, cycling through all variants."""
+        if ' ' not in s:
+            return s
+        ws_chars = ['%09', '%0a', '%0d', '%a0', '/**/']
+        for ws in ws_chars:
+            result = s.replace(' ', ws)
+            if result != s:
+                return result
+        return s
+
+    def _unicode_normalization(self, s: str) -> str:
+        """Replace ASCII chars with Unicode lookalikes."""
+        mapping = {
+            'a': '\u0430', 'A': '\u0410',
+            'e': '\u0435', 'E': '\u0415',
+            'o': '\u043E', 'O': '\u041E',
+            'c': '\u0441', 'C': '\u0421',
+            'p': '\u0440', 'P': '\u0420',
+            'x': '\u0445', 'X': '\u0425',
+            'y': '\u0443', 'Y': '\u0423',
+            'M': '\u041C', 'H': '\u041D',
+            'T': '\u0422', 'K': '\u041A',
+        }
+        result = ''.join(mapping.get(c, c) for c in s)
+        return result
+
+    def _mixed_case_variation(self, s: str) -> str:
+        """Systematic alternating case."""
+        result_chars = []
+        for i, c in enumerate(s):
+            if c.isalpha():
+                result_chars.append(c.upper() if i % 2 == 0 else c.lower())
+            else:
+                result_chars.append(c)
+        return ''.join(result_chars)
 
     # ============================================================
     # CONTEXT-AWARE SELECTION

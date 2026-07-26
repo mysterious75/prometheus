@@ -294,26 +294,45 @@ class _ToolOrchestratorCompat:
         if target.startswith(("http://", "https://")):
             return "web_app"
         elif "." in target and not target[0].isdigit():
-            return "domain"
+            return "domain_recon"
         elif target[0].isdigit():
-            return "ip"
-        return "username"
+            return "ip_scan"
+        return "username_osint"
     
     def list_playbooks(self):
         return ["web_app", "domain_recon", "ip_scan", "username_osint", "api_security"]
     
     def get_playbook_info(self, name: str):
-        playbooks = {
-            "web_app": {"name": "web_app", "steps": 21, "description": "Full web app security assessment"},
-            "domain_recon": {"name": "domain_recon", "steps": 8, "description": "Domain reconnaissance"},
-            "ip_scan": {"name": "ip_scan", "steps": 4, "description": "IP address scanning"},
-            "username_osint": {"name": "username_osint", "steps": 1, "description": "Username OSINT"},
+        tool_map = {
+            "web_app": ["fingerprint", "sqli", "xss", "ssrf", "cmdi", "ssti", "xxe", "smuggling", "cors", "headers", "dns", "secrets"],
+            "domain_recon": ["subdomain", "dns", "port", "fingerprint"],
+            "ip_scan": ["port", "service"],
+            "username_osint": ["social"],
         }
-        return playbooks.get(name, {"name": name, "steps": 0, "description": "Unknown playbook"})
+        playbooks = {
+            "web_app": {"name": "web_app", "steps": 21, "total_steps": 21, "description": "Full web app security assessment", "tools": [{"tool": t} for t in tool_map["web_app"]]},
+            "domain_recon": {"name": "domain_recon", "steps": 8, "total_steps": 8, "description": "Domain reconnaissance", "tools": [{"tool": t} for t in tool_map["domain_recon"]]},
+            "ip_scan": {"name": "ip_scan", "steps": 4, "total_steps": 4, "description": "IP address scanning", "tools": [{"tool": t} for t in tool_map["ip_scan"]]},
+            "username_osint": {"name": "username_osint", "steps": 1, "total_steps": 1, "description": "Username OSINT", "tools": [{"tool": t} for t in tool_map["username_osint"]]},
+        }
+        return playbooks.get(name, {"name": name, "steps": 0, "total_steps": 0, "description": "Unknown playbook", "tools": []})
     
     def plan(self, target: str):
+        from dataclasses import dataclass
+        @dataclass
+        class PlanStep:
+            tool: str
+            priority: int
+            playbook: str = ""
         target_type = self._detect_target_type(target)
-        return {"target": target, "type": target_type, "steps": self.list_playbooks()}
+        playbook_map = {
+            "web_app": ["fingerprint", "sqli", "xss", "ssrf", "cmdi", "ssti", "xxe", "smuggling", "cors", "headers", "dns", "secrets"],
+            "domain_recon": ["subdomain", "dns", "port", "fingerprint"],
+            "ip_scan": ["port", "service"],
+            "username_osint": ["social"],
+        }
+        tools = playbook_map.get(target_type, [])
+        return [PlanStep(tool=t, priority=i) for i, t in enumerate(tools)]
 
 # Patch Orchestrator with compat methods
 Orchestrator._detect_target_type = _ToolOrchestratorCompat._detect_target_type

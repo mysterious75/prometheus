@@ -5,9 +5,9 @@
 <p align="center">
   <a href="https://github.com/mysterious75/prometheus/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-00d4aa?style=for-the-badge&logo=none" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/tests-252_passing-00d4aa?style=for-the-badge&logo=none" alt="Tests">
-  <img src="https://img.shields.io/badge/scanners-41-e94560?style=for-the-badge&logo=none" alt="Scanners">
-  <img src="https://img.shields.io/badge/payloads-777-ff6b35?style=for-the-badge&logo=none" alt="Payloads">
+  <img src="https://img.shields.io/badge/tests-322_passing-00d4aa?style=for-the-badge&logo=none" alt="Tests">
+  <img src="https://img.shields.io/badge/scanners-55-e94560?style=for-the-badge&logo=none" alt="Scanners">
+  <img src="https://img.shields.io/badge/payloads-2035-ff6b35?style=for-the-badge&logo=none" alt="Payloads">
   <img src="https://img.shields.io/badge/API-REST-6c5ce7?style=for-the-badge&logo=fastapi&logoColor=white" alt="API">
 </p>
 
@@ -46,10 +46,10 @@ Prometheus is an **open-source, AI-powered security testing platform** that auto
 
 **Why Prometheus?**
 
-- **41 vulnerability scanners** with adversarial validation
+- **55 vulnerability scanners** with adversarial validation
 - **5-stage pipeline** (Recon, Hunt, Validate, Trace, Report)
-- **777 core payloads** + 2,861 WAF bypass variants
-- **1,242+ report knowledge base**
+- **2,035 core payloads** with WAF bypass variants
+- **300+ real security advisories** (from GitHub Advisory Database + NVD)
 - **Skill/plugin system** with on-demand loading
 - **API auto-discovery** (OpenAPI/Swagger/GraphQL)
 - **403/401 bypass testing** (39 + 24 enhanced techniques)
@@ -209,7 +209,7 @@ result = p.assess("example.com")
 
 ## Features
 
-### 41 Vulnerability Scanners
+### 55 Vulnerability Scanners
 
 <table>
 <tr>
@@ -281,7 +281,7 @@ result = p.assess("example.com")
 **API, AI & Reporting (5)**
 - API Security (REST, GraphQL, JWT, OAuth)
 - API Auto-Discovery (OpenAPI/Swagger/GraphQL)
-- AI-Assisted Payloads (context-aware generation)
+- Payload engine with context-aware generation
 - PayloadsAllTheThings Import (markdown/text/URL)
 - Executive Report (risk matrix, compliance mapping)
 
@@ -439,10 +439,9 @@ Finding → Hunter (confirm) → Skeptic (disprove) → Referee (verdict)
 
 ### Payload Engine
 
-```
-777 Core Payloads
-├── SQLi: 235  ├── XSS: 194  ├── SSRF: 73
-├── CMDi: 78   ├── SSTI: 43  ├── Others: 154
+2,035 Core Payloads
+├── SQLi: 607  ├── XSS: 342  ├── SSRF: 238
+├── CMDi: 197  ├── SSTI: 163 ├── Others: 488
 
 Dynamic Variant Generation (7 types)
 ├── URL encoding    ├── Double URL encoding
@@ -450,17 +449,15 @@ Dynamic Variant Generation (7 types)
 ├── Case variation  ├── Comment injection
 └── Whitespace substitution
 
-Result: 2,861+ effective payloads with WAF bypass
-
 External Import
 ├── PayloadsAllTheThings (markdown/text/URL)
 ├── Deduplication engine
 └── Auto vuln-type mapping
 ```
 
-### AI-Assisted Payload Generation
+### Context-Aware Payload Engine
 
-Context-aware payload generation that adapts to the target:
+Rule-based payload generation that adapts based on target fingerprinting:
 
 ```
 Technology Detection          Vulnerability Context        Payload Adaptation
@@ -621,7 +618,7 @@ src/
 │   ├── wordpress.py           WordPress Scanner ← NEW
 │   ├── google_dorking.py      Google Dorking ← NEW
 │   ├── dependency_confusion.py Dependency Confusion ← NEW
-│   ├── ai_assist.py           AI-Assisted Payloads ← NEW
+│   ├── context_analyzer.py    Context-Aware Payload Generator ← NEW
 │   ├── payload_engine.py      777 core payloads + variants
 │   ├── payload_importer.py    PayloadsAllTheThings importer
 │   ├── adversarial.py         Adversarial validation
@@ -633,7 +630,7 @@ src/
 ├── skills/                    Skill/plugin system (8 YAML files)
 ├── tools/                     External tool wrappers (6 tools)
 ├── brain/                     LLM router (14 providers)
-├── knowledge/                 Knowledge base (1,242+ reports)
+├── knowledge/                 Knowledge base (300+ real advisories)
 ├── api/                       REST API (FastAPI)
 ├── market/                    Market features
 ├── cli/                       Interactive CLI
@@ -686,7 +683,7 @@ src/
 python -m pytest tests/ -v
 ```
 
-**252 passing, 100% pass rate**
+**322 passing**
 
 ---
 
@@ -738,7 +735,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 | [Brutecat](https://brutecat.com/articles/hacking-google-with-ai/) | API discovery technique | Blog |
 | [Joseph Thacker](https://josephthacker.com/hacking/2026/07/01/we-built-a-hackbot.html) | Hackbot methodology | Blog |
 | [Niels Provos](https://www.provos.org/p/finding-zero-days-with-any-model/) | Orchestration > model | Blog |
-| Security research community | 1,242+ bug bounty reports | Various |
+| Security research community | 300+ advisories (GHSA + NVD) | Various |
 
 ---
 

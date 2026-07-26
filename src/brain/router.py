@@ -46,13 +46,17 @@ class ModelRouter:
         self.routing: Dict[str, Any] = {}
         self.use_consensus = use_consensus
         self.critic: Optional[CriticAgent] = None
+        self._provider_tested: set = set()
         self._initialize()
         if use_consensus and len(self.providers) >= 2:
             self.critic = CriticAgent(self.providers)
 
+    def __repr__(self):
+        return f"ModelRouter(providers={list(self.providers.keys())})"
+
     def _initialize(self):
-        """Auto-detect and test all available keys."""
-        console.print("[bold blue]Auto-detecting AI providers...[/bold blue]")
+        """Auto-detect keys and create providers (lazy - no key testing at startup)."""
+        console.print("[bold blue]Auto-detecting AI providers (lazy)...[/bold blue]")
 
         all_keys = config.get_all_keys()
         if not all_keys:
@@ -69,40 +73,21 @@ class ModelRouter:
             if provider is None:
                 continue
 
-            # Test the key
-            try:
-                success, msg, models = provider.test_key()
-            except Exception as e:
-                console.print(f"  [red]-[/red] {name:15s} test failed: {str(e)[:40]}")
-                continue
+            # Auto-assign role without testing key
+            role = assign_role(name, [model] if model else [])
+            provider.role = role
 
-            if success:
-                # Auto-assign role
-                role = assign_role(name, models)
-                provider.role = role
-                provider.models_available = models
-
-                # Auto-select model if not set
-                if not provider.model and models:
-                    provider.model = models[0]
-
-                self.providers[name] = provider
-
-                models_str = ", ".join(models[:3])
-                if len(models) > 3:
-                    models_str += f" +{len(models)-3} more"
-                console.print(f"  [green]+[/green] {name:15s} [{role:15s}] {models_str}")
-            else:
-                console.print(f"  [red]-[/red] {name:15s} {msg[:50]}")
+            self.providers[name] = provider
+            console.print(f"  [yellow]~[/yellow] {name:15s} [{role:15s}] (lazy)")
 
         # Build routing config
         self._build_routing()
 
         count = len(self.providers)
-        console.print(f"\n  [bold green]{count} provider(s) active[/bold green]")
+        console.print(f"\n  [bold green]{count} provider(s) configured (lazy)[/bold green]")
 
         if count == 0:
-            console.print("[yellow]No working keys! Running in offline mode.[/yellow]")
+            console.print("[yellow]No API keys found! Running in offline mode.[/yellow]")
 
     def _create_provider(self, name: str, key: str, base_url: str,
                          model: str, provider_type: str) -> Optional[LLMProvider]:
@@ -117,6 +102,24 @@ class ModelRouter:
 
         # Everything else: OpenAI-compatible
         return OpenAICompatibleProvider(name, key, model, base_url)
+
+    def _test_provider(self, name: str, provider: LLMProvider):
+        """Test a provider lazily on first use."""
+        try:
+            success, msg, models = provider.test_key()
+            if success:
+                provider.models_available = models
+                if not provider.model and models:
+                    provider.model = models[0]
+                models_str = ", ".join(models[:3])
+                if len(models) > 3:
+                    models_str += f" +{len(models)-3} more"
+                console.print(f"  [green]+[/green] {name:15s} [{provider.role:15s}] {models_str}")
+            else:
+                console.print(f"  [red]-[/red] {name:15s} {msg[:50]}")
+        except Exception as e:
+            console.print(f"  [red]-[/red] {name:15s} test failed: {str(e)[:40]}")
+        self._provider_tested.add(name)
 
     def _build_routing(self):
         """Build routing chains from available providers."""
@@ -135,31 +138,43 @@ class ModelRouter:
         }
 
     def get_provider(self, role: str = "", preferred: Optional[str] = None) -> Optional[LLMProvider]:
-        """Get best provider for a role."""
+        """Get best provider for a role. Tests untested providers lazily."""
         if preferred and preferred in self.providers:
-            return self.providers[preferred]
+            provider = self.providers[preferred]
+            if preferred not in self._provider_tested:
+                self._test_provider(preferred, provider)
+            return provider if provider.available else None
 
         by_role = self.routing.get("by_role", {})
 
-        # Try exact role match
+        candidates = []
         if role in by_role and by_role[role]:
-            return self.providers[by_role[role][0]]
+            candidates = by_role[role]
+        else:
+            role_map = {
+                "primary": ["primary", "fast", "backup"],
+                "fast": ["fast", "primary", "backup"],
+                "reasoning": ["reasoning", "primary", "backup"],
+                "scan": ["primary", "fast", "backup"],
+            }
+            for alias_role in role_map.get(role, ["primary", "fast", "backup"]):
+                if alias_role in by_role and by_role[alias_role]:
+                    candidates = by_role[alias_role]
+                    break
 
-        # Try role aliases
-        role_map = {
-            "primary": ["primary", "fast", "backup"],
-            "fast": ["fast", "primary", "backup"],
-            "reasoning": ["reasoning", "primary", "backup"],
-            "scan": ["primary", "fast", "backup"],
-        }
+        for name in candidates:
+            provider = self.providers[name]
+            if name not in self._provider_tested:
+                self._test_provider(name, provider)
+            if provider.available:
+                return provider
 
-        for alias_role in role_map.get(role, ["primary", "fast", "backup"]):
-            if alias_role in by_role and by_role[alias_role]:
-                return self.providers[by_role[alias_role][0]]
-
-        # Last resort: any provider
-        if self.providers:
-            return list(self.providers.values())[0]
+        # Last resort: any untested or available provider
+        for name, provider in self.providers.items():
+            if name not in self._provider_tested:
+                self._test_provider(name, provider)
+            if provider.available:
+                return provider
 
         return None
 

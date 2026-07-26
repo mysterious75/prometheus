@@ -1,4 +1,4 @@
-"""AI-Assisted Payload Generator — intelligent context-aware payload generation.
+"""Context-Aware Payload Generator — rule-based context-aware payload generation.
 
 Uses pattern analysis and context awareness to generate targeted payloads
 for specific vulnerability types and application contexts.
@@ -71,16 +71,16 @@ VULN_CONTEXT_PATTERNS = {
 }
 
 
-class AIAssistPayloadGenerator:
-    """Generates context-aware payloads based on target analysis."""
+class ContextAwarePayloadGenerator:
+    """Generates context-aware payloads based on target context analysis."""
 
-    NAME = "ai_assist"
+    NAME = "context_analyzer"
 
     def __init__(self):
         pass
 
     def analyze_and_generate(self, url: str, response_body: str = "", headers: Dict[str, str] = None) -> Dict[str, Any]:
-        """Analyze a target and generate context-aware payloads.
+        """Perform rule-based analysis and generate context-aware payloads.
 
         Args:
             url: Target URL
@@ -142,7 +142,7 @@ class AIAssistPayloadGenerator:
         # Report technologies
         if result["technologies"]:
             findings.append(Finding(
-                vuln_type="AI Analysis",
+                vuln_type="Context Analysis",
                 title=f"Technology stack: {', '.join(result['technologies'])}",
                 severity="INFO",
                 url=url,
@@ -158,13 +158,13 @@ class AIAssistPayloadGenerator:
             param = ctx.get("parameter", "unknown")
 
             findings.append(Finding(
-                vuln_type="AI Analysis",
+                vuln_type="Context Analysis",
                 title=f"Vulnerability context: {vuln_type} (param: {param})",
                 severity="INFO",
                 url=url,
                 parameter=param,
                 evidence=f"Context: {json.dumps(ctx)[:300]}",
-                description=f"AI detected {vuln_type} context in parameter '{param}'. Generated {len(payloads)} targeted payloads.",
+                description=f"Context analysis detected {vuln_type} context in parameter '{param}'. Generated {len(payloads)} targeted payloads.",
                 tool=self.NAME, confidence=result["confidence"],
             ))
 
@@ -351,4 +351,4 @@ class AIAssistPayloadGenerator:
         return payloads
 
 
-__all__ = ["AIAssistPayloadGenerator"]
+__all__ = ["ContextAwarePayloadGenerator"]

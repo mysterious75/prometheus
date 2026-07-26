@@ -4,8 +4,7 @@ Generates professional evidence for every finding.
 """
 
 import json
-import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -17,7 +16,7 @@ from ..core.logger import logger, console
 class Evidence:
     """Evidence for a security finding."""
     finding: Finding
-    poc_command: str
+    poc_command: Tuple[str, list]  # (tool, [args...])
     poc_output: str = ""
     curl_command: str = ""
     http_request: str = ""
@@ -27,7 +26,7 @@ class Evidence:
 
     def to_dict(self):
         return {
-            "finding_id": self.finding.id,
+            "finding_id": self.finding.finding_id,
             "vuln_type": self.finding.vuln_type,
             "severity": self.finding.severity,
             "poc_command": self.poc_command,
@@ -49,34 +48,33 @@ class EvidenceEngine:
             http_request=self._generate_http_request(finding),
         )
 
-        # Try to execute PoC and capture output
-        evidence.poc_output = self._execute_poc(evidence.poc_command)
+        # PoC command is returned as structured data; not auto-executed
         evidence.verified = self._verify_finding(finding, evidence.poc_output)
 
         return evidence
 
-    def _generate_poc_command(self, finding: Finding) -> str:
-        """Generate a PoC command for the finding."""
+    def _generate_poc_command(self, finding: Finding) -> Tuple[str, list]:
+        """Generate a PoC command for the finding. Returns (tool, [args...])."""
         vuln_type = finding.vuln_type.lower()
 
         if "sql" in vuln_type:
-            return f'sqlmap -u "{finding.url}" -p {finding.parameter} --batch --level=1'
+            return ("sqlmap", ["-u", finding.url, "-p", finding.parameter, "--batch", "--level=1"])
         elif "xss" in vuln_type:
-            return f'curl -k "{finding.url}?{finding.parameter}=<script>alert(1)</script>" | grep "<script>"'
+            return ("curl", ["-k", f"{finding.url}?{finding.parameter}=<script>alert(1)</script>"])
         elif "ssrf" in vuln_type:
-            return f'curl -k "{finding.url}?{finding.parameter}=http://169.254.169.254/latest/meta-data/"'
+            return ("curl", ["-k", f"{finding.url}?{finding.parameter}=http://169.254.169.254/latest/meta-data/"])
         elif "command" in vuln_type or "cmdi" in vuln_type:
-            return f'curl -k "{finding.url}?{finding.parameter}=;id"'
+            return ("curl", ["-k", f"{finding.url}?{finding.parameter}=;id"])
         elif "traversal" in vuln_type or "lfi" in vuln_type:
-            return f'curl -k "{finding.url}?{finding.parameter}=../../../etc/passwd"'
+            return ("curl", ["-k", f"{finding.url}?{finding.parameter}=../../../etc/passwd"])
         elif "redirect" in vuln_type:
-            return f'curl -k -I "{finding.url}?{finding.parameter}=https://evil.com"'
+            return ("curl", ["-k", "-I", f"{finding.url}?{finding.parameter}=https://evil.com"])
         elif "cors" in vuln_type:
-            return f'curl -k -H "Origin: https://evil.com" "{finding.url}"'
+            return ("curl", ["-k", "-H", "Origin: https://evil.com", finding.url])
         elif "header" in vuln_type:
-            return f'curl -k -I "{finding.url}"'
+            return ("curl", ["-k", "-I", finding.url])
         else:
-            return f'curl -k "{finding.url}"'
+            return ("curl", ["-k", finding.url])
 
     def _generate_curl_command(self, finding: Finding) -> str:
         """Generate a curl command for reproduction."""
@@ -104,19 +102,11 @@ class EvidenceEngine:
             f"\r\n"
         )
 
-    def _execute_poc(self, command: str) -> str:
-        """Execute a PoC command and capture output."""
-        try:
-            import subprocess
-            proc = subprocess.run(
-                command, shell=True, capture_output=True,
-                text=True, timeout=30,
-            )
-            return proc.stdout[:1000] + proc.stderr[:500]
-        except subprocess.TimeoutExpired:
-            return "[TIMEOUT]"
-        except Exception as e:
-            return f"[ERROR: {e}]"
+    def _execute_poc(self, command: Tuple[str, list]) -> str:
+        """No-op: PoC commands are not auto-executed. Logs the structured command."""
+        tool, args = command
+        logger.info("PoC command generated (not executed): %s %s", tool, " ".join(args))
+        return "[DISABLED: PoC auto-execution removed for security]"
 
     def _verify_finding(self, finding: Finding, poc_output: str) -> bool:
         """Verify a finding based on PoC output."""

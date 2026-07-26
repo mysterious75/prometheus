@@ -8,6 +8,8 @@ Automates search engine dorking to find:
 - Configuration files
 - Login pages
 - And much more
+
+Note: generates search URLs for manual use — does not automatically execute searches.
 """
 
 import re
@@ -205,7 +207,7 @@ class DorkingEngine:
         for category in categories:
             dorks = self.GOOGLE_DORKS.get(category, [])
             for dork_template in dorks:
-                dork = dork_template.format(target=target)
+                dork = dork_template.format(target=target.replace('{', '{{').replace('}', '}}'))
                 self.limiter.wait("google.com")
 
                 # We construct the URL but don't actually scrape Google
@@ -227,7 +229,7 @@ class DorkingEngine:
 
         results = []
         for dork_template in self.GITHUB_DORKS:
-            dork = dork_template.format(target=target)
+            dork = dork_template.format(target=target.replace('{', '{{').replace('}', '}}'))
             results.append(DorkResult(
                 url=f"https://github.com/search?q={dork.replace(' ', '+')}&type=code",
                 title=f"GitHub Dork",
@@ -245,7 +247,7 @@ class DorkingEngine:
 
         results = []
         for dork in self.SHODAN_DORKS:
-            dork = dork.format(target=target)
+            dork = dork.format(target=target.replace('{', '{{').replace('}', '}}'))
             results.append(DorkResult(
                 url=f"https://www.shodan.io/search?query={dork.replace(' ', '+')}",
                 title=f"Shodan Dork",
@@ -263,7 +265,7 @@ class DorkingEngine:
 
         results = []
         for dork_template in self.BING_DORKS:
-            dork = dork_template.format(target=target)
+            dork = dork_template.format(target=target.replace('{', '{{').replace('}', '}}'))
             results.append(DorkResult(
                 url=f"https://www.bing.com/search?q={dork.replace(' ', '+')}",
                 title=f"Bing Dork",

@@ -24,7 +24,7 @@ from .xxe import XXEScanner
 from .smuggling import SmugglingScanner
 from .race import RaceConditionScanner
 from .auth import AuthBypassScanner
-from ..core.logger import console, log_finding
+from ..core.logger import console, log_finding, logger
 from ..core.ratelimit import get_limiter
 
 
@@ -71,7 +71,7 @@ class ScanRunner:
             target = f"https://{target}"
 
         result = ScanResult(target=target)
-        start = time.time()
+        start = time.monotonic()
 
         console.print(f"\n[bold blue]═══ Security Scan: {target} ═══[/bold blue]")
 
@@ -120,7 +120,9 @@ class ScanRunner:
             scanner_name = scanner.NAME if hasattr(scanner, 'NAME') else scanner.__class__.__name__
             console.print(f"  [tool]▸ {scanner_name}[/tool]")
 
-            for url in urls_to_scan[:10]:  # Limit to avoid excessive scanning
+            if len(urls_to_scan) > 50:
+                logger.warning(f"URL limit hit: scanning first 50 of {len(urls_to_scan)} discovered URLs")
+            for url in urls_to_scan[:50]:  # Limit to avoid excessive scanning
                 try:
                     findings = scanner.scan_url(url)
                     for f in findings:
@@ -130,7 +132,8 @@ class ScanRunner:
                     console.print(f"    [error]✗ {scanner_name} error: {e}[/error]")
 
             # Also scan forms specifically for injection scanners
-            if crawl_result and hasattr(scanner, 'scan_url'):
+            injection_types = (SQLiScanner, XSSScanner, SSRFScanner, CMDiScanner, SSTIScanner, XXEScanner, TraversalScanner)
+            if crawl_result and isinstance(scanner, injection_types):
                 for form in crawl_result.forms[:5]:
                     if form.inputs:
                         params = {inp["name"]: inp.get("value", "test") for inp in form.inputs if inp.get("name")}
@@ -142,7 +145,7 @@ class ScanRunner:
                         except Exception:
                             pass
 
-        result.duration = time.time() - start
+        result.duration = time.monotonic() - start
 
         # Summary
         summary = result.summary()

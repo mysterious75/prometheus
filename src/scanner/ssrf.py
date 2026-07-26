@@ -448,7 +448,10 @@ class SSRFScanner:
             url_params = test_params
 
         client = httpx.Client(
-            follow_redirects=False,  # Important: don't follow redirects for SSRF
+            follow_redirects=False,  # Don't follow redirects for SSRF — following them could
+                                     # mask the vulnerability (server redirects internally) or
+                                     # cause data exfiltration to attacker-controlled hosts.
+                                     # Log 3xx responses as potential redirect-based SSRF instead.
             timeout=self.timeout,
             verify=False,
             headers={
@@ -745,11 +748,11 @@ class SSRFScanner:
                 if status == 200 and len(body) > 0:
                     # Check if it's different from an external request
                     if not baseline_body:
-                        # Make external baseline request
-                        test_params[param] = "http://httpbin.org/get"
+                        # Use non-routable domain that should fail (avoids httpbin.org dependency)
+                        test_params[param] = "http://example.invalid"
                         ext_url = self._build_url(url, test_params)
                         try:
-                            ext_resp = client.get(ext_url)
+                            ext_resp = client.get(ext_url, timeout=2)
                             baseline_body = ext_resp.text
                             baseline_status = ext_resp.status_code
                             baseline_len = len(baseline_body)
@@ -977,10 +980,21 @@ class SSRFScanner:
                 if indicator.lower() in body_lower:
                     return True
 
-            # Generic: if status is 200 and body has content, it's suspicious
-            # (but only for internal network targets, not metadata)
+            # Require at least one service-specific banner match before flagging
+            service_banners = [
+                "NOAUTH", "redis_version", "redis",
+                "Access denied", "MySQL", "MariaDB",
+                "SSH-2.0", "OpenSSH",
+                "FTP", "220 ",
+                "SMTP", "250 ",
+                "HTTP/1.1", "nginx", "Apache",
+                "MongoDB", "PostgreSQL",
+                "cluster_name", "elasticsearch",
+            ]
+            body_upper = body.upper()
+            banner_match = any(b.upper() in body_upper for b in service_banners)
             if category in ("internal", "localhost", "docker", "kubernetes"):
-                return len(body) > 50
+                return len(body) > 50 and banner_match
 
         # Connection refused/timeout can also indicate SSRF (server tried to connect)
         if status in (502, 503, 504):

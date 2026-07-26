@@ -187,7 +187,7 @@ class ExecutiveReportGenerator:
         return {
             "owasp_top10": owasp_findings,
             "pci_dss": pci_findings,
-            "owasp_compliant": len(owasp_findings) == 0,
+            "owasp_compliant": "unknown",
             "pci_compliant": len(pci_findings) == 0,
         }
 
@@ -215,6 +215,16 @@ class ExecutiveReportGenerator:
         """Estimate remediation effort."""
         cwe = finding.cwe or ""
         
+        # Severity-based fallback when CWE is missing
+        if not cwe:
+            effort_map = {
+                "CRITICAL": "High (1-3 days)",
+                "HIGH": "Medium (4-8 hours)",
+                "MEDIUM": "Medium (2-4 hours)",
+                "LOW": "Low (1-2 hours)",
+            }
+            return effort_map.get(finding.severity.upper(), "Medium (4-8 hours)")
+
         # Quick fixes (configuration changes)
         quick_fixes = ["CWE-16", "CWE-693", "CWE-523", "CWE-319"]
         if cwe in quick_fixes:

@@ -12,7 +12,7 @@ from typing import List, Dict, Tuple, Optional
 from pathlib import Path
 from urllib.parse import urlparse
 
-from src.core.logger import logger
+from ..core.logger import logger
 
 
 @dataclass

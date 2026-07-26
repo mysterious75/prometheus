@@ -223,19 +223,28 @@ class DNSTools:
 
     def brute_force_subdomains(self, domain: str) -> List[str]:
         """Brute force subdomains via DNS resolution."""
-        found = []
-        for sub in self.BRUTE_SUBDOMAINS:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def _check_sub(sub):
             self.limiter.wait(domain)
             hostname = f"{sub}.{domain}"
             try:
                 socket.setdefaulttimeout(2)
                 socket.gethostbyname(hostname)
-                found.append(hostname)
-                console.print(f"    [success]+ {hostname}[/success]")
+                return hostname
             except (socket.gaierror, socket.timeout):
-                pass
+                return None
             except Exception:
-                pass
+                return None
+
+        found = []
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(_check_sub, sub): sub for sub in self.BRUTE_SUBDOMAINS}
+            for future in as_completed(futures):
+                result = future.result()
+                if result:
+                    found.append(result)
+                    console.print(f"    [success]+ {result}[/success]")
 
         return found
 
