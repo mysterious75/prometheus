@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Web Crawler — production-grade attack surface discovery.
 
 Features:

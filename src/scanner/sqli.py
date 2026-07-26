@@ -1,3 +1,4 @@
+from __future__ import annotations
 """SQL Injection Scanner — production-grade multi-technique detection.
 
 Detection methods:

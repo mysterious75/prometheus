@@ -1,3 +1,4 @@
+from __future__ import annotations
 """XSS Scanner — production-grade context-aware Cross-Site Scripting detection.
 
 Features:

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """SSRF Scanner — production-grade Server-Side Request Forgery detection.
 
 Features:
