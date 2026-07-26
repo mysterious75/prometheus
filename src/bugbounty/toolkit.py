@@ -41,7 +41,7 @@ class PythonToolkit:
     """Autonomous hacker toolkit - all Python, no external binaries."""
 
     def __init__(self):
-        self.client = httpx.Client(follow_redirects=True, timeout=15, verify=False)
+        self.client = httpx.Client(follow_redirects=True, timeout=15, verify=True)
         self.results: List[ToolResult] = []
         self._check_available_tools()
 

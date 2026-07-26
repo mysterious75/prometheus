@@ -81,7 +81,7 @@ class VulnerabilityScanner:
 
         try:
             import requests
-            response = requests.get(url, timeout=10, verify=False)
+            response = requests.get(url, timeout=10, verify=True)
 
             security_headers = {
                 "Strict-Transport-Security": "HSTS not set",
@@ -123,7 +123,7 @@ class VulnerabilityScanner:
             import requests
             findings = []
 
-            response = requests.get(url, timeout=10, verify=False)
+            response = requests.get(url, timeout=10, verify=True)
             server = response.headers.get("Server", "")
             if server and any(v in server.lower() for v in ["apache", "nginx", "iis", "php"]):
                 finding = {
@@ -144,7 +144,7 @@ class VulnerabilityScanner:
 
             for path in sensitive_paths:
                 try:
-                    resp = requests.get(f"{url}{path}", timeout=5, verify=False)
+                    resp = requests.get(f"{url}{path}", timeout=5, verify=True)
                     if resp.status_code == 200 and len(resp.text) > 100:
                         finding = {
                             "type": "Sensitive Path Accessible",

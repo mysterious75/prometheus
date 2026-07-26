@@ -34,7 +34,7 @@ class XXEScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=False,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
                               headers={"Content-Type": "application/xml"})
 
         for payload_name, payload in [("direct entity", self.XXE_PAYLOAD),

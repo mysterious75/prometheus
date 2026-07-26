@@ -45,7 +45,7 @@ class IDORJwtGraphQLScanner:
         if auth_token:
             headers["Authorization"] = f"Bearer {auth_token}"
 
-        client = httpx.Client(verify=False, timeout=self.timeout, follow_redirects=True, headers=headers)
+        client = httpx.Client(verify=True, timeout=self.timeout, follow_redirects=True, headers=headers)
 
         try:
             # Test 1: JWT claim manipulation

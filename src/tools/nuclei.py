@@ -469,7 +469,7 @@ class NucleiScanner(BaseTool):
             client = httpx.Client(
                 follow_redirects=True,
                 timeout=8,
-                verify=False,
+                verify=True,
                 headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
             )
         except Exception as e:

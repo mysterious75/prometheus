@@ -38,7 +38,7 @@ class SSTIScanner:
         if not test_params:
             test_params = {"name": "test", "input": "test"}
 
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
 
         for param_name in test_params:
             for payload, indicator, engine in self.PAYLOADS:

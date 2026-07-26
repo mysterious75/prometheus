@@ -358,7 +358,7 @@ class SQLInjectionScanner(BaseTool):
         client = httpx.Client(
             follow_redirects=True,
             timeout=12,
-            verify=False,
+            verify=True,
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             },

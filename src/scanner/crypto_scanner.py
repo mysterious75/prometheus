@@ -256,7 +256,7 @@ class CryptoScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
             resp = client.get(url)
             headers = resp.headers
 
@@ -327,7 +327,7 @@ class CryptoScanner:
         try:
             import httpx
             http_url = f"http://{host}:{http_port}"
-            client = httpx.Client(follow_redirects=False, timeout=10, verify=False)
+            client = httpx.Client(follow_redirects=False, timeout=10, verify=True)
             resp = client.get(http_url)
 
             if resp.status_code not in (301, 302, 307, 308):
@@ -377,7 +377,7 @@ class CryptoScanner:
 
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
             resp = client.get(url)
             body = resp.text
 

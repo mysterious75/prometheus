@@ -43,7 +43,7 @@ class RedirectScanner:
                           "next": "https://example.com", "return": "https://example.com",
                           "returnTo": "https://example.com", "dest": "https://example.com"}
 
-        client = httpx.Client(follow_redirects=False, timeout=10, verify=False)
+        client = httpx.Client(follow_redirects=False, timeout=10, verify=True)
 
         for param_name in test_params:
             for payload in self.PAYLOADS:

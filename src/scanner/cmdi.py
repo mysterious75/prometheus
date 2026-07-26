@@ -56,7 +56,7 @@ class CMDiScanner:
         if not test_params:
             test_params = {"host": "127.0.0.1", "ip": "127.0.0.1", "cmd": "ls", "ping": "127.0.0.1"}
 
-        client = httpx.Client(follow_redirects=True, timeout=15, verify=False,
+        client = httpx.Client(follow_redirects=True, timeout=15, verify=True,
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Get baseline timing — average over 3 requests with benign value, use monotonic

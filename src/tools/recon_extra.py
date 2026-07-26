@@ -50,7 +50,7 @@ class ReconTools:
 
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             # Check website for emails
             resp = client.get(f"https://{domain}")
@@ -93,7 +93,7 @@ class ReconTools:
         """Fallback: basic crawling."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
             if not target.startswith("http"):
                 target = f"https://{target}"
             resp = client.get(target)

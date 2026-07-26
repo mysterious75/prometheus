@@ -24,6 +24,7 @@ from .xxe import XXEScanner
 from .smuggling import SmugglingScanner
 from .race import RaceConditionScanner
 from .auth import AuthBypassScanner
+from ..core.auth_context import require_auth
 from ..core.logger import console, log_finding, logger
 from ..core.ratelimit import get_limiter
 
@@ -67,6 +68,7 @@ class ScanRunner:
             full: If True, crawl first and test all endpoints.
                   If False, only test the given URL.
         """
+        require_auth()
         if not target.startswith(("http://", "https://")):
             target = f"https://{target}"
 

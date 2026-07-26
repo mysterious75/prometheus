@@ -257,7 +257,7 @@ class DNSTools:
 
         subdomains = set()
         try:
-            client = httpx.Client(timeout=15, verify=False)
+            client = httpx.Client(timeout=15, verify=True)
             resp = client.get(f"https://crt.sh/?q=%.{domain}&output=json")
             if resp.status_code == 200:
                 data = resp.json()

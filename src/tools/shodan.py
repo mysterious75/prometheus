@@ -111,7 +111,7 @@ class ShodanTool:
         try:
             import httpx
             # Use Shodan's web interface
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
             url = f"https://www.shodan.io/search?query={query}"
             resp = client.get(url)
             # Parse basic results from HTML (limited)
@@ -132,7 +132,7 @@ class ShodanTool:
         """Use Shodan's free InternetDB API (no API key needed)."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
             resp = client.get(f"https://internetdb.shodan.io/{ip}")
             if resp.status_code == 200:
                 return resp.json()

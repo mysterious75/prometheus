@@ -45,7 +45,7 @@ class AuthBypassScanner:
 
         findings = []
         base = url.rstrip("/")
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=False,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Check for accessible admin panels

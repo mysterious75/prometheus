@@ -51,7 +51,7 @@ class OWASPMethodologyScanner:
     def _make_client(self, follow_redirects: bool = True) -> httpx.Client:
         return httpx.Client(
             timeout=15,
-            verify=False,
+            verify=True,
             follow_redirects=follow_redirects,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )

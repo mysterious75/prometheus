@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.core.config import load_config, ScanProfile
 from src.core.auth import TargetAuthorization
+from src.core.auth_context import set_auth_token
 from src.core.logger import console, logger
 
 # ──────────────────────────────────────────────
@@ -471,8 +472,9 @@ def create_app(
     # Scan Management
     # ──────────────────────────────────────────
 
-    async def _run_scan_background(scan_id: str, target: str, scan_type: str, options: dict):
+    async def _run_scan_background(scan_id: str, target: str, scan_type: str, options: dict, api_key: str = ""):
         """Execute scan in background thread."""
+        set_auth_token(api_key)
         try:
             if _scan_cancelled.get(scan_id):
                 return
@@ -604,6 +606,7 @@ def create_app(
             request.target,
             request.scan_type,
             request.options,
+            api_key,
         )
 
         return ScanStatus(**scan)

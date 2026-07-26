@@ -79,7 +79,7 @@ class MultiSessionEngine:
         """Authenticate a session."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=15, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=15, verify=True)
 
             # Get login page to find form
             self.limiter.wait(urlparse(session.login_url).netloc)
@@ -209,14 +209,14 @@ class MultiSessionEngine:
                     import httpx
                     # Request as creator
                     creator_client = httpx.Client(
-                        follow_redirects=True, timeout=10, verify=False,
+                        follow_redirects=True, timeout=10, verify=True,
                         headers=creator.headers, cookies=creator.cookies,
                     )
                     creator_resp = creator_client.get(url)
 
                     # Request as accessor
                     accessor_client = httpx.Client(
-                        follow_redirects=True, timeout=10, verify=False,
+                        follow_redirects=True, timeout=10, verify=True,
                         headers=accessor.headers, cookies=accessor.cookies,
                     )
                     accessor_resp = accessor_client.get(url)
@@ -279,7 +279,7 @@ class MultiSessionEngine:
         import httpx
         for session in non_admin:
             client = httpx.Client(
-                follow_redirects=True, timeout=10, verify=False,
+                follow_redirects=True, timeout=10, verify=True,
                 headers=session.headers, cookies=session.cookies,
             )
 

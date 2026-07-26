@@ -56,7 +56,7 @@ class HeadersScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
 
         try:
             resp = client.get(url)

@@ -896,7 +896,7 @@ class SessionManagerScanner:
     def _test_forged_jwt(self, url: str, token: str) -> bool:
         """Test if a forged JWT is accepted by the server."""
         try:
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
             resp = client.get(url, headers={"Authorization": f"Bearer {token}"})
             client.close()
             return resp.status_code == 200 and len(resp.text) > 50

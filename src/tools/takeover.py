@@ -190,7 +190,7 @@ class SubdomainTakeoverScanner:
         """Verify takeover vulnerability with HTTP request."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=8, verify=False)
+            client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
 
             for scheme in ["https", "http"]:
                 try:

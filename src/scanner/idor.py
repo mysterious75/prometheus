@@ -33,7 +33,7 @@ class IDORScanner:
         if not test_params:
             return []
 
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=False,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Get original response

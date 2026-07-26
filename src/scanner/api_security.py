@@ -50,7 +50,7 @@ class APISecurityScanner:
         """Run GraphQL introspection query."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             introspection_query = """
             query IntrospectionQuery {
@@ -107,7 +107,7 @@ class APISecurityScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             # Send batch query
             batch = [
@@ -146,7 +146,7 @@ class APISecurityScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             # Deeply nested query
             deep_query = "{ __typename " * 20 + "}" * 20
@@ -353,7 +353,7 @@ class APISecurityScanner:
         """Test if a forged JWT is accepted."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
             resp = client.get(url, headers={"Authorization": f"Bearer {token}"})
             return resp.status_code == 200 and len(resp.text) > 50
         except Exception:
@@ -386,7 +386,7 @@ class APISecurityScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             resp = client.get(url, headers={"Origin": "https://evil.com"})
             acao = resp.headers.get("Access-Control-Allow-Origin", "")
@@ -416,7 +416,7 @@ class APISecurityScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             # Send 20 rapid requests
             statuses = []
@@ -448,7 +448,7 @@ class APISecurityScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             # Try method override headers
             for header in ["X-HTTP-Method-Override", "X-HTTP-Method", "X-Method-Override"]:
@@ -477,7 +477,7 @@ class APISecurityScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
 
             # Trigger an error
             resp = client.get(f"{url}/nonexistent_endpoint_12345")

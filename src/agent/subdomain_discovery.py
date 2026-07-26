@@ -165,7 +165,7 @@ class SmartSubdomainDiscovery:
         """Certificate transparency logs via crt.sh."""
         try:
             import httpx
-            client = httpx.Client(timeout=15, verify=False)
+            client = httpx.Client(timeout=15, verify=True)
             resp = client.get(f"https://crt.sh/?q=%.{self.domain}&output=json")
             if resp.status_code == 200:
                 data = resp.json()
@@ -212,7 +212,7 @@ class SmartSubdomainDiscovery:
         """Find subdomains via Shodan SSL certificates."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=False)
+            client = httpx.Client(timeout=10, verify=True)
             # Use Shodan InternetDB (free, no API key)
             # First get IPs from known subdomains
             for sub in self.assets.get_all_subdomains()[:5]:

@@ -50,7 +50,7 @@ class CSVInjectionScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=False, timeout=self.timeout, follow_redirects=True,
+            verify=True, timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0"},
         )
 

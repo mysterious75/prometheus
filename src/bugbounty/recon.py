@@ -160,7 +160,7 @@ class ReconPipeline:
                 for scheme in ["http", "https"]:
                     url = f"{scheme}://{self.target}:{port}"
                     try:
-                        resp = requests.get(url, timeout=5, verify=False)
+                        resp = requests.get(url, timeout=5, verify=True)
                         services.append({
                             "url": url,
                             "status_code": resp.status_code,

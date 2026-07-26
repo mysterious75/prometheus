@@ -154,7 +154,7 @@ class SubdomainEnumerator(BaseTool):
         logger.info(f"[{self.name}(fallback)] Querying crt.sh for {domain}")
         try:
             import httpx
-            client = httpx.Client(timeout=20, verify=False)
+            client = httpx.Client(timeout=20, verify=True)
             resp = client.get(
                 f"https://crt.sh/?q=%.{domain}&output=json",
                 headers={"User-Agent": "Mozilla/5.0"},

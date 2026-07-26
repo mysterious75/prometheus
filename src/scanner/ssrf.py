@@ -453,7 +453,7 @@ class SSRFScanner:
                                      # cause data exfiltration to attacker-controlled hosts.
                                      # Log 3xx responses as potential redirect-based SSRF instead.
             timeout=self.timeout,
-            verify=False,
+            verify=True,
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Accept": "*/*",

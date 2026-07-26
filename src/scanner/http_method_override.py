@@ -62,7 +62,7 @@ class HttpMethodOverrideScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=False, timeout=self.timeout, follow_redirects=False,
+            verify=True, timeout=self.timeout, follow_redirects=False,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )
 

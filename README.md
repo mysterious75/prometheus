@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1a1a2e,100:16213e&height=220&section=header&text=Prometheus&fontSize=80&fontColor=e94560&fontAlignY=35&desc=AI-Powered%20Security%20Testing%20Platform&descSize=18&descAlignY=55&animation=fadeIn" width="100%"/>
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1a1a2e,100:16213e&height=220&section=header&text=Prometheus&fontSize=80&fontColor=e94560&fontAlignY=35&desc=Automated%20Security%20Testing%20Platform&descSize=18&descAlignY=55&animation=fadeIn" width="100%"/>
 </p>
 
 <p align="center">
@@ -38,7 +38,7 @@
 
 ## What Is Prometheus?
 
-Prometheus is an **open-source, AI-powered security testing platform** that autonomously discovers and validates vulnerabilities in web applications, APIs, networks, and cloud infrastructure.
+Prometheus is an **open-source automated security testing platform** that autonomously discovers and validates vulnerabilities in web applications, APIs, networks, and cloud infrastructure.
 
 <table>
 <tr>

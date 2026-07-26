@@ -42,7 +42,7 @@ class TraversalScanner:
             test_params = {"file": "index.html", "path": "pages/", "page": "home",
                           "include": "header.php", "template": "default"}
 
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=False)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
 
         for param_name in test_params:
             for payload, indicator, desc in self.PAYLOADS:

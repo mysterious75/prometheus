@@ -129,7 +129,7 @@ class ContextAwarePayloadGenerator:
         findings: List[Finding] = []
 
         try:
-            client = httpx.Client(verify=False, timeout=10, follow_redirects=True,
+            client = httpx.Client(verify=True, timeout=10, follow_redirects=True,
                                   headers={"User-Agent": "Mozilla/5.0"})
             try:
                 resp = client.get(url)

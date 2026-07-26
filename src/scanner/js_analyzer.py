@@ -332,7 +332,7 @@ class JSAnalyzer:
             return []
 
         try:
-            resp = httpx.get(url, timeout=15, follow_redirects=True, verify=False)
+            resp = httpx.get(url, timeout=15, follow_redirects=True, verify=True)
             resp.raise_for_status()
         except Exception as e:
             logger.error(f"Failed to fetch JS from {url}: {e}")

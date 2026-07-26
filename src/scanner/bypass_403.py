@@ -214,7 +214,7 @@ class BypassScanner:
         techniques.extend(_build_protocol_bypasses())
 
         client = httpx.Client(
-            verify=False,
+            verify=True,
             timeout=self.timeout,
             follow_redirects=False,  # Important: don't follow redirects for bypass detection
             headers={
