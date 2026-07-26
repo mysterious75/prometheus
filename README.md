@@ -5,8 +5,8 @@
 <p align="center">
   <a href="https://github.com/mysterious75/prometheus/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-00d4aa?style=for-the-badge&logo=none" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/tests-251_passing-00d4aa?style=for-the-badge&logo=none" alt="Tests">
-  <img src="https://img.shields.io/badge/scanners-21-e94560?style=for-the-badge&logo=none" alt="Scanners">
+  <img src="https://img.shields.io/badge/tests-252_passing-00d4aa?style=for-the-badge&logo=none" alt="Tests">
+  <img src="https://img.shields.io/badge/scanners-27-e94560?style=for-the-badge&logo=none" alt="Scanners">
   <img src="https://img.shields.io/badge/payloads-777-ff6b35?style=for-the-badge&logo=none" alt="Payloads">
   <img src="https://img.shields.io/badge/API-REST-6c5ce7?style=for-the-badge&logo=fastapi&logoColor=white" alt="API">
 </p>
@@ -46,15 +46,18 @@ Prometheus is an **open-source, AI-powered security testing platform** that auto
 
 **Why Prometheus?**
 
-- **21 vulnerability scanners** with adversarial validation
+- **27 vulnerability scanners** with adversarial validation
 - **5-stage pipeline** (Recon, Hunt, Validate, Trace, Report)
 - **777 core payloads** + 2,861 WAF bypass variants
 - **1,242+ report knowledge base**
 - **Skill/plugin system** with on-demand loading
 - **API auto-discovery** (OpenAPI/Swagger/GraphQL)
+- **403/401 bypass testing** (39 techniques)
+- **Anti-bot detection** (11 WAF systems, 5 CAPTCHAs)
+- **Deep JS analysis** (endpoints, secrets, cloud URLs)
+- **Attack surface change detection**
 - **Works offline** — no API keys needed
 - **REST API** for automation & CI/CD
-- **Scope enforcement** — hard block out-of-scope
 
 </td>
 <td width="50%">
@@ -68,8 +71,8 @@ Prometheus is an **open-source, AI-powered security testing platform** that auto
 | Linux (Arch) | Fully supported |
 | macOS (Intel + Apple Silicon) | Fully supported |
 | Windows 10/11 | Supported (PowerShell) |
-| Docker | Community supported |
-| WSL2 (Windows Subsystem for Linux) | Fully supported |
+| Docker | Supported |
+| WSL2 | Fully supported |
 
 </td>
 </tr>
@@ -82,139 +85,68 @@ Prometheus is an **open-source, AI-powered security testing platform** that auto
 ### Linux (Ubuntu / Debian)
 
 ```bash
-# Install prerequisites
 sudo apt update && sudo apt install -y python3 python3-pip python3-venv git
-
-# Clone and install
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
-python3 -m venv venv
-source venv/bin/activate
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# Optional: Install external tools for enhanced scanning
-sudo apt install -y nmap whois dnsutils
-pip install sqlmap sherlock-project
-go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-
-# Run
 python3 -m src.entry
 ```
 
-### Linux (Fedora / RHEL / CentOS)
+### Linux (Fedora / RHEL)
 
 ```bash
-# Install prerequisites
 sudo dnf install -y python3 python3-pip git
-
-# Clone and install
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
-python3 -m venv venv
-source venv/bin/activate
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# Optional: Install external tools
-sudo dnf install -y nmap whois bind-utils
-pip install sqlmap sherlock-project
-
-# Run
 python3 -m src.entry
 ```
 
-### Linux (Arch / Manjaro)
+### Linux (Arch)
 
 ```bash
-# Install prerequisites
 sudo pacman -S python python-pip git
-
-# Clone and install
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
-python3 -m venv venv
-source venv/bin/activate
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# Optional: Install external tools
-sudo pacman -S nmap whois dnsutils
-pip install sqlmap sherlock-project
-
-# Run
 python3 -m src.entry
 ```
 
-### macOS (Intel & Apple Silicon)
+### macOS
 
 ```bash
-# Install prerequisites (if not already installed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-brew install python3 git go
-
-# Clone and install
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
-python3 -m venv venv
-source venv/bin/activate
+brew install python3 git
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
-# Optional: Install external tools
-brew install nmap
-pip install sqlmap sherlock-project
-go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
-
-# Run
 python3 -m src.entry
 ```
 
-### Windows 10/11 (PowerShell)
+### Windows (PowerShell)
 
 ```powershell
-# Install prerequisites
-# Install Python 3.10+ from https://www.python.org/downloads/
-# Install Git from https://git-scm.com/download/win
-# Check "Add Python to PATH" during installation
-
-# Clone and install
 git clone https://github.com/mysterious75/prometheus.git
 cd prometheus
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-
-# Optional: Install external tools
-pip install sqlmap sherlock-project
-# Install nmap from https://nmap.org/download.html
-# Install Go from https://go.dev/dl/ then:
-# go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
-
-# Run
 python -m src.entry
 ```
 
-### Windows (WSL2 — Recommended for Windows)
+### Windows (WSL2 — Recommended)
 
 ```bash
-# In WSL2 terminal (Ubuntu):
 sudo apt update && sudo apt install -y python3 python3-pip python3-venv git
-
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
-python3 -m venv venv
-source venv/bin/activate
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-
 python3 -m src.entry
 ```
 
 ### Docker
 
 ```bash
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
 docker build -t prometheus .
 docker run -it prometheus
 ```
@@ -225,21 +157,12 @@ docker run -it prometheus
 git clone https://github.com/mysterious75/prometheus.git && cd prometheus && bash install.sh
 ```
 
-The installer automatically:
-- Detects your OS and package manager
-- Checks Python 3.10+ (installs if missing)
-- Creates virtual environment
-- Installs Python dependencies
-- Installs external tools if available
-- Creates global `prometheus` command
-
-### pip Install (All Platforms)
+### pip Install
 
 ```bash
-git clone https://github.com/mysterious75/prometheus.git
-cd prometheus
+git clone https://github.com/mysterious75/prometheus.git && cd prometheus
 pip install -e .
-# Then run: prometheus
+prometheus
 ```
 
 ---
@@ -256,17 +179,17 @@ scan example.com                    # Full autonomous scan
 
 ```bash
 prometheus scan example.com          # Full autonomous scan
-prometheus owasp https://target.com  # OWASP methodology (12 phases)
-prometheus crypto target.com         # SSL/TLS deep analysis
-prometheus quick target.com          # Fast scan (top vulns only)
-prometheus stealth target.com        # Slow, stealthy scan
+prometheus owasp https://target.com  # OWASP methodology
+prometheus crypto target.com         # SSL/TLS analysis
+prometheus quick target.com          # Fast scan
+prometheus stealth target.com        # Stealthy scan
 ```
 
 ### REST API
 
 ```bash
 python -m src.api.app               # Start API server
-# Open http://localhost:8000/docs for interactive documentation
+# Docs at http://localhost:8000/docs
 ```
 
 ### Python Library
@@ -275,20 +198,19 @@ python -m src.api.app               # Start API server
 from src.main import Prometheus
 p = Prometheus()
 result = p.assess("example.com")
-print(result["findings"])
 ```
 
 ---
 
 ## Features
 
-### 21 Vulnerability Scanners
+### 27 Vulnerability Scanners
 
 <table>
 <tr>
 <td>
 
-**Injection**
+**Injection (6)**
 - SQL Injection (198 patterns, 8 DBMS)
 - XSS (context-aware, DOM, stored, WAF bypass)
 - Command Injection (Linux + Windows)
@@ -299,8 +221,9 @@ print(result["findings"])
 </td>
 <td>
 
-**Access & Logic**
+**Access & Logic (7)**
 - IDOR / BOLA (multi-session)
+- Advanced IDOR (UUID, encoded, JWT, GraphQL)
 - Auth Bypass (default creds, admin panels)
 - Path Traversal (30+ encoding bypasses)
 - Open Redirect (28 bypass techniques)
@@ -310,7 +233,7 @@ print(result["findings"])
 </td>
 <td>
 
-**Configuration**
+**Configuration (6)**
 - Exposed Secrets (25 regex patterns)
 - Security Headers (10 critical headers)
 - SSL/TLS/Crypto (weak ciphers, cert validation)
@@ -320,20 +243,99 @@ print(result["findings"])
 
 </td>
 </tr>
+<tr>
+<td>
+
+**Bypass & Detection (4)**
+- 403/401 Bypass (39 techniques)
+- Anti-Bot Detection (11 WAFs, 5 CAPTCHAs)
+- Fingerprinting Detection (Canvas, WebGL, Audio)
+- JS Analysis (endpoints, secrets, cloud URLs)
+
+</td>
+<td>
+
+**API & Infrastructure (2)**
+- API Security (REST, GraphQL, JWT, OAuth)
+- API Auto-Discovery (OpenAPI/Swagger/GraphQL)
+
+</td>
+<td>
+
+**Reporting (2)**
+- Executive Report (risk matrix, compliance mapping)
+- Attack Surface Change Detection
+
+</td>
+</tr>
 </table>
+
+### 403/401 Bypass Scanner (39 Techniques)
+
+Inspired by [NoMore403](https://github.com/devploit/nomore403):
+
+```
+Path Mutations (20)          Header Overrides (5)         IP Spoofing (10)
+├─ //admin (double slash)    ├─ X-HTTP-Method-Override    ├─ X-Forwarded-For: 127.0.0.1
+├─ /admin/ (trailing slash)  ├─ X-Method-Override         ├─ X-Real-IP: 127.0.0.1
+├─ /admin/. (dot suffix)     ├─ X-HTTP-Method             ├─ X-Client-IP: 127.0.0.1
+├─ /./admin (dot prefix)     ├─ X-Original-Method         ├─ X-Remote-Addr: 127.0.0.1
+├─ /admin%20 (space)         └─ X-Rewrite-Method          └─ X-Host: localhost
+├─ /admin%09 (tab)
+├─ /admin%00 (null byte)
+├─ /%2f/admin (encoded slash)
+├─ /admin..;/ (semicolon)
+├─ /admin.json (extension)
+├─ /ADMIN (uppercase)
+└─ ... (20 total)
+```
+
+### Anti-Bot Detection (16 Systems)
+
+```
+WAF Detection (11)           CAPTCHA Detection (5)
+├─ Cloudflare                ├─ reCAPTCHA
+├─ Akamai                    ├─ hCaptcha
+├─ DataDome                  ├─ FunCaptcha
+├─ PerimeterX                ├─ GeeTest
+├─ Shape Security            └─ Cloudflare Turnstile
+├─ AWS WAF
+├─ Imperva                   Fingerprinting (6)
+├─ Kasada                    ├─ Canvas
+├─ Sucuri                    ├─ WebGL
+├─ Wordfence                 ├─ Audio
+└─ ModSecurity               ├─ Font, WebRTC, Navigator
+```
+
+### Deep JS Analysis (10 Categories)
+
+Inspired by [JSAnalyzer](https://github.com/jenish-sojitra/JSAnalyzer):
+
+```
+API Endpoints      /api/v1/users, /graphql, /rest/data
+Cloud URLs         S3://, *.blob.core.windows.net, storage.googleapis.com
+OAuth URLs         /oauth2/token, /auth/login, /callback
+Secrets            AWS keys, GitHub tokens, Stripe keys, JWT, API keys
+Sensitive Files    .sql, .csv, .bak, .env, .pem, .key
+Emails             developer@company.com
+Internal URLs      http://localhost, http://10.*, http://192.168.*
+Comments           Developer comments with sensitive info
+Credentials        password=, secret=, token=, apikey=
+DOM XSS            document.location, innerHTML, eval()
+```
 
 ### Adversarial Validation
 
 Three-stage validation eliminates false positives:
 
 ```
-Finding ──> Hunter (confirm) ──> Skeptic (disprove) ──> Referee (verdict)
-                                                              │
-                                          ┌───────────────────┼───────────────────┐
-                                          │                   │                   │
-                                     CONFIRMED     LIKELY_FALSE_POS      FALSE_POSITIVE
-                                          │                   │                   │
-                                       KEEP              KEEP (low)            DROP
+Finding → Hunter (confirm) → Skeptic (disprove) → Referee (verdict)
+                                                        │
+                                    ┌───────────────────┼───────────────────┐
+                                    │                   │                   │
+                               CONFIRMED     LIKELY_FALSE_POS      FALSE_POSITIVE
+                                    │                   │                   │
+                                 KEEP              KEEP (low)            DROP
 ```
 
 ### Payload Engine
@@ -343,22 +345,20 @@ Finding ──> Hunter (confirm) ──> Skeptic (disprove) ──> Referee (ver
 ├── SQLi: 235  ├── XSS: 194  ├── SSRF: 73
 ├── CMDi: 78   ├── SSTI: 43  ├── Others: 154
 
-Dynamic Variant Generation
+Dynamic Variant Generation (7 types)
 ├── URL encoding    ├── Double URL encoding
 ├── HTML entity     ├── Unicode
 ├── Case variation  ├── Comment injection
 └── Whitespace substitution
 
 Result: 2,861+ effective payloads with WAF bypass
-Learning System: Caches successful payloads
-Context-Aware: DBMS, WAF, framework detection
 ```
 
 ### 5-Stage Pipeline
 
 ```
 Stage 1  RECON      Fast model       Subdomains, ports, HTTP, crawl, API discovery
-Stage 2  HUNT       Primary model    Run all 21 vulnerability scanners
+Stage 2  HUNT       Primary model    Run all 27 vulnerability scanners
 Stage 3  VALIDATE   Reasoning model  Adversarial review (Hunter-Skeptic-Referee)
 Stage 4  TRACE      Primary model    Prove attacker input reaches vulnerable sink
 Stage 5  REPORT     Fast model       Executive report with confirmed findings only
@@ -371,8 +371,6 @@ Stage 5  REPORT     Fast model       Executive report with confirmed findings on
 ```
 sqli.yml  xss.yml  ssrf.yml  idor.yml  auth_bypass.yml  api_security.yml  cloud_security.yml  session_mgmt.yml
 ```
-
-Skills auto-load on-demand based on target characteristics.
 
 ---
 
@@ -428,11 +426,11 @@ Skills auto-load on-demand based on target characteristics.
 
 ## API
 
-FastAPI-based REST API for automation and CI/CD integration:
+FastAPI-based REST API for automation:
 
 ```bash
 python -m src.api.app
-# Interactive docs at http://localhost:8000/docs
+# Docs at http://localhost:8000/docs
 ```
 
 | Method | Endpoint | Description |
@@ -446,18 +444,6 @@ python -m src.api.app
 | `GET` | `/targets` | List authorized targets |
 | `GET` | `/status` | System status |
 | `GET` | `/tools` | Tool availability |
-
-### Python Client
-
-```python
-from src.api.client import PrometheusClient
-
-client = PrometheusClient(base_url="http://localhost:8000", api_key=***
-scan_id = client.scan("example.com")
-result = client.wait_for_scan(scan_id)
-findings = client.get_findings(scan_id, severity="HIGH")
-report = client.get_report(scan_id, format="markdown")
-```
 
 ---
 
@@ -480,12 +466,18 @@ src/
 │   ├── exploit_agent.py       Exploit validation specialist
 │   └── report_agent.py        Report generation specialist
 │
-├── scanner/                   Vulnerability detection (21 scanners)
+├── scanner/                   Vulnerability detection (27 scanners)
 │   ├── sqli.py                SQL Injection (198 patterns, 8 DBMS)
 │   ├── xss.py                 XSS (context-aware, DOM, stored)
 │   ├── ssrf.py                SSRF (23 cloud, 32 internal targets)
+│   ├── bypass_403.py          403/401 bypass (39 techniques)
+│   ├── antibot.py             Anti-bot detection (16 systems)
+│   ├── idor_advanced.py       Advanced IDOR (UUID, encoded, JWT)
+│   ├── js_analyzer.py         Deep JS analysis (10 categories)
+│   ├── surface_tracker.py     Attack surface change detection
 │   ├── adversarial.py         Adversarial validation
 │   ├── payload_engine.py      777 core payloads + variants
+│   ├── payload_importer.py    PayloadsAllTheThings importer
 │   ├── api_discovery.py       OpenAPI/Swagger/GraphQL discovery
 │   ├── owasp_methodology.py   OWASP Testing Guide v4
 │   ├── business_logic.py      Business logic testing
@@ -494,18 +486,8 @@ src/
 │   ├── api_security.py        API security
 │   └── executive_report.py    Executive report generator
 │
-├── skills/                    Skill/plugin system
-│   ├── loader.py              On-demand skill loading
-│   └── *.yml                  8 skill files
-│
-├── tools/                     External tool wrappers
-│   ├── nuclei.py              Nuclei (177 fallback paths)
-│   ├── sqlmap.py              SQLMap (128 fallback payloads)
-│   ├── subfinder.py           Subfinder (246 fallback prefixes)
-│   ├── httpx.py               httpx (HTTP probing)
-│   ├── portscan.py            Nmap (320 fallback ports)
-│   └── sherlock.py            Sherlock (123 fallback platforms)
-│
+├── skills/                    Skill/plugin system (8 YAML files)
+├── tools/                     External tool wrappers (6 tools)
 ├── brain/                     LLM router (14 providers)
 ├── knowledge/                 Knowledge base (1,242+ reports)
 ├── api/                       REST API (FastAPI)
@@ -518,8 +500,6 @@ src/
 ---
 
 ## Tool Fallbacks
-
-Every tool works without external binaries (Python fallback mode):
 
 | Tool | Binary Mode | Fallback Mode | Fallback Size |
 |------|-------------|---------------|---------------|
@@ -550,8 +530,8 @@ Every tool works without external binaries (Python fallback mode):
 | Tier | USD | INR | Features |
 |------|-----|-----|----------|
 | **Free** | $0 | Rs.0 | 5 URLs/month, 5 scanners, CLI |
-| **Pro** | $19/mo | Rs.1,499/mo | Unlimited URLs, all 21 scanners, API, OWASP methodology |
-| **Team** | $99/mo | Rs.7,499/mo | + 5 members, continuous scanning, CI/CD, compliance |
+| **Pro** | $19/mo | Rs.1,499/mo | Unlimited URLs, all 27 scanners, API |
+| **Team** | $99/mo | Rs.7,499/mo | + 5 members, continuous scanning, CI/CD |
 | **Enterprise** | $299/mo | Rs.22,499/mo | + SSO, on-prem, custom playbooks, SLA |
 
 ---
@@ -559,11 +539,10 @@ Every tool works without external binaries (Python fallback mode):
 ## Testing
 
 ```bash
-python -m pytest tests/ -v          # Run all tests
-python -m pytest tests/ --tb=short  # Quick smoke test
+python -m pytest tests/ -v
 ```
 
-**251 passing, 99.6% pass rate**
+**252 passing, 100% pass rate**
 
 ---
 
@@ -605,7 +584,10 @@ MIT License — see [LICENSE](LICENSE) for details.
 | [ZephrFish/harness-kit](https://github.com/ZephrFish/harness-kit) | 5-stage pipeline design | Public |
 | [The-XSS-Rat/subScraper](https://github.com/The-XSS-Rat/subScraper) | Stateful scanning design | Public |
 | [DevCop95/bugbounty-lab101](https://github.com/DevCop95/bugbounty-lab101) | Scope enforcement | MIT |
-| [rawfilejson/awesome-osint-arsenal](https://github.com/rawfilejson/awesome-osint-arsenal) | Tool inventory | MIT |
+| [devploit/nomore403](https://github.com/devploit/nomore403) | 403/401 bypass techniques | MIT |
+| [jenish-sojitra/JSAnalyzer](https://github.com/jenish-sojitra/JSAnalyzer) | JS analysis patterns | MIT |
+| [0xSojalSec/sqlmap-ai](https://github.com/0xSojalSec/sqlmap-ai) | Adaptive SQLi testing | MIT |
+| [scrapfly/Antibot-Detector](https://github.com/scrapfly/Antibot-Detector) | Anti-bot detection | MIT |
 | [Brutecat](https://brutecat.com/articles/hacking-google-with-ai/) | API discovery technique | Blog |
 | [Joseph Thacker](https://josephthacker.com/hacking/2026/07/01/we-built-a-hackbot.html) | Hackbot methodology | Blog |
 | [Niels Provos](https://www.provos.org/p/finding-zero-days-with-any-model/) | Orchestration > model | Blog |
