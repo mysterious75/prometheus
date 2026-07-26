@@ -47,7 +47,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install networkx
+          pip install networkx pytest-timeout
       - name: Check core imports
         run: |
           python -c "
