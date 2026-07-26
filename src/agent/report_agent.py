@@ -438,7 +438,7 @@ class ReportAgent:
 ### Steps To Reproduce
 1. Navigate to `{url}`
 2. {"Inject the following payload:" if poc else "Observe the vulnerable behavior."}
-{f"```\\n{poc}\\n```" if poc else ""}
+{('```' + chr(10) + poc + chr(10) + '```') if poc else ""}
 
 ### Impact
 {self._get_impact_text(sev, vuln_type)}
