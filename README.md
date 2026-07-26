@@ -6,7 +6,7 @@
   <a href="https://github.com/mysterious75/prometheus/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-00d4aa?style=for-the-badge&logo=none" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/tests-252_passing-00d4aa?style=for-the-badge&logo=none" alt="Tests">
-  <img src="https://img.shields.io/badge/scanners-27-e94560?style=for-the-badge&logo=none" alt="Scanners">
+  <img src="https://img.shields.io/badge/scanners-41-e94560?style=for-the-badge&logo=none" alt="Scanners">
   <img src="https://img.shields.io/badge/payloads-777-ff6b35?style=for-the-badge&logo=none" alt="Payloads">
   <img src="https://img.shields.io/badge/API-REST-6c5ce7?style=for-the-badge&logo=fastapi&logoColor=white" alt="API">
 </p>
@@ -46,15 +46,20 @@ Prometheus is an **open-source, AI-powered security testing platform** that auto
 
 **Why Prometheus?**
 
-- **27 vulnerability scanners** with adversarial validation
+- **41 vulnerability scanners** with adversarial validation
 - **5-stage pipeline** (Recon, Hunt, Validate, Trace, Report)
 - **777 core payloads** + 2,861 WAF bypass variants
 - **1,242+ report knowledge base**
 - **Skill/plugin system** with on-demand loading
 - **API auto-discovery** (OpenAPI/Swagger/GraphQL)
-- **403/401 bypass testing** (39 techniques)
+- **403/401 bypass testing** (39 + 24 enhanced techniques)
 - **Anti-bot detection** (11 WAF systems, 5 CAPTCHAs)
-- **Deep JS analysis** (endpoints, secrets, cloud URLs)
+- **Deep JS analysis** (10 categories, noise filtering)
+- **154 sensitive file paths** probed automatically
+- **ORM injection detection** (Django, SQLAlchemy, MongoDB)
+- **Mass assignment testing** (50 privilege escalation payloads)
+- **Subdomain takeover** (37 cloud service fingerprints)
+- **WordPress scanner** (version, plugins, xmlrpc, user enum)
 - **Attack surface change detection**
 - **Works offline** — no API keys needed
 - **REST API** for automation & CI/CD
@@ -204,50 +209,59 @@ result = p.assess("example.com")
 
 ## Features
 
-### 27 Vulnerability Scanners
+### 41 Vulnerability Scanners
 
 <table>
 <tr>
 <td>
 
-**Injection (6)**
+**Injection (9)**
 - SQL Injection (198 patterns, 8 DBMS)
 - XSS (context-aware, DOM, stored, WAF bypass)
 - Command Injection (Linux + Windows)
 - SSTI (Jinja2, Twig, Freemarker, Velocity, ERB, Pug)
 - XXE (file read, SSRF, blind)
 - HTTP Smuggling (CL.TE / TE.CL / TE.TE)
+- CRLF Injection (response splitting, header injection)
+- ORM Injection (Django, SQLAlchemy, MongoDB, GraphQL)
+- CSV Injection (formula injection in exports)
 
 </td>
 <td>
 
-**Access & Logic (7)**
+**Access & Logic (10)**
 - IDOR / BOLA (multi-session)
 - Advanced IDOR (UUID, encoded, JWT, GraphQL)
+- IDOR JWT & GraphQL (claim manipulation, object-level auth)
 - Auth Bypass (default creds, admin panels)
 - Path Traversal (30+ encoding bypasses)
 - Open Redirect (28 bypass techniques)
 - CORS Misconfiguration
 - Race Conditions
+- Mass Assignment (50 privilege payloads, nested/array/dot-notation)
+- HTTP Method Override (headers, query params, method cycling)
 
 </td>
 <td>
 
-**Configuration (6)**
+**Configuration (8)**
 - Exposed Secrets (25 regex patterns)
 - Security Headers (10 critical headers)
 - SSL/TLS/Crypto (weak ciphers, cert validation)
 - Business Logic (price manipulation, step skipping)
 - Session Management (cookie flags, CSRF, JWT)
 - OWASP Methodology (12 phases)
+- File Disclosure (154 sensitive paths, secret detection)
+- Dependency Confusion (private packages, registry exposure)
 
 </td>
 </tr>
 <tr>
 <td>
 
-**Bypass & Detection (4)**
+**Bypass & Detection (5)**
 - 403/401 Bypass (39 techniques)
+- Enhanced 403 Bypass (UA rotation, mid-path, nginx headers, method cycling)
 - Anti-Bot Detection (11 WAFs, 5 CAPTCHAs)
 - Fingerprinting Detection (Canvas, WebGL, Audio)
 - JS Analysis (endpoints, secrets, cloud URLs)
@@ -255,22 +269,27 @@ result = p.assess("example.com")
 </td>
 <td>
 
-**API & Infrastructure (2)**
-- API Security (REST, GraphQL, JWT, OAuth)
-- API Auto-Discovery (OpenAPI/Swagger/GraphQL)
+**Platform-Specific (4)**
+- WordPress (version, plugins, xmlrpc, user enum)
+- Subdomain Takeover (37 cloud service fingerprints)
+- CSS Injection (data exfil, UI redress, style injection)
+- Google Dorking (72 dorks in 6 categories)
 
 </td>
 <td>
 
-**Reporting (2)**
+**API, AI & Reporting (5)**
+- API Security (REST, GraphQL, JWT, OAuth)
+- API Auto-Discovery (OpenAPI/Swagger/GraphQL)
+- AI-Assisted Payloads (context-aware generation)
+- PayloadsAllTheThings Import (markdown/text/URL)
 - Executive Report (risk matrix, compliance mapping)
-- Attack Surface Change Detection
 
 </td>
 </tr>
 </table>
 
-### 403/401 Bypass Scanner (39 Techniques)
+### 403/401 Bypass Scanner (63 Techniques Total)
 
 Inspired by [NoMore403](https://github.com/devploit/nomore403):
 
@@ -288,6 +307,17 @@ Path Mutations (20)          Header Overrides (5)         IP Spoofing (10)
 ├─ /admin.json (extension)
 ├─ /ADMIN (uppercase)
 └─ ... (20 total)
+
+Enhanced Bypass (24 more)    Protocol Bypass (4)
+├─ User-Agent Rotation (12)  ├─ Content-Length: 0
+│  ├─ Googlebot              ├─ Transfer-Encoding: chunked
+│  ├─ Bingbot                ├─ Content-Type: application/json
+│  ├─ curl                   └─ Content-Type: application/xml
+│  └─ ... (12 total)
+├─ Mid-Path Mutations (6)    Auto Method Cycling
+├─ Nginx Headers (4)         ├─ PUT, PATCH, DELETE
+│  ├─ X-Original-URL         ├─ OPTIONS, TRACE, HEAD
+│  └─ X-Rewrite-URL          └─ Combined UA + Method
 ```
 
 ### Anti-Bot Detection (16 Systems)
@@ -324,6 +354,75 @@ Credentials        password=, secret=, token=, apikey=
 DOM XSS            document.location, innerHTML, eval()
 ```
 
+### Sensitive File Disclosure (154 Paths)
+
+```
+Environment (15)       Version Control (6)    Backups (15)
+├─ /.env               ├─ /.git/config        ├─ /backup.zip
+├─ /.env.local         ├─ /.git/HEAD          ├─ /backup.sql
+├─ /.env.production    ├─ /.svn/entries       ├─ /dump.sql
+├─ /.env.staging       └─ /.hg/dirstate       └─ /db.sqlite3
+
+Server/Admin (16)      Cloud (6)              CI/CD (9)
+├─ /actuator/env       ├─ /.aws/credentials   ├─ /.github/workflows
+├─ /server-status      ├─ /service-account    ├─ /.gitlab-ci.yml
+├─ /phpinfo.php        └─ /.azure/credentials ├─ /Jenkinsfile
+└─ /manager/html                               └─ /buildspec.yml
+
+SSH/Keys (7)           Package (14)           WordPress (5)
+├─ /id_rsa             ├─ /package.json       ├─ /wp-config.php.bak
+├─ /.ssh/config        ├─ /composer.json      ├─ /xmlrpc.php
+└─ /.npmrc             └─ /requirements.txt   └─ /wp-json/wp/v2/users
+
+API/Debug (12)         Well-Known (6)         Misc (20+)
+├─ /swagger.json       ├─ /.well-known/       ├─ /.DS_Store
+├─ /graphql            │  security.txt        ├─ /robots.txt
+├─ /metrics            └─ /.well-known/       └─ /crossdomain.xml
+└─ /debug/pprof           openid-configuration
+```
+
+### ORM Injection Detection
+
+Inspired by [real-world Django ORM exploits](https://blog.p1.gs/writeup/2025/07/06/Hacking-a-crypto-game/):
+
+```
+Django ORM Filters       NoSQL Injection        Error-Based Detection
+├─ __contains            ├─ $gt / $ne           ├─ FieldError (Django)
+├─ __startswith          ├─ $regex              ├─ Cannot resolve keyword
+├─ __endswith            ├─ $where              ├─ ProgrammingError
+├─ __gt / __gte / __lt   └─ MongoDB bypass      ├─ SequelizeDatabaseError
+├─ __in                                            └─ PrismaClientKnownRequestError
+├─ is_superuser / is_staff
+└─ field traversal (user__is_admin)
+```
+
+### Mass Assignment (50 Privilege Payloads)
+
+Inspired by [LostSec's mass assignment guide](https://infosecwriteups.com/uncovering-invisible-privileges-the-ultimate-guide-to-mass-assignment-in-registration-flows-9ecd5ff40512):
+
+```
+Direct Flags          Nested JSON           Array Bypass          Dot Notation
+├─ role: "admin"      ├─ user.role          ├─ roles: ["admin"]   ├─ user.role
+├─ is_admin: true     ├─ user.is_admin      ├─ permissions:       ├─ user.is_admin
+├─ is_superuser: true ├─ account.type         ["admin"]           └─ account.type
+├─ verified: true     └─ metadata.role      └─ groups:
+├─ plan: "premium"                            ["administrators"]
+└─ access_level: 999
+```
+
+### Subdomain Takeover (37 Services)
+
+```
+Cloud Storage     PaaS/Hosting      CDNs/Proxy     SaaS Platforms
+├─ AWS S3         ├─ Heroku         ├─ Fastly      ├─ Shopify
+├─ Azure Blob     ├─ Netlify        ├─ Cloudflare  ├─ Zendesk
+├─ Azure Web App  ├─ Vercel         └─ Akamai      ├─ Tumblr
+├─ GCP Storage    ├─ GitHub Pages                   ├─ WordPress.com
+└─ Azure Traffic  ├─ Pantheon                       ├─ SurveyMonkey
+   Manager        ├─ Webflow                        ├─ Intercom
+                  └─ Kajabi                         └─ ... (37 total)
+```
+
 ### Adversarial Validation
 
 Three-stage validation eliminates false positives:
@@ -352,13 +451,30 @@ Dynamic Variant Generation (7 types)
 └── Whitespace substitution
 
 Result: 2,861+ effective payloads with WAF bypass
+
+External Import
+├── PayloadsAllTheThings (markdown/text/URL)
+├── Deduplication engine
+└── Auto vuln-type mapping
+```
+
+### AI-Assisted Payload Generation
+
+Context-aware payload generation that adapts to the target:
+
+```
+Technology Detection          Vulnerability Context        Payload Adaptation
+├─ PHP / Python / Java       ├─ Parameter name analysis   ├─ DBMS-specific SQLi
+├─ Node / Ruby / .NET        ├─ Response content analysis  ├─ Framework-specific SSTI
+├─ WordPress / Django        ├─ Header fingerprinting      ├─ Context-aware XSS
+└─ Flask / Spring / Rails    └─ Error message analysis     └─ OS-specific CMDi
 ```
 
 ### 5-Stage Pipeline
 
 ```
 Stage 1  RECON      Fast model       Subdomains, ports, HTTP, crawl, API discovery
-Stage 2  HUNT       Primary model    Run all 27 vulnerability scanners
+Stage 2  HUNT       Primary model    Run all 41 vulnerability scanners
 Stage 3  VALIDATE   Reasoning model  Adversarial review (Hunter-Skeptic-Referee)
 Stage 4  TRACE      Primary model    Prove attacker input reaches vulnerable sink
 Stage 5  REPORT     Fast model       Executive report with confirmed findings only
@@ -466,24 +582,52 @@ src/
 │   ├── exploit_agent.py       Exploit validation specialist
 │   └── report_agent.py        Report generation specialist
 │
-├── scanner/                   Vulnerability detection (27 scanners)
+├── scanner/                   Vulnerability detection (41 scanners)
 │   ├── sqli.py                SQL Injection (198 patterns, 8 DBMS)
 │   ├── xss.py                 XSS (context-aware, DOM, stored)
 │   ├── ssrf.py                SSRF (23 cloud, 32 internal targets)
-│   ├── bypass_403.py          403/401 bypass (39 techniques)
-│   ├── antibot.py             Anti-bot detection (16 systems)
-│   ├── idor_advanced.py       Advanced IDOR (UUID, encoded, JWT)
-│   ├── js_analyzer.py         Deep JS analysis (10 categories)
-│   ├── surface_tracker.py     Attack surface change detection
-│   ├── adversarial.py         Adversarial validation
+│   ├── cmdi.py                Command Injection (Linux + Windows)
+│   ├── ssti.py                SSTI (6 template engines)
+│   ├── xxe.py                 XXE (file read, SSRF, blind)
+│   ├── traversal.py           Path Traversal (30+ bypasses)
+│   ├── redirect.py            Open Redirect (28 techniques)
+│   ├── cors.py                CORS Misconfiguration
+│   ├── smuggling.py           HTTP Smuggling
+│   ├── race.py                Race Conditions
+│   ├── idor.py                IDOR / BOLA
+│   ├── idor_advanced.py       Advanced IDOR (UUID, encoded)
+│   ├── idor_jwt_graphql.py    IDOR JWT & GraphQL ← NEW
+│   ├── auth.py                Auth Bypass
+│   ├── secrets.py             Exposed Secrets (25 patterns)
+│   ├── headers.py             Security Headers
+│   ├── crypto_scanner.py      SSL/TLS/Crypto
+│   ├── business_logic.py      Business Logic
+│   ├── session_manager.py     Session Management
+│   ├── owasp_methodology.py   OWASP Testing Guide v4
+│   ├── api_security.py        API Security
+│   ├── api_discovery.py       API Auto-Discovery
+│   ├── bypass_403.py          403/401 Bypass (39 techniques)
+│   ├── bypass_enhanced.py     Enhanced 403 Bypass ← NEW
+│   ├── antibot.py             Anti-Bot Detection (16 systems)
+│   ├── js_analyzer.py         Deep JS Analysis (10 categories)
+│   ├── file_disclosure.py     Sensitive File Disclosure ← NEW
+│   ├── orm_injection.py       ORM Injection Detection ← NEW
+│   ├── mass_assignment.py     Mass Assignment Testing ← NEW
+│   ├── http_method_override.py HTTP Method Override ← NEW
+│   ├── crlf.py                CRLF Injection ← NEW
+│   ├── csv_injection.py       CSV Injection ← NEW
+│   ├── css_injection.py       CSS Injection ← NEW
+│   ├── subdomain_takeover.py  Subdomain Takeover ← NEW
+│   ├── wordpress.py           WordPress Scanner ← NEW
+│   ├── google_dorking.py      Google Dorking ← NEW
+│   ├── dependency_confusion.py Dependency Confusion ← NEW
+│   ├── ai_assist.py           AI-Assisted Payloads ← NEW
 │   ├── payload_engine.py      777 core payloads + variants
 │   ├── payload_importer.py    PayloadsAllTheThings importer
-│   ├── api_discovery.py       OpenAPI/Swagger/GraphQL discovery
-│   ├── owasp_methodology.py   OWASP Testing Guide v4
-│   ├── business_logic.py      Business logic testing
-│   ├── session_manager.py     Session management
-│   ├── crypto_scanner.py      SSL/TLS/crypto
-│   ├── api_security.py        API security
+│   ├── adversarial.py         Adversarial validation
+│   ├── surface_tracker.py     Attack surface change detection
+│   ├── internal_net.py        Internal network scanning
+│   ├── evidence.py            Evidence collection
 │   └── executive_report.py    Executive report generator
 │
 ├── skills/                    Skill/plugin system (8 YAML files)
@@ -530,7 +674,7 @@ src/
 | Tier | USD | INR | Features |
 |------|-----|-----|----------|
 | **Free** | $0 | Rs.0 | 5 URLs/month, 5 scanners, CLI |
-| **Pro** | $19/mo | Rs.1,499/mo | Unlimited URLs, all 27 scanners, API |
+| **Pro** | $19/mo | Rs.1,499/mo | Unlimited URLs, all 41 scanners, API |
 | **Team** | $99/mo | Rs.7,499/mo | + 5 members, continuous scanning, CI/CD |
 | **Enterprise** | $299/mo | Rs.22,499/mo | + SSO, on-prem, custom playbooks, SLA |
 
@@ -588,6 +732,9 @@ MIT License — see [LICENSE](LICENSE) for details.
 | [jenish-sojitra/JSAnalyzer](https://github.com/jenish-sojitra/JSAnalyzer) | JS analysis patterns | MIT |
 | [0xSojalSec/sqlmap-ai](https://github.com/0xSojalSec/sqlmap-ai) | Adaptive SQLi testing | MIT |
 | [scrapfly/Antibot-Detector](https://github.com/scrapfly/Antibot-Detector) | Anti-bot detection | MIT |
+| [swisskyrepo/PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) | Payload database | MIT |
+| [KingOfBugbounty/KingOfBugBountyTips](https://github.com/KingOfBugbounty/KingOfBugBountyTips) | Recon methodology | MIT |
+| [nahamsec](https://github.com/nahamsec) | Bug bounty tooling | Various |
 | [Brutecat](https://brutecat.com/articles/hacking-google-with-ai/) | API discovery technique | Blog |
 | [Joseph Thacker](https://josephthacker.com/hacking/2026/07/01/we-built-a-hackbot.html) | Hackbot methodology | Blog |
 | [Niels Provos](https://www.provos.org/p/finding-zero-days-with-any-model/) | Orchestration > model | Blog |
