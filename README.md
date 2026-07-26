@@ -6,8 +6,8 @@
   <a href="https://github.com/mysterious75/prometheus/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-00d4aa?style=for-the-badge&logo=none" alt="License"></a>
   <img src="https://img.shields.io/badge/python-3.10+-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/tests-322_passing-00d4aa?style=for-the-badge&logo=none" alt="Tests">
-  <img src="https://img.shields.io/badge/scanners-55-e94560?style=for-the-badge&logo=none" alt="Scanners">
-  <img src="https://img.shields.io/badge/payloads-2035-ff6b35?style=for-the-badge&logo=none" alt="Payloads">
+  <img src="https://img.shields.io/badge/scanners-41-e94560?style=for-the-badge&logo=none" alt="Scanners">
+  <img src="https://img.shields.io/badge/payloads-777-ff6b35?style=for-the-badge&logo=none" alt="Payloads">
   <img src="https://img.shields.io/badge/API-REST-6c5ce7?style=for-the-badge&logo=fastapi&logoColor=white" alt="API">
 </p>
 
@@ -46,9 +46,9 @@ Prometheus is an **open-source automated security testing platform** that autono
 
 **Why Prometheus?**
 
-- **55 vulnerability scanners** with adversarial validation
+- **41 vulnerability scanners** with adversarial validation
 - **5-stage pipeline** (Recon, Hunt, Validate, Trace, Report)
-- **2,035 core payloads** with WAF bypass variants
+- **777 core payloads** with WAF bypass variants (10,000+ at runtime)
 - **300+ real security advisories** (from GitHub Advisory Database + NVD)
 - **Skill/plugin system** with on-demand loading
 - **API auto-discovery** (OpenAPI/Swagger/GraphQL)
