@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -74,7 +75,7 @@ class CloudScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=8, verify=ssl_verify())
 
         # Generate bucket names
         base_names = [name, name.replace(".", "-"), name.replace(".", "")]
@@ -129,7 +130,7 @@ class CloudScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=8, verify=ssl_verify())
 
         base_names = [name, name.replace(".", "-"), name.replace(".", "")]
         container_names = set()
@@ -169,7 +170,7 @@ class CloudScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=8, verify=ssl_verify())
 
         base_names = [name, name.replace(".", "-"), name.replace(".", "")]
         bucket_names = set()
@@ -205,7 +206,7 @@ class CloudScanner:
         """Check S3 bucket permissions."""
         try:
             import httpx
-            client = httpx.Client(timeout=8, verify=True)
+            client = httpx.Client(timeout=8, verify=ssl_verify())
 
             # Check ACL
             acl_url = f"https://{bucket}.s3.amazonaws.com/?acl"

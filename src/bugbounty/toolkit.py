@@ -19,6 +19,7 @@ from urllib.parse import urljoin, urlparse
 import httpx
 
 from ..utils.logger import logger
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -41,7 +42,7 @@ class PythonToolkit:
     """Autonomous hacker toolkit - all Python, no external binaries."""
 
     def __init__(self):
-        self.client = httpx.Client(follow_redirects=True, timeout=15, verify=True)
+        self.client = httpx.Client(follow_redirects=True, timeout=15, verify=ssl_verify())
         self.results: List[ToolResult] = []
         self._check_available_tools()
 

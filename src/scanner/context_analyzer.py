@@ -14,6 +14,8 @@ from urllib.parse import urlparse, parse_qs
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
 # ---------------------------------------------------------------------------
@@ -71,13 +73,13 @@ VULN_CONTEXT_PATTERNS = {
 }
 
 
-class ContextAwarePayloadGenerator:
+class ContextAwarePayloadGenerator(BaseScanner):
     """Generates context-aware payloads based on target context analysis."""
 
     NAME = "context_analyzer"
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def analyze_and_generate(self, url: str, response_body: str = "", headers: Dict[str, str] = None) -> Dict[str, Any]:
         """Perform rule-based analysis and generate context-aware payloads.
@@ -129,7 +131,7 @@ class ContextAwarePayloadGenerator:
         findings: List[Finding] = []
 
         try:
-            client = httpx.Client(verify=True, timeout=10, follow_redirects=True,
+            client = httpx.Client(verify=ssl_verify(), timeout=10, follow_redirects=True,
                                   headers={"User-Agent": "Mozilla/5.0"})
             try:
                 resp = client.get(url)

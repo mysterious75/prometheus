@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # ---------------------------------------------------------------------------
@@ -104,7 +105,7 @@ class BypassEnhanced:
         base = f"{parsed.scheme}://{parsed.netloc}"
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=False,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=False,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )
 

@@ -12,9 +12,11 @@ import re
 from typing import List
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # CSS injection payloads
@@ -34,12 +36,13 @@ CSS_PAYLOADS = [
 ]
 
 
-class CSSInjectionScanner:
+class CSSInjectionScanner(BaseScanner):
     """Detects CSS injection vulnerabilities."""
 
     NAME = "css_injection"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -52,7 +55,7 @@ class CSSInjectionScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=True,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0"},
         )
 

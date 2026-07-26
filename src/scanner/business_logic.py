@@ -20,17 +20,19 @@ from urllib.parse import urlparse, urljoin
 
 import httpx
 
+from .base import BaseScanner
 from ..core.logger import logger, console, log_tool_start, log_tool_result
 from ..core.ratelimit import get_limiter
 from .findings import Finding
 
 
-class BusinessLogicScanner:
+class BusinessLogicScanner(BaseScanner):
     """Tests for business logic vulnerabilities."""
 
     NAME = "business_logic"
 
     def __init__(self, rps: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.rps = rps
 

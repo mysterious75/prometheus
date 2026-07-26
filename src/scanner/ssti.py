@@ -3,11 +3,13 @@
 from typing import List
 from urllib.parse import urlparse, urlencode, urlunparse, parse_qs
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
-class SSTIScanner:
+class SSTIScanner(BaseScanner):
     """Tests for Server-Side Template Injection."""
 
     NAME = "ssti"
@@ -22,6 +24,7 @@ class SSTIScanner:
     ]
 
     def __init__(self, rps: float = 5.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, params: dict = None) -> List[Finding]:
@@ -38,7 +41,7 @@ class SSTIScanner:
         if not test_params:
             test_params = {"name": "test", "input": "test"}
 
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify())
 
         for param_name in test_params:
             for payload, indicator, engine in self.PAYLOADS:

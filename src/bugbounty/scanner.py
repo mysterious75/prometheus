@@ -8,6 +8,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 from ..utils.logger import logger
+from ..core.transport import ssl_verify
 
 
 class VulnerabilityScanner:
@@ -81,7 +82,7 @@ class VulnerabilityScanner:
 
         try:
             import requests
-            response = requests.get(url, timeout=10, verify=True)
+            response = requests.get(url, timeout=10, verify=ssl_verify())
 
             security_headers = {
                 "Strict-Transport-Security": "HSTS not set",
@@ -123,7 +124,7 @@ class VulnerabilityScanner:
             import requests
             findings = []
 
-            response = requests.get(url, timeout=10, verify=True)
+            response = requests.get(url, timeout=10, verify=ssl_verify())
             server = response.headers.get("Server", "")
             if server and any(v in server.lower() for v in ["apache", "nginx", "iis", "php"]):
                 finding = {
@@ -144,7 +145,7 @@ class VulnerabilityScanner:
 
             for path in sensitive_paths:
                 try:
-                    resp = requests.get(f"{url}{path}", timeout=5, verify=True)
+                    resp = requests.get(f"{url}{path}", timeout=5, verify=ssl_verify())
                     if resp.status_code == 200 and len(resp.text) > 100:
                         finding = {
                             "type": "Sensitive Path Accessible",

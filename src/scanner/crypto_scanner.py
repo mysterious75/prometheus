@@ -19,12 +19,14 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
-class CryptoScanner:
+class CryptoScanner(BaseScanner):
     """Tests cryptographic implementations and SSL/TLS configuration."""
     NAME = "crypto"
 
@@ -44,6 +46,7 @@ class CryptoScanner:
     STRONG_PROTOCOLS = ["TLSv1.2", "TLSv1.3"]
 
     def __init__(self):
+        super().__init__()
         self.limiter = get_limiter(rps=2.0)
 
     def scan_url(self, url: str, **kwargs) -> List[Finding]:
@@ -256,7 +259,7 @@ class CryptoScanner:
         findings = []
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify())
             resp = client.get(url)
             headers = resp.headers
 
@@ -327,7 +330,7 @@ class CryptoScanner:
         try:
             import httpx
             http_url = f"http://{host}:{http_port}"
-            client = httpx.Client(follow_redirects=False, timeout=10, verify=True)
+            client = httpx.Client(follow_redirects=False, timeout=10, verify=ssl_verify())
             resp = client.get(http_url)
 
             if resp.status_code not in (301, 302, 307, 308):
@@ -377,7 +380,7 @@ class CryptoScanner:
 
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify())
             resp = client.get(url)
             body = resp.text
 

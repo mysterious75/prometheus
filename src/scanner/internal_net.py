@@ -13,12 +13,14 @@ from dataclasses import dataclass, field
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
 from ..scanner.findings import Finding
+from .base import BaseScanner
 
 
-class InternalNetworkScanner:
+class InternalNetworkScanner(BaseScanner):
     """Internal network security testing."""
 
     def __init__(self, rps: float = 5.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_smb(self, target: str) -> List[Finding]:

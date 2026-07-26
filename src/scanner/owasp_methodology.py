@@ -29,17 +29,20 @@ from urllib.parse import urlparse, urljoin
 
 import httpx
 
+from .base import BaseScanner
 from ..core.logger import logger, console, log_tool_start, log_tool_result
 from ..core.ratelimit import get_limiter
 from .findings import Finding, ScanResult
+from ..core.transport import ssl_verify
 
 
-class OWASPMethodologyScanner:
+class OWASPMethodologyScanner(BaseScanner):
     """Implements complete OWASP Testing Guide v4 methodology."""
 
     NAME = "owasp_methodology"
 
     def __init__(self, rps: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.rps = rps
         self._finding_id = 0
@@ -51,7 +54,7 @@ class OWASPMethodologyScanner:
     def _make_client(self, follow_redirects: bool = True) -> httpx.Client:
         return httpx.Client(
             timeout=15,
-            verify=True,
+            verify=ssl_verify(),
             follow_redirects=follow_redirects,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )

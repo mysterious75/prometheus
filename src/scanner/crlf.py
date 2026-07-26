@@ -15,6 +15,8 @@ from urllib.parse import urlparse, quote
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
 # CRLF payloads
@@ -32,12 +34,13 @@ CRLF_PAYLOADS = [
 ]
 
 
-class CRLFInjectionScanner:
+class CRLFInjectionScanner(BaseScanner):
     """Detects CRLF injection vulnerabilities."""
 
     NAME = "crlf_injection"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -50,7 +53,7 @@ class CRLFInjectionScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=False,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=False,
             headers={"User-Agent": "Mozilla/5.0"},
         )
 

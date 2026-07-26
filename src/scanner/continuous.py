@@ -17,6 +17,7 @@ from pathlib import Path
 from ..core.config import config
 from ..core.logger import logger, console
 from ..scanner.findings import Finding, ScanResult
+from .base import BaseScanner
 
 
 @dataclass
@@ -39,7 +40,7 @@ class ScanDiff:
     new_endpoints: List[str] = field(default_factory=list)
 
 
-class ContinuousScanner:
+class ContinuousScanner(BaseScanner):
     """Continuous security scanning engine.
 
     Features:
@@ -50,6 +51,7 @@ class ContinuousScanner:
     """
 
     def __init__(self):
+        super().__init__()
         self.schedules: Dict[str, ScanSchedule] = {}
         self.scan_history: Dict[str, List[Dict]] = {}  # target -> list of scan results
         self._load_state()

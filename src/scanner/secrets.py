@@ -4,11 +4,13 @@ import re
 from typing import List
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
-class SecretsScanner:
+class SecretsScanner(BaseScanner):
     """Finds exposed secrets, API keys, and credentials."""
 
     NAME = "secrets"
@@ -68,6 +70,7 @@ class SecretsScanner:
     ]
 
     def __init__(self, rps: float = 5.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, **kwargs) -> List[Finding]:
@@ -78,7 +81,7 @@ class SecretsScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify(),
                               headers={"User-Agent": "Mozilla/5.0"})
         base = url.rstrip("/")
 

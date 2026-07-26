@@ -5,16 +5,18 @@ import ssl
 from typing import List
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
 
 
-class SmugglingScanner:
+class SmugglingScanner(BaseScanner):
     """Tests for HTTP request smuggling (CL.TE and TE.CL)."""
 
     NAME = "smuggling"
 
     def __init__(self, rps: float = 2.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, **kwargs) -> List[Finding]:

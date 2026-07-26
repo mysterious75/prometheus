@@ -11,9 +11,11 @@ import re
 from typing import List, Dict, Any, Optional, Tuple
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # ---------------------------------------------------------------------------
@@ -43,12 +45,13 @@ ORM_ERRORS = [
 ]
 
 
-class ORMInjectionScanner:
+class ORMInjectionScanner(BaseScanner):
     """Detects ORM injection via filter manipulation."""
 
     NAME = "orm_injection"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -69,7 +72,7 @@ class ORMInjectionScanner:
             headers["Authorization"] = f"Bearer {auth_token}"
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=True, headers=headers,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=True, headers=headers,
         )
 
         try:

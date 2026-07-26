@@ -13,6 +13,7 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse, urljoin
 from .base import BaseTool, ToolResult
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -358,7 +359,7 @@ class SQLInjectionScanner(BaseTool):
         client = httpx.Client(
             follow_redirects=True,
             timeout=12,
-            verify=True,
+            verify=ssl_verify(),
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             },

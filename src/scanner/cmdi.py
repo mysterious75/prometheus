@@ -8,11 +8,13 @@ import time
 from typing import List
 from urllib.parse import urlparse, urlencode, urlunparse, parse_qs
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
-class CMDiScanner:
+class CMDiScanner(BaseScanner):
     """OS Command Injection scanner."""
 
     NAME = "cmdi"
@@ -40,6 +42,7 @@ class CMDiScanner:
     ]
 
     def __init__(self, rps: float = 3.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, params: dict = None) -> List[Finding]:
@@ -56,7 +59,7 @@ class CMDiScanner:
         if not test_params:
             test_params = {"host": "127.0.0.1", "ip": "127.0.0.1", "cmd": "ls", "ping": "127.0.0.1"}
 
-        client = httpx.Client(follow_redirects=True, timeout=15, verify=True,
+        client = httpx.Client(follow_redirects=True, timeout=15, verify=ssl_verify(),
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Get baseline timing — average over 3 requests with benign value, use monotonic

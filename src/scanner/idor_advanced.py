@@ -22,9 +22,11 @@ from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
-class AdvancedIDORScanner:
+class AdvancedIDORScanner(BaseScanner):
     """Advanced IDOR testing with multiple attack vectors."""
     NAME = "advanced_idor"
 
@@ -46,6 +48,7 @@ class AdvancedIDORScanner:
     JWT_HEADERS = ["Authorization", "X-Auth-Token", "X-JWT-Token", "X-Token", "Cookie"]
 
     def __init__(self, rps: float = 5.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, **kwargs) -> List[Finding]:
@@ -63,7 +66,7 @@ class AdvancedIDORScanner:
         client = httpx.Client(
             follow_redirects=True,
             timeout=15,
-            verify=True,
+            verify=ssl_verify(),
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         )
 

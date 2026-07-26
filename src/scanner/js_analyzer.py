@@ -22,6 +22,7 @@ from urllib.parse import urlparse, urljoin
 
 from ..core.logger import logger, log_tool_start, log_tool_result
 from .findings import Finding
+from ..core.transport import ssl_verify
 
 
 # ---------------------------------------------------------------------------
@@ -332,7 +333,7 @@ class JSAnalyzer:
             return []
 
         try:
-            resp = httpx.get(url, timeout=15, follow_redirects=True, verify=True)
+            resp = httpx.get(url, timeout=15, follow_redirects=True, verify=ssl_verify())
             resp.raise_for_status()
         except Exception as e:
             logger.error(f"Failed to fetch JS from {url}: {e}")

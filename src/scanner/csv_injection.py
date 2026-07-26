@@ -13,6 +13,8 @@ from urllib.parse import urlparse
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
 # CSV injection payloads
@@ -32,12 +34,13 @@ CSV_PAYLOADS = [
 ]
 
 
-class CSVInjectionScanner:
+class CSVInjectionScanner(BaseScanner):
     """Detects CSV injection vulnerabilities."""
 
     NAME = "csv_injection"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -50,7 +53,7 @@ class CSVInjectionScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=True,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0"},
         )
 

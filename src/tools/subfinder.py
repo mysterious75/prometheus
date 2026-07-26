@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from .base import BaseTool, ToolResult
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -154,7 +155,7 @@ class SubdomainEnumerator(BaseTool):
         logger.info(f"[{self.name}(fallback)] Querying crt.sh for {domain}")
         try:
             import httpx
-            client = httpx.Client(timeout=20, verify=True)
+            client = httpx.Client(timeout=20, verify=ssl_verify())
             resp = client.get(
                 f"https://crt.sh/?q=%.{domain}&output=json",
                 headers={"User-Agent": "Mozilla/5.0"},

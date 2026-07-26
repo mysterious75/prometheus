@@ -14,11 +14,11 @@ def set_auth_token(token: Optional[str]) -> None:
 
 
 def check_auth() -> bool:
-    if _AUTH_TOKEN is None:
-        return False
     expected = os.getenv("AUTH_TOKEN", "")
     if not expected:
         return True
+    if _AUTH_TOKEN is None:
+        return False
     return _AUTH_TOKEN == expected
 
 

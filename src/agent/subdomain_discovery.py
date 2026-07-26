@@ -26,6 +26,7 @@ from urllib.parse import urlparse
 from .assets import SmartAssetManager
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 class SmartSubdomainDiscovery:
@@ -165,7 +166,7 @@ class SmartSubdomainDiscovery:
         """Certificate transparency logs via crt.sh."""
         try:
             import httpx
-            client = httpx.Client(timeout=15, verify=True)
+            client = httpx.Client(timeout=15, verify=ssl_verify())
             resp = client.get(f"https://crt.sh/?q=%.{self.domain}&output=json")
             if resp.status_code == 200:
                 data = resp.json()
@@ -212,7 +213,7 @@ class SmartSubdomainDiscovery:
         """Find subdomains via Shodan SSL certificates."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=True)
+            client = httpx.Client(timeout=10, verify=ssl_verify())
             # Use Shodan InternetDB (free, no API key)
             # First get IPs from known subdomains
             for sub in self.assets.get_all_subdomains()[:5]:

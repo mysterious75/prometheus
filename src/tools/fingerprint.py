@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 
 from ..core.logger import logger, console
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -180,7 +181,7 @@ class WebFingerprinter:
         """Analyze HTTP headers for technology detection."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
+            client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify(),
                                   headers={"User-Agent": "Mozilla/5.0"})
             resp = client.get(target)
             result.headers = dict(resp.headers)

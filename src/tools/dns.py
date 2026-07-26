@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -257,7 +258,7 @@ class DNSTools:
 
         subdomains = set()
         try:
-            client = httpx.Client(timeout=15, verify=True)
+            client = httpx.Client(timeout=15, verify=ssl_verify())
             resp = client.get(f"https://crt.sh/?q=%.{domain}&output=json")
             if resp.status_code == 200:
                 data = resp.json()

@@ -30,14 +30,17 @@ import httpx
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
 from .findings import Finding
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
-class SessionManagerScanner:
+class SessionManagerScanner(BaseScanner):
     """Tests session management security."""
 
     NAME = "session_management"
 
     def __init__(self, rps: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def _make_client(self, **kwargs) -> httpx.Client:
@@ -896,7 +899,7 @@ class SessionManagerScanner:
     def _test_forged_jwt(self, url: str, token: str) -> bool:
         """Test if a forged JWT is accepted by the server."""
         try:
-            client = httpx.Client(timeout=10, verify=True)
+            client = httpx.Client(timeout=10, verify=ssl_verify())
             resp = client.get(url, headers={"Authorization": f"Bearer {token}"})
             client.close()
             return resp.status_code == 200 and len(resp.text) > 50

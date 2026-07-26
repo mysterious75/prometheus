@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -111,7 +112,7 @@ class ShodanTool:
         try:
             import httpx
             # Use Shodan's web interface
-            client = httpx.Client(timeout=10, verify=True)
+            client = httpx.Client(timeout=10, verify=ssl_verify())
             url = f"https://www.shodan.io/search?query={query}"
             resp = client.get(url)
             # Parse basic results from HTML (limited)
@@ -132,7 +133,7 @@ class ShodanTool:
         """Use Shodan's free InternetDB API (no API key needed)."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=True)
+            client = httpx.Client(timeout=10, verify=ssl_verify())
             resp = client.get(f"https://internetdb.shodan.io/{ip}")
             if resp.status_code == 200:
                 return resp.json()

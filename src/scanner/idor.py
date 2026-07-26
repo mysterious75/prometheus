@@ -7,16 +7,19 @@ import re
 from typing import List
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
-class IDORScanner:
+class IDORScanner(BaseScanner):
     """IDOR vulnerability scanner."""
 
     NAME = "idor"
 
     def __init__(self, rps: float = 5.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, params: dict = None) -> List[Finding]:
@@ -33,7 +36,7 @@ class IDORScanner:
         if not test_params:
             return []
 
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify(),
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Get original response

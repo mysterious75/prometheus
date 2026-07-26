@@ -17,6 +17,8 @@ from urllib.parse import urlparse, urljoin
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
 # Common vulnerable WordPress plugins
@@ -56,12 +58,13 @@ WP_PATHS = [
 ]
 
 
-class WordPressScanner:
+class WordPressScanner(BaseScanner):
     """WordPress-specific vulnerability scanner."""
 
     NAME = "wordpress"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -79,7 +82,7 @@ class WordPressScanner:
         base = f"{parsed.scheme}://{parsed.netloc}"
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=True,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )
 

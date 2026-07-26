@@ -843,15 +843,21 @@ def main():
     parser.add_argument("--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=8000, help="Bind port (default: 8000)")
     parser.add_argument("--no-auth", action="store_true", help="Disable API key authentication")
+    parser.add_argument("--no-verify", action="store_true", help="Disable SSL verification (self-signed certs)")
     parser.add_argument("--rpm", type=int, default=60, help="Rate limit: requests per minute per key")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
     args = parser.parse_args()
+
+    if args.no_verify:
+        from src.core.transport import set_verify
+        set_verify(False)
 
     app = create_app(require_auth=not args.no_auth, requests_per_minute=args.rpm)
 
     console.print(f"\n[bold cyan]Prometheus Security API[/bold cyan]")
     console.print(f"  Host: {args.host}:{args.port}")
     console.print(f"  Auth: {'disabled' if args.no_auth else 'enabled'}")
+    console.print(f"  SSL verify: {'disabled' if args.no_verify else 'enabled'}")
     console.print(f"  Rate limit: {args.rpm} req/min/key")
     console.print(f"  Docs: http://{args.host}:{args.port}/docs")
     console.print()

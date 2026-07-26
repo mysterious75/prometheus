@@ -23,9 +23,11 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 # ---------------------------------------------------------------------------
 # SQL error patterns — 200+ patterns across 8 DBMS
@@ -513,7 +515,7 @@ class WAFResult:
 # Main Scanner
 # ---------------------------------------------------------------------------
 
-class SQLiScanner:
+class SQLiScanner(BaseScanner):
     """Production-grade SQL injection scanner.
 
     Features:
@@ -530,6 +532,7 @@ class SQLiScanner:
     NAME = "sqli"
 
     def __init__(self, rps: float = 5.0, timeout: float = 15.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -572,7 +575,7 @@ class SQLiScanner:
         client = httpx.Client(
             follow_redirects=True,
             timeout=self.timeout,
-            verify=True,
+            verify=ssl_verify(),
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )
 

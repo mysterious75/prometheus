@@ -1,11 +1,12 @@
 """XXE Scanner — XML External Entity injection detection."""
 
 from typing import List
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
 
 
-class XXEScanner:
+class XXEScanner(BaseScanner):
     """Tests for XML External Entity injection."""
 
     NAME = "xxe"
@@ -24,6 +25,7 @@ class XXEScanner:
 <root>&test;</root>"""
 
     def __init__(self, rps: float = 3.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, **kwargs) -> List[Finding]:
@@ -34,7 +36,7 @@ class XXEScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify(),
                               headers={"Content-Type": "application/xml"})
 
         for payload_name, payload in [("direct entity", self.XXE_PAYLOAD),
@@ -70,3 +72,4 @@ class XXEScanner:
 
 
 from urllib.parse import urlparse
+from ..core.transport import ssl_verify

@@ -3,9 +3,10 @@
 from typing import List
 from .findings import Finding
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
 
 
-class AuthBypassScanner:
+class AuthBypassScanner(BaseScanner):
     """Tests for authentication and authorization bypass vulnerabilities."""
 
     NAME = "auth"
@@ -34,6 +35,7 @@ class AuthBypassScanner:
     ]
 
     def __init__(self, rps: float = 3.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, **kwargs) -> List[Finding]:
@@ -45,7 +47,7 @@ class AuthBypassScanner:
 
         findings = []
         base = url.rstrip("/")
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify(),
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Check for accessible admin panels
@@ -108,3 +110,4 @@ class AuthBypassScanner:
 
 
 from urllib.parse import urlparse
+from ..core.transport import ssl_verify

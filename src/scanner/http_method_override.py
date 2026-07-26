@@ -16,6 +16,8 @@ from urllib.parse import urlparse
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from .base import BaseScanner
+from ..core.transport import ssl_verify
 
 
 # Override headers to test
@@ -44,12 +46,13 @@ OVERRIDE_PARAMS = [
 METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE", "HEAD", "CONNECT"]
 
 
-class HttpMethodOverrideScanner:
+class HttpMethodOverrideScanner(BaseScanner):
     """Tests for HTTP method override vulnerabilities."""
 
     NAME = "http_method_override"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -62,7 +65,7 @@ class HttpMethodOverrideScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=False,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=False,
             headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
         )
 

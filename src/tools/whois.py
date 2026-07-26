@@ -8,6 +8,7 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 
 from ..core.logger import logger, console
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -138,7 +139,7 @@ class WhoisTool:
 
             # Use bgp.tools (free, no API key)
             import httpx
-            client = httpx.Client(timeout=10, verify=True)
+            client = httpx.Client(timeout=10, verify=ssl_verify())
             resp = client.get(f"https://bgp.tools/prefix/{ip}")
             if resp.status_code == 200:
                 body = resp.text
@@ -159,7 +160,7 @@ class WhoisTool:
         """Get historical DNS/IP records for a domain."""
         try:
             import httpx
-            client = httpx.Client(timeout=10, verify=True)
+            client = httpx.Client(timeout=10, verify=ssl_verify())
             # Use SecurityTrails or similar free API
             resp = client.get(f"https://securitytrails.com/domain/{domain}/dns")
             # Limited without API key, but can extract some data

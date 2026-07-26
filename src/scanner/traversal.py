@@ -4,11 +4,13 @@ import re
 from typing import List
 from urllib.parse import urlparse, urlencode, urlunparse, parse_qs
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
-class TraversalScanner:
+class TraversalScanner(BaseScanner):
     """Tests for path traversal / local file inclusion."""
 
     NAME = "traversal"
@@ -25,6 +27,7 @@ class TraversalScanner:
     ]
 
     def __init__(self, rps: float = 5.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
 
     def scan_url(self, url: str, params: dict = None) -> List[Finding]:
@@ -42,7 +45,7 @@ class TraversalScanner:
             test_params = {"file": "index.html", "path": "pages/", "page": "home",
                           "include": "header.php", "template": "default"}
 
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify())
 
         for param_name in test_params:
             for payload, indicator, desc in self.PAYLOADS:

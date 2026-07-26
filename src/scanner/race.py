@@ -5,10 +5,12 @@ import time
 from typing import List
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
+from ..core.transport import ssl_verify
 
 
-class RaceConditionScanner:
+class RaceConditionScanner(BaseScanner):
     """Tests for race condition vulnerabilities."""
 
     NAME = "race"
@@ -21,7 +23,7 @@ class RaceConditionScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True,
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify(),
                               headers={"User-Agent": "Mozilla/5.0"})
 
         # Send 20 concurrent requests

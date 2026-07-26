@@ -15,9 +15,11 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse, urljoin
 
+from .base import BaseScanner
 from ..core.logger import logger, log_tool_start, log_tool_result, log_finding
 from ..core.ratelimit import get_limiter
 from .findings import Finding
+from ..core.transport import ssl_verify
 
 
 # ---------------------------------------------------------------------------
@@ -171,12 +173,13 @@ class BaselineResponse:
     body_snippet: str = ""  # first 500 chars
 
 
-class BypassScanner:
+class BypassScanner(BaseScanner):
     """Tests for 403/401 access control bypasses."""
 
     NAME = "bypass_403"
 
     def __init__(self, rps: float = 10.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -214,7 +217,7 @@ class BypassScanner:
         techniques.extend(_build_protocol_bypasses())
 
         client = httpx.Client(
-            verify=True,
+            verify=ssl_verify(),
             timeout=self.timeout,
             follow_redirects=False,  # Important: don't follow redirects for bypass detection
             headers={

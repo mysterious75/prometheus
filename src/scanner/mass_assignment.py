@@ -11,9 +11,11 @@ import re
 from typing import List, Dict, Any, Optional
 from urllib.parse import urlparse, urljoin
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # ---------------------------------------------------------------------------
@@ -83,12 +85,13 @@ PRIVILEGE_PAYLOADS: List[Dict[str, Any]] = [
 ]
 
 
-class MassAssignmentScanner:
+class MassAssignmentScanner(BaseScanner):
     """Tests for mass assignment vulnerabilities in API endpoints."""
 
     NAME = "mass_assignment"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -101,7 +104,7 @@ class MassAssignmentScanner:
         host = parsed.netloc
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=True,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=True,
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
                 "Content-Type": "application/json",

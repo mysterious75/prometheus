@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 
 from ..core.logger import logger, console
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 @dataclass
@@ -190,7 +191,7 @@ class SubdomainTakeoverScanner:
         """Verify takeover vulnerability with HTTP request."""
         try:
             import httpx
-            client = httpx.Client(follow_redirects=True, timeout=8, verify=True)
+            client = httpx.Client(follow_redirects=True, timeout=8, verify=ssl_verify())
 
             for scheme in ["https", "http"]:
                 try:

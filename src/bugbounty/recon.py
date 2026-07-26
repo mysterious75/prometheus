@@ -8,6 +8,7 @@ from typing import Optional, List, Dict
 from datetime import datetime
 
 from ..utils.logger import logger
+from ..core.transport import ssl_verify
 
 
 class ReconPipeline:
@@ -160,7 +161,7 @@ class ReconPipeline:
                 for scheme in ["http", "https"]:
                     url = f"{scheme}://{self.target}:{port}"
                     try:
-                        resp = requests.get(url, timeout=5, verify=True)
+                        resp = requests.get(url, timeout=5, verify=ssl_verify())
                         services.append({
                             "url": url,
                             "status_code": resp.status_code,

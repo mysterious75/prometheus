@@ -13,9 +13,11 @@ import re
 from typing import List, Dict, Set
 from urllib.parse import urlparse
 
+from .base import BaseScanner
 from .findings import Finding
 from ..core.logger import logger
 from ..core.ratelimit import get_limiter
+from ..core.transport import ssl_verify
 
 
 # Patterns for internal package names
@@ -64,12 +66,13 @@ CONFIG_PATHS = [
 ]
 
 
-class DependencyConfusionScanner:
+class DependencyConfusionScanner(BaseScanner):
     """Detects dependency confusion / supply chain vulnerabilities."""
 
     NAME = "dependency_confusion"
 
     def __init__(self, rps: float = 5.0, timeout: float = 10.0):
+        super().__init__()
         self.limiter = get_limiter(rps)
         self.timeout = timeout
 
@@ -83,7 +86,7 @@ class DependencyConfusionScanner:
         base = f"{parsed.scheme}://{parsed.netloc}"
 
         client = httpx.Client(
-            verify=True, timeout=self.timeout, follow_redirects=True,
+            verify=ssl_verify(), timeout=self.timeout, follow_redirects=True,
             headers={"User-Agent": "Mozilla/5.0"},
         )
 

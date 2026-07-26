@@ -1,10 +1,13 @@
 """CORS Scanner — Cross-Origin Resource Sharing misconfiguration."""
 
 from typing import List
+
+from .base import BaseScanner
 from .findings import Finding
+from ..core.transport import ssl_verify
 
 
-class CORSScanner:
+class CORSScanner(BaseScanner):
     """Tests for CORS misconfigurations."""
 
     NAME = "cors"
@@ -17,7 +20,7 @@ class CORSScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify())
 
         # Test origins
         test_origins = [

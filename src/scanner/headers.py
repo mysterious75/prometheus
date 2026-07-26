@@ -1,10 +1,12 @@
 """Headers Scanner — security header analysis."""
 
 from typing import List
+from .base import BaseScanner
 from .findings import Finding
+from src.core.transport import ssl_verify
 
 
-class HeadersScanner:
+class HeadersScanner(BaseScanner):
     """Checks for missing or misconfigured security headers."""
 
     NAME = "headers"
@@ -56,7 +58,7 @@ class HeadersScanner:
             return []
 
         findings = []
-        client = httpx.Client(follow_redirects=True, timeout=10, verify=True)
+        client = httpx.Client(follow_redirects=True, timeout=10, verify=ssl_verify())
 
         try:
             resp = client.get(url)
