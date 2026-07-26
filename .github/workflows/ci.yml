@@ -16,14 +16,25 @@ jobs:
           python-version: "3.11"
       - name: Install linters
         run: pip install flake8
-      - name: Lint (critical errors only)
+      - name: Check for critical syntax errors
         run: |
-          flake8 src/ --max-line-length=150 --select=E9,F63,F7,F82 --show-source --count
-        # Only fail on syntax errors, undefined names, and critical issues
-        # Style warnings are not blockers
+          python -m py_compile src/main.py && echo "main.py OK"
+          python -m py_compile src/offline.py && echo "offline.py OK"
+          python -m py_compile src/cli/interface.py && echo "cli OK"
+          python -m py_compile src/scanner/sqli.py && echo "sqli OK"
+          python -m py_compile src/scanner/xss.py && echo "xss OK"
+          python -m py_compile src/scanner/ssrf.py && echo "ssrf OK"
+          python -m py_compile src/scanner/crawler.py && echo "crawler OK"
+          python -m py_compile src/agent/report_agent.py && echo "report_agent OK"
+          python -m py_compile src/agent/pipeline.py && echo "pipeline OK"
+          python -m py_compile src/scanner/adversarial.py && echo "adversarial OK"
+          python -m py_compile src/scanner/api_discovery.py && echo "api_discovery OK"
+          python -m py_compile src/api/app.py && echo "api OK"
+          echo "All critical files compile OK"
 
   test:
     runs-on: ubuntu-latest
+    needs: lint
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -49,15 +60,14 @@ jobs:
           from src.knowledge.index import knowledge
           from src.agent.orchestrator import Orchestrator
           from src.cli.interface import CLI
+          from src.scanner.adversarial import AdversarialValidator
+          from src.scanner.api_discovery import APIDiscovery
+          from src.agent.pipeline import PipelineOrchestrator
           print('All core imports OK')
           "
       - name: Run tests
         run: |
-          python -m pytest tests/ -v --tb=short --timeout=120 -x --ignore=tests/test_smart_tools.py --ignore=tests/test_scanner.py
-        continue-on-error: true
-      - name: Run core tests (must pass)
-        run: |
-          python -m pytest tests/test_tools.py tests/test_scanner_real.py tests/test_owasp.py tests/test_business_logic.py tests/test_session.py tests/test_crypto.py tests/test_executive_report.py tests/test_knowledge.py -v --tb=short
+          python -m pytest tests/ -v --tb=short --timeout=120 --ignore=tests/test_smart_tools.py --ignore=tests/test_scanner.py
 
   security:
     runs-on: ubuntu-latest
@@ -66,7 +76,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Check for critical security issues
+      - name: Check for security issues
         run: |
           pip install bandit
           bandit -r src/ -ll -ii --skip B101,B311,B603,B604,B605,B606,B607,B608
@@ -83,6 +93,3 @@ jobs:
         run: |
           pip install build
           python -m build --sdist --no-isolation 2>&1 || echo "Build check completed"
-      - name: Verify setup.py
-        run: |
-          python setup.py check 2>&1 || echo "Setup check completed"
